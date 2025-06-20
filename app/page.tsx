@@ -58,8 +58,8 @@ export default function Page() {
               <h3 className="font-semibold text-blue-900 mb-2">Testing Instructions</h3>
               <div className="text-blue-800 text-sm space-y-2">
                 <p>• Each form is dynamically generated based on JSON configuration</p>
-                <p>• Forms include validation, help text, and password visibility toggles</p>
-                <p>• Submission is mocked - check browser console for "database" operations</p>
+                                 <p>• Forms include validation, help text, and password visibility toggles</p>
+                 <p>• Submission is mocked - check browser console for &quot;database&quot; operations</p>
                 <p>• Forms handle different field types: text, password, email, URL, number</p>
               </div>
             </CardContent>

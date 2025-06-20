@@ -28,7 +28,7 @@ export function IntegrationForm({ formConfig, userId }: IntegrationFormProps) {
 
   // Dynamic schema generation based on form fields
   const createSchema = () => {
-    const schemaObj: Record<string, z.ZodString | z.ZodNumber> = {}
+    const schemaObj: Record<string, z.ZodTypeAny> = {}
     
     formConfig.form_fields.forEach(field => {
       if (field.field_type === 'number') {
@@ -44,13 +44,9 @@ export function IntegrationForm({ formConfig, userId }: IntegrationFormProps) {
           fieldSchema = fieldSchema.url('Invalid URL format')
         }
         
-        if (field.required) {
-          fieldSchema = fieldSchema.min(1, `${field.label} is required`)
-        } else {
-          fieldSchema = fieldSchema.optional()
-        }
-        
-        schemaObj[field.field_name] = fieldSchema
+        schemaObj[field.field_name] = field.required
+          ? fieldSchema.min(1, `${field.label} is required`)
+          : fieldSchema.optional()
       }
     })
     
@@ -225,7 +221,7 @@ export function IntegrationForm({ formConfig, userId }: IntegrationFormProps) {
                 
                 {form.formState.errors[field.field_name as keyof FormData] && (
                   <p className="text-sm text-red-600">
-                    {form.formState.errors[field.field_name as keyof FormData]?.message}
+                    {String(form.formState.errors[field.field_name as keyof FormData]?.message)}
                   </p>
                 )}
               </div>
