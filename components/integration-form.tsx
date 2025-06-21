@@ -139,7 +139,7 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
   const schema = createSchema()
   type FormData = z.infer<typeof schema>
 
-  const form = useForm<FormData>({
+  const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: configForm?.form_fields.reduce((acc, field) => ({
       ...acc,
@@ -496,7 +496,7 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
 
                 {form.formState.errors[field.field_name] && (
                   <p className="text-sm text-red-600">
-                    {form.formState.errors[field.field_name]?.message}
+                    {(form.formState.errors[field.field_name] as any)?.message || 'This field is required'}
                   </p>
                 )}
               </div>
