@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { Eye, EyeOff, HelpCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, HelpCircle, CheckCircle, Loader2, Info } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ConfigFormData } from '@/lib/mock-data'
 import { createClient } from '@/lib/utils/supabase/client'
@@ -30,6 +30,28 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   const supabase = createClient()
+
+  // Function to determine next status based on auth requirements
+  const determineNextStatus = async (serviceId: string, userId: string): Promise<string> => {
+    try {
+      // Get the integration build state to check auth requirements
+      const { data: buildState } = await supabase
+        .from('integration_build_states')
+        .select('state_data')
+        .eq('user_id', userId)
+        .eq('service_name', configForm?.service_name || 'Unknown Service')
+        .single()
+
+      // Check if auth is needed (default to true if not specified)
+      const authNeeded = buildState?.state_data?.auth_needed ?? true
+
+      // Return appropriate status based on auth requirements
+      return authNeeded ? 'auth_ready' : 'form_completed'
+    } catch (error) {
+      console.warn('Could not determine auth requirements, defaulting to auth_ready:', error)
+      return 'auth_ready'
+    }
+  }
 
   const fetchConfigForm = useCallback(async () => {
     try {
@@ -119,40 +141,35 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: configForm?.form_fields.reduce((acc: Record<string, string>, field) => {
-      acc[field.field_name as keyof FormData] = field.default_value || ''
-      return acc
-    }, {} as FormData) || {}
+    defaultValues: configForm?.form_fields.reduce((acc, field) => ({
+      ...acc,
+      [field.field_name]: field.default_value || ''
+    }), {}) || {}
   })
 
-  // Re-initialize form when configForm changes
+  // Update form defaults when configForm changes
   useEffect(() => {
     if (configForm) {
-      const defaultValues = configForm.form_fields.reduce((acc: Record<string, string>, field) => {
-        acc[field.field_name as keyof FormData] = field.default_value || ''
-        return acc
-      }, {} as FormData)
-      form.reset(defaultValues)
+      const defaults = configForm.form_fields.reduce((acc, field) => ({
+        ...acc,
+        [field.field_name]: field.default_value || ''
+      }), {})
+      form.reset(defaults)
     }
   }, [configForm, form])
 
-  const togglePasswordVisibility = (fieldName: string) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [fieldName]: !prev[fieldName]
-    }))
-  }
-
   // Hybrid mapping system from dynamic example
-  const mapFormDataToIntegrationSchema = (
+  const mapFormDataToIntegrationSchema = async (
     formData: Record<string, unknown>, 
     configForm: ConfigFormData
-  ): Record<string, unknown> => {
+  ): Promise<Record<string, unknown>> => {
+    const nextStatus = await determineNextStatus(formId, userId)
+    
     const mappedData: Record<string, unknown> = {
       user_id: userId,
       service_id: formId, // Using formId as service_id for now
       configuration: {},
-      status: 'auth_ready'
+      status: nextStatus
     }
 
     // Use hybrid mapping instructions if available
@@ -233,13 +250,16 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
       }
     }
 
+    // Determine the next status for build state
+    const nextStatus = await determineNextStatus(formId, userId)
+
     // Update integration build state
     const { error: buildStateError } = await supabase
       .from('integration_build_states')
       .upsert({
         user_id: userId,
         service_name: configForm?.service_name || 'Unknown Service',
-        current_status: 'auth_ready',
+        current_status: nextStatus,
         completed_steps: ['form_response'],
         state_data: { form_data_received: true },
         last_updated: new Date().toISOString()
@@ -261,7 +281,7 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
 
     try {
       // Map form data to integration schema using hybrid mapping
-      const mappedData = mapFormDataToIntegrationSchema(data, configForm)
+      const mappedData = await mapFormDataToIntegrationSchema(data, configForm)
 
       // Submit to database
       await submitToIntegration(mappedData)
@@ -274,6 +294,32 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
       setIsSubmitting(false)
     }
   }
+
+  // Check auth requirements for user expectation setting
+  const [authNeeded, setAuthNeeded] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const checkAuthRequirements = async () => {
+      if (!configForm || !userId) return
+
+      try {
+        const { data: buildState } = await supabase
+          .from('integration_build_states')
+          .select('state_data')
+          .eq('user_id', userId)
+          .eq('service_name', configForm.service_name)
+          .single()
+
+        const authRequired = buildState?.state_data?.auth_needed ?? true
+        setAuthNeeded(authRequired)
+      } catch (error) {
+        console.warn('Could not check auth requirements:', error)
+        setAuthNeeded(true) // Default to true
+      }
+    }
+
+    checkAuthRequirements()
+  }, [configForm, userId, supabase])
 
   if (loading) {
     return (
@@ -352,6 +398,21 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
           </div>
         </div>
 
+        {/* User Expectation Setting - Optional UI */}
+        {authNeeded !== null && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-gray-700">
+                {authNeeded ? 
+                  "After submitting, you'll complete authentication in your mobile app" :
+                  "After submitting, your integration will be ready to activate!"
+                }
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mapping confidence indicator */}
         {configForm.mapping_confidence && (
           <div className="flex items-center text-sm text-gray-600">
@@ -391,57 +452,56 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
                     </Tooltip>
                   )}
                 </div>
-                
-                <div className="relative">
-                  {field.field_type === 'textarea' ? (
-                    <Textarea
-                      id={field.field_name}
-                      {...form.register(field.field_name as keyof FormData)}
-                      placeholder={field.help_text}
-                      rows={3}
-                    />
-                  ) : (
+
+                {field.field_type === 'textarea' ? (
+                  <Textarea
+                    id={field.field_name}
+                    placeholder={field.help_text}
+                    {...form.register(field.field_name)}
+                    className="min-h-[100px]"
+                  />
+                ) : field.field_type === 'password' ? (
+                  <div className="relative">
                     <Input
                       id={field.field_name}
-                      type={
-                        field.field_type === 'password' && !showPasswords[field.field_name]
-                          ? 'password'
-                          : field.field_type === 'password' && showPasswords[field.field_name]
-                          ? 'text'
-                          : field.field_type
-                      }
-                      {...form.register(field.field_name as keyof FormData)}
+                      type={showPasswords[field.field_name] ? 'text' : 'password'}
                       placeholder={field.help_text}
+                      {...form.register(field.field_name)}
                     />
-                  )}
-                  
-                  {field.field_type === 'password' && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      onClick={() => togglePasswordVisibility(field.field_name)}
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPasswords(prev => ({
+                        ...prev,
+                        [field.field_name]: !prev[field.field_name]
+                      }))}
                     >
                       {showPasswords[field.field_name] ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       )}
                     </Button>
-                  )}
-                </div>
-                
-                {form.formState.errors[field.field_name as keyof FormData] && (
+                  </div>
+                ) : (
+                  <Input
+                    id={field.field_name}
+                    type={field.field_type}
+                    placeholder={field.help_text}
+                    {...form.register(field.field_name)}
+                  />
+                )}
+
+                {form.formState.errors[field.field_name] && (
                   <p className="text-sm text-red-600">
-                    This field is required
+                    {form.formState.errors[field.field_name]?.message}
                   </p>
                 )}
               </div>
             ))}
           </TooltipProvider>
-
-          <Separator />
 
           <Button 
             type="submit" 
