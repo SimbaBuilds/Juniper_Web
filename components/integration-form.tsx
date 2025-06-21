@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -139,7 +139,7 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
   const schema = createSchema()
   type FormData = z.infer<typeof schema>
 
-  const form = useForm<any>({
+  const form = useForm<Record<string, unknown>>({
     resolver: zodResolver(schema),
     defaultValues: configForm?.form_fields.reduce((acc, field) => ({
       ...acc,
@@ -496,7 +496,7 @@ export function IntegrationForm({ formId, userId }: IntegrationFormProps) {
 
                 {form.formState.errors[field.field_name] && (
                   <p className="text-sm text-red-600">
-                    {(form.formState.errors[field.field_name] as any)?.message || 'This field is required'}
+                    {(form.formState.errors[field.field_name] as { message?: string })?.message || 'This field is required'}
                   </p>
                 )}
               </div>

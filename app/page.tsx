@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { IntegrationForm } from '@/components/integration-form'
 import { INTEGRATION_CONFIG } from '@/lib/config'
 
-export default function Page() {
+function PageContent() {
   const searchParams = useSearchParams()
   
   // Configuration for the single service this app handles
@@ -37,5 +38,13 @@ export default function Page() {
         />
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">Loading...</div>}>
+      <PageContent />
+    </Suspense>
   )
 }
