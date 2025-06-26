@@ -205,6 +205,9 @@ export default function HomePage() {
                 <Link href="/privacy-policy" className="block text-gray-400 hover:text-white">
                   Privacy Policy
                 </Link>
+                <Link href="/terms-of-use" className="block text-gray-400 hover:text-white">
+                  Terms of Use
+                </Link>
               </div>
             </div>
             <div>
