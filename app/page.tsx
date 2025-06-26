@@ -214,7 +214,7 @@ export default function HomePage() {
           </div>
           <Separator className="my-8 bg-gray-800" />
           <div className="text-center text-gray-400">
-            <p>&copy; 2024 Mobile Jarvis. All rights reserved.</p>
+            <p>&copy; 2025 Mobile Jarvis. All rights reserved.</p>
           </div>
         </div>
       </footer>
