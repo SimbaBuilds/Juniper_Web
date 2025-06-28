@@ -13,7 +13,6 @@ import {
   FileText, 
   Users, 
   Video, 
-  Cloud,
   CheckCircle,
   Zap,
   Smartphone

@@ -11,7 +11,6 @@ import {
   FileText, 
   Users, 
   Video, 
-  Cloud,
   CheckCircle,
   Phone,
   Search,
