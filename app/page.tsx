@@ -25,7 +25,6 @@ const integrations = [
   { name: "Slack", category: "Team Communication", icon: MessageSquare, color: "bg-purple-600" },
   { name: "Trello", category: "Project Management", icon: Users, color: "bg-blue-600" },
   { name: "Zoom", category: "Video Conferencing", icon: Video, color: "bg-blue-500" },
-  { name: "Dropbox", category: "Cloud Storage", icon: Cloud, color: "bg-blue-400" },
   { name: "Todoist", category: "Task Management", icon: CheckCircle, color: "bg-red-500" },
   { name: "Perplexity", category: "AI Research", icon: Brain, color: "bg-indigo-600" },
   { name: "Google Sheets", category: "Spreadsheets", icon: FileText, color: "bg-green-600" },
@@ -37,7 +36,6 @@ const integrations = [
   { name: "Outlook Calendar", category: "Calendar", icon: Calendar, color: "bg-blue-600" },
   { name: "Outlook Mail", category: "Email", icon: MessageSquare, color: "bg-blue-600" },
   { name: "Microsoft Teams", category: "Communication", icon: Users, color: "bg-purple-700" },
-  { name: "Google Meet", category: "Video Conferencing", icon: Video, color: "bg-green-500" },
   { name: "Twilio", category: "SMS", icon: Phone, color: "bg-red-500" }
 ]
 

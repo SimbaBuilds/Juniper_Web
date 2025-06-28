@@ -38,28 +38,12 @@ const integrations = [
     features: ["Team Communication", "Channel Management", "File Sharing", "Notifications"]
   },
   { 
-    name: "Trello", 
-    category: "Project Management", 
-    icon: Users, 
-    color: "bg-blue-600",
-    description: "Visual project management with boards, lists, and cards",
-    features: ["Project Management", "Task Management", "Team Collaboration", "Visual Organization"]
-  },
-  { 
     name: "Zoom", 
     category: "Video Conferencing", 
     icon: Video, 
     color: "bg-blue-500",
     description: "High-quality video meetings and webinars for remote collaboration",
     features: ["Video Conferencing", "Screen Sharing", "Recording", "Webinars"]
-  },
-  { 
-    name: "Dropbox", 
-    category: "Cloud Storage", 
-    icon: Cloud, 
-    color: "bg-blue-400",
-    description: "Secure cloud storage and file synchronization across devices",
-    features: ["Cloud Storage", "File Sync", "File Sharing", "Version Control"]
   },
   { 
     name: "Todoist", 
@@ -148,14 +132,6 @@ const integrations = [
     color: "bg-purple-700",
     description: "Unified communication platform for chat, meetings, and collaboration",
     features: ["Team Communication", "Video Meetings", "File Collaboration", "App Integration"]
-  },
-  { 
-    name: "Google Meet", 
-    category: "Video Conferencing", 
-    icon: Video, 
-    color: "bg-green-500",
-    description: "Secure video meetings integrated with Google Workspace",
-    features: ["Video Conferencing", "Screen Sharing", "Recording", "Google Integration"]
   },
   { 
     name: "Twilio", 
