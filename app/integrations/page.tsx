@@ -184,8 +184,7 @@ export default function IntegrationsPage() {
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">All Integrations</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect Juniper with your favorite apps and services. Choose from 18+ integrations 
-            to streamline your workflow and boost productivity.
+            Connect Juniper with your favorite apps and services to streamline your workflow and boost productivity.
           </p>
         </div>
 

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: "Juniper - AI-Powered Mobile Assistant",
     template: "%s | Juniper"
   },
-  description: "Connect all your favorite apps and services with voice-controlled intelligence. Juniper integrates seamlessly with 18+ platforms to streamline your workflow.",
+  description: "Connect all your favorite apps and services with voice-controlled intelligence. Juniper integrates seamlessly with over a dozen platforms to streamline your workflow.",
   keywords: ["mobile assistant", "AI", "integrations", "voice control", "productivity", "automation"],
   authors: [{ name: "Juniper Team" }],
   openGraph: {

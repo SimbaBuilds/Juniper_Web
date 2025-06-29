@@ -31,7 +31,7 @@ export const INTEGRATION_CONFIG = {
 export const APP_CONFIG = {
   NAME: "Juniper",
   TAGLINE: "AI-Powered Mobile Assistant",
-  DESCRIPTION: "Connect all your favorite apps and services with voice-controlled intelligence. Juniper integrates seamlessly with 18+ platforms to streamline your workflow.",
+  DESCRIPTION: "Connect all your favorite apps and services with voice-controlled intelligence. Juniper integrates seamlessly with 12+ platforms to streamline your workflow.",
   
   // Feature highlights
   FEATURES: {
@@ -39,11 +39,11 @@ export const APP_CONFIG = {
     CROSS_PLATFORM: "iOS and Android Support",
     WAKE_WORD: "Always-on Wake Word Detection (Android)",
     MEMORY_MANAGEMENT: "Smart or Manual Memory Management",
-    INTEGRATIONS: "18+ Service Integrations"
+    INTEGRATIONS: "12+ Service Integrations"
   },
   
   // Integration count
-  INTEGRATION_COUNT: 18,
+  INTEGRATION_COUNT: 15,
   
   // Platform support
   PLATFORMS: ["iOS", "Android"]

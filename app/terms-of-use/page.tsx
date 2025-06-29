@@ -100,7 +100,7 @@ export default function TermsOfUsePage() {
                   </p>
                   <ul className="list-disc pl-6 text-gray-600 mb-6 space-y-1">
                     <li>Voice-to-voice conversational AI assistance</li>
-                    <li>Integration with 18+ third-party services and applications</li>
+                    <li>Integration with 12+ third-party services and applications</li>
                     <li>Smart memory management and habit learning</li>
                     <li>Cross-platform mobile applications (iOS and Android)</li>
                     <li>Always-on wake word detection (Android devices)</li>

@@ -22,7 +22,6 @@ import Link from 'next/link'
 const integrations = [
   { name: "Notion", category: "Project Management", icon: FileText, color: "bg-black" },
   { name: "Slack", category: "Team Communication", icon: MessageSquare, color: "bg-purple-600" },
-  { name: "Trello", category: "Project Management", icon: Users, color: "bg-blue-600" },
   { name: "Zoom", category: "Video Conferencing", icon: Video, color: "bg-blue-500" },
   { name: "Todoist", category: "Task Management", icon: CheckCircle, color: "bg-red-500" },
   { name: "Perplexity", category: "AI Research", icon: Brain, color: "bg-indigo-600" },
@@ -57,7 +56,7 @@ const features = [
   {
     icon: Zap,
     title: "Instant Integrations",
-    description: "Connect to 18+ services with seamless authentication and setup"
+    description: "Connect to multiple services with seamless authentication and setup"
   }
 ]
 
@@ -91,7 +90,7 @@ export default function HomePage() {
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Connect all your favorite apps and services with voice-controlled intelligence. 
-            Juniper integrates seamlessly with 18+ platforms to streamline your workflow.
+            Juniper integrates seamlessly with 12+ platforms to streamline your workflow.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/integration/setup">
@@ -135,7 +134,7 @@ export default function HomePage() {
       {/* Integrations Preview */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h3 className="text-3xl font-bold text-gray-900 mb-4">18+ Integrations</h3>
+          <h3 className="text-3xl font-bold text-gray-900 mb-4">Integrations</h3>
           <p className="text-lg text-gray-600">Connect with all your essential tools and services</p>
         </div>
         
