@@ -44,41 +44,58 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'POST') {
     
     // For POST requests, include the body
     if (method === 'POST') {
-      fetchOptions.body = await request.text();
+      const contentType = request.headers.get('content-type') || '';
+      
+      // Handle form data submissions
+      if (contentType.includes('application/x-www-form-urlencoded')) {
+        fetchOptions.body = await request.text();
+        if (fetchOptions.headers && typeof fetchOptions.headers === 'object') {
+          (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/x-www-form-urlencoded';
+        }
+      } else {
+        fetchOptions.body = await request.text();
+      }
     }
     
     // Make the request to the edge function
     const response = await fetch(targetUrl, fetchOptions);
     
-    const contentType = response.headers.get('content-type');
+    const responseText = await response.text();
+    const contentType = response.headers.get('content-type') || '';
     
-    // If it's HTML, return it for rendering
-    if (contentType?.includes('text/html')) {
-      const htmlContent = await response.text();
-      return new NextResponse(htmlContent, {
+    // Log the response for debugging
+    console.log('Edge function response:', {
+      status: response.status,
+      contentType,
+      bodyLength: responseText.length,
+      bodyPreview: responseText.substring(0, 200)
+    });
+    
+    // Check if the response is JSON by trying to parse it
+    try {
+      const jsonData = JSON.parse(responseText);
+      return NextResponse.json(jsonData, {
+        status: response.status,
+      });
+    } catch {
+      // Not JSON, check if it's HTML
+      if (contentType.includes('text/html') || responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+        return new NextResponse(responseText, {
+          status: response.status,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        });
+      }
+      
+      // Return as plain text for other content
+      return new NextResponse(responseText, {
         status: response.status,
         headers: {
-          'Content-Type': 'text/html',
+          'Content-Type': 'text/plain',
         },
       });
     }
-    
-    // For JSON responses (like form submissions), return as JSON
-    if (contentType?.includes('application/json')) {
-      const jsonContent = await response.json();
-      return NextResponse.json(jsonContent, {
-        status: response.status,
-      });
-    }
-    
-    // For other content types, return as text
-    const textContent = await response.text();
-    return new NextResponse(textContent, {
-      status: response.status,
-      headers: {
-        'Content-Type': contentType || 'text/plain',
-      },
-    });
     
   } catch (error) {
     console.error('Error proxying to edge function:', error);
