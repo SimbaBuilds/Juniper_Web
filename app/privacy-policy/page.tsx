@@ -145,7 +145,7 @@ export default function PrivacyPolicyPage() {
                   </ul>
                   <p className="text-gray-600 mb-4">
                     <strong>Supported Integrations:</strong> Notion, Slack, Todoist, 
-                    Perplexity, Google Workspace, Microsoft Office 365, Twilio, and others.
+                    Perplexity, Google Workspace, Microsoft Office 365, Sendgrid, and others.
                   </p>
                 </section>
 

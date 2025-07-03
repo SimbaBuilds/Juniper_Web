@@ -124,12 +124,12 @@ serve(async (req)=>{
           success = await processPerplexitySetup(formData.apiKey, tokenData, supabase);
           if (!success) errorMessage = 'Failed to validate API key';
         }
-      } else if (service.toLowerCase() === 'twilio') {
+      } else if (service.toLowerCase() === 'sendgrid') {
         if (!formData.accountSid || !formData.apiKey || !formData.apiSecret || !formData.phoneNumber) {
-          errorMessage = 'All Twilio credentials are required';
+          errorMessage = 'All Sendgrid credentials are required';
         } else {
-          // Validate and store Twilio credentials
-          success = await processTwilioSetup(formData, tokenData, supabase);
+          // Validate and store Sendgrid credentials
+          success = await processSendgridSetup(formData, tokenData, supabase);
           if (!success) errorMessage = 'Failed to validate credentials';
         }
       } else {
@@ -234,7 +234,7 @@ async function processPerplexitySetup(apiKey, tokenData, supabase) {
     return false;
   }
 }
-async function processTwilioSetup(formData, tokenData, supabase) {
+async function processSendgridSetup(formData, tokenData, supabase) {
   try {
     const { accountSid, apiKey, apiSecret, phoneNumber } = formData;
     // Basic validation
@@ -261,7 +261,7 @@ async function processTwilioSetup(formData, tokenData, supabase) {
     }).eq('id', tokenData.integration_id);
     return true;
   } catch (error) {
-    console.error('Error processing Twilio setup:', error);
+    console.error('Error processing Sendgrid setup:', error);
     return false;
   }
 }
@@ -292,7 +292,7 @@ function generateErrorPage(message) {
 }
 function generateFormPage(token, service, serviceName) {
   const isPerplexity = service === 'perplexity';
-  const isTwilio = service === 'twilio';
+  const isSendgrid = service === 'sendgrid';
   return `
     <!DOCTYPE html>
     <html>
@@ -356,34 +356,34 @@ function generateFormPage(token, service, serviceName) {
         </form>
         ` : ''}
 
-        ${isTwilio ? `
+        ${isSendgrid ? `
         <div class="instructions">
           <h3>📝 Instructions</h3>
           <ol>
-            <li>Sign up at <a href="https://twilio.com" target="_blank">twilio.com</a> ($15 free credit)</li>
-            <li>Go to Console > Account > API keys & tokens</li>
-            <li>Copy your Account SID</li>
-            <li>Create a new API Key (gives you Key + Secret)</li>
-            <li>Buy a phone number in Console > Phone Numbers</li>
+            <li>Sign up at <a href="https://sendgrid.com" target="_blank">sendgrid.com</a> (free tier available)</li>
+            <li>Go to Settings > API Keys</li>
+            <li>Copy your Account ID</li>
+            <li>Create a new API Key</li>
+            <li>Configure your sender identity for email</li>
           </ol>
         </div>
 
         <form id="setupForm">
           <div class="form-group">
-            <label for="accountSid">Account SID</label>
-            <input type="text" id="accountSid" name="accountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <label for="accountSid">Account ID</label>
+            <input type="text" id="accountSid" name="accountSid" placeholder="sg.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
           </div>
           <div class="form-group">
             <label for="apiKey">API Key</label>
-            <input type="text" id="apiKey" name="apiKey" placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <input type="text" id="apiKey" name="apiKey" placeholder="SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
           </div>
           <div class="form-group">
             <label for="apiSecret">API Secret</label>
-            <input type="password" id="apiSecret" name="apiSecret" placeholder="Your API secret" required>
+            <input type="password" id="apiSecret" name="apiSecret" placeholder="Your API key" required>
           </div>
           <div class="form-group">
-            <label for="phoneNumber">Twilio Phone Number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="+1234567890" required>
+            <label for="phoneNumber">Sender Email</label>
+            <input type="email" id="phoneNumber" name="phoneNumber" placeholder="your-email@example.com" required>
           </div>
           <button type="submit" class="submit-btn">Complete Setup</button>
         </form>

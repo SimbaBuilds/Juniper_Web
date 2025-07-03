@@ -124,16 +124,16 @@ const integrations = [
     features: ["Team Communication", "Video Meetings", "File Collaboration", "App Integration"]
   },
   { 
-    name: "Twilio", 
-    category: "SMS", 
+    name: "Sendgrid", 
+    category: "Email", 
     icon: Phone, 
     color: "bg-red-500",
-    description: "Programmable SMS and communication APIs for messaging",
-    features: ["SMS", "Text Messaging", "Communication APIs", "Automation"]
+    description: "Reliable email delivery service for transactional and marketing emails",
+    features: ["Email Delivery", "Email Marketing", "Email APIs", "Analytics"]
   }
 ]
 
-const categories = ["All", "Project Management", "Team Communication", "Cloud Storage", "Task Management", "AI Research", "Spreadsheets", "Documents", "Email", "Calendar", "SMS"]
+const categories = ["All", "Project Management", "Team Communication", "Cloud Storage", "Task Management", "AI Research", "Spreadsheets", "Documents", "Email", "Calendar"]
 
 export default function IntegrationsPage() {
   const [searchTerm, setSearchTerm] = useState('')
