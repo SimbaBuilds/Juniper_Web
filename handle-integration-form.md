@@ -124,12 +124,12 @@ serve(async (req)=>{
           success = await processPerplexitySetup(formData.apiKey, tokenData, supabase);
           if (!success) errorMessage = 'Failed to validate API key';
         }
-      } else if (service.toLowerCase() === 'sendgrid') {
+      } else if (service.toLowerCase() === 'textbelt') {
         if (!formData.accountSid || !formData.apiKey || !formData.apiSecret || !formData.phoneNumber) {
-          errorMessage = 'All Sendgrid credentials are required';
+          errorMessage = 'All Textbelt credentials are required';
         } else {
-          // Validate and store Sendgrid credentials
-          success = await processSendgridSetup(formData, tokenData, supabase);
+          // Validate and store Textbelt credentials
+          success = await processTextbeltSetup(formData, tokenData, supabase);
           if (!success) errorMessage = 'Failed to validate credentials';
         }
       } else {
@@ -234,7 +234,7 @@ async function processPerplexitySetup(apiKey, tokenData, supabase) {
     return false;
   }
 }
-async function processSendgridSetup(formData, tokenData, supabase) {
+async function processTextbeltSetup(formData, tokenData, supabase) {
   try {
     const { accountSid, apiKey, apiSecret, phoneNumber } = formData;
     // Basic validation
@@ -261,7 +261,7 @@ async function processSendgridSetup(formData, tokenData, supabase) {
     }).eq('id', tokenData.integration_id);
     return true;
   } catch (error) {
-    console.error('Error processing Sendgrid setup:', error);
+    console.error('Error processing Textbelt setup:', error);
     return false;
   }
 }
@@ -292,7 +292,7 @@ function generateErrorPage(message) {
 }
 function generateFormPage(token, service, serviceName) {
   const isPerplexity = service === 'perplexity';
-  const isSendgrid = service === 'sendgrid';
+  const isTextbelt = service === 'textbelt';
   return `
     <!DOCTYPE html>
     <html>
@@ -356,34 +356,34 @@ function generateFormPage(token, service, serviceName) {
         </form>
         ` : ''}
 
-        ${isSendgrid ? `
+        ${isTextbelt ? `
         <div class="instructions">
           <h3>📝 Instructions</h3>
           <ol>
-            <li>Sign up at <a href="https://sendgrid.com" target="_blank">sendgrid.com</a> (free tier available)</li>
-            <li>Go to Settings > API Keys</li>
-            <li>Copy your Account ID</li>
-            <li>Create a new API Key</li>
-            <li>Configure your sender identity for email</li>
+            <li>Sign up at <a href="https://textbelt.com" target="_blank">textbelt.com</a> (free tier available)</li>
+            <li>Go to your account dashboard</li>
+            <li>Copy your API key</li>
+            <li>Generate or view your API key</li>
+            <li>No additional setup required</li>
           </ol>
         </div>
 
         <form id="setupForm">
           <div class="form-group">
-            <label for="accountSid">Account ID</label>
-            <input type="text" id="accountSid" name="accountSid" placeholder="sg.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <label for="accountSid">API Key</label>
+            <input type="text" id="accountSid" name="accountSid" placeholder="textbelt-xxxxxxxxxxxxxxxxxxxxxxxx" required>
           </div>
           <div class="form-group">
-            <label for="apiKey">API Key</label>
-            <input type="text" id="apiKey" name="apiKey" placeholder="SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <label for="apiKey">Additional Field</label>
+            <input type="text" id="apiKey" name="apiKey" placeholder="optional-value" required>
           </div>
           <div class="form-group">
             <label for="apiSecret">API Secret</label>
-            <input type="password" id="apiSecret" name="apiSecret" placeholder="Your API key" required>
+            <input type="password" id="apiSecret" name="apiSecret" placeholder="Optional additional field" required>
           </div>
           <div class="form-group">
-            <label for="phoneNumber">Sender Email</label>
-            <input type="email" id="phoneNumber" name="phoneNumber" placeholder="your-email@example.com" required>
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="+1234567890" required>
           </div>
           <button type="submit" class="submit-btn">Complete Setup</button>
         </form>

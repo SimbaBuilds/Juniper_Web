@@ -124,16 +124,16 @@ const integrations = [
     features: ["Team Communication", "Video Meetings", "File Collaboration", "App Integration"]
   },
   { 
-    name: "Sendgrid", 
-    category: "Email", 
+    name: "Textbelt", 
+    category: "SMS", 
     icon: Phone, 
     color: "bg-red-500",
-    description: "Reliable email delivery service for transactional and marketing emails",
-    features: ["Email Delivery", "Email Marketing", "Email APIs", "Analytics"]
+    description: "Simple SMS API for sending text messages programmatically",
+    features: ["SMS Delivery", "Text Messaging", "SMS APIs", "Simple Integration"]
   }
 ]
 
-const categories = ["All", "Project Management", "Team Communication", "Cloud Storage", "Task Management", "AI Research", "Spreadsheets", "Documents", "Email", "Calendar"]
+const categories = ["All", "Project Management", "Team Communication", "Cloud Storage", "Task Management", "AI Research", "Spreadsheets", "Documents", "Email", "Calendar", "SMS"]
 
 export default function IntegrationsPage() {
   const [searchTerm, setSearchTerm] = useState('')

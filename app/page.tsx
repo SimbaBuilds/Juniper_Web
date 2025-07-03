@@ -32,7 +32,7 @@ const integrations = [
   { name: "Outlook Calendar", category: "Calendar", icon: Calendar, color: "bg-blue-600" },
   { name: "Outlook Mail", category: "Email", icon: MessageSquare, color: "bg-blue-600" },
   { name: "Microsoft Teams", category: "Communication", icon: Users, color: "bg-purple-700" },
-  { name: "Sendgrid", category: "Email", icon: Phone, color: "bg-red-500" }
+  { name: "Textbelt", category: "SMS", icon: Phone, color: "bg-red-500" }
 ]
 
 const features = [

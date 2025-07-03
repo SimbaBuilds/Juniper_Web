@@ -161,7 +161,7 @@ export default function TermsOfUsePage() {
                     <li>You can disconnect integrations at any time through your account settings</li>
                   </ul>
                   <p className="text-gray-600 mb-4">
-                    <strong>Supported Services:</strong> Notion, Slack, Todoist, Perplexity, Google Workspace, Microsoft Office 365, Sendgrid, and others as specified in the application.
+                    <strong>Supported Services:</strong> Notion, Slack, Todoist, Perplexity, Google Workspace, Microsoft Office 365, Textbelt, and others as specified in the application.
                   </p>
                 </section>
 
