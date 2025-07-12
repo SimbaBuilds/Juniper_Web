@@ -2,18 +2,14 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { 
   Mic, 
   Brain, 
   Zap,
-  Smartphone,
-  Settings
+  Smartphone
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { fetchServicesWithTags, ServiceWithTags } from '@/lib/services'
 
 
 const features = [
@@ -29,34 +25,17 @@ const features = [
   },
   {
     icon: Brain,
-    title: "Smart Memory Management",
-    description: "Intelligent or manual memory management to optimize your workflow"
+    title: "Smart Resource Management",
+    description: "Intuitive Storage of Memories and Resources to help your AI serve you"
   },
   {
     icon: Zap,
-    title: "Instant Integrations",
+    title: "12+ Integrations",
     description: "Connect to multiple services with seamless authentication and setup"
   }
 ]
 
 export default function HomePage() {
-  const [services, setServices] = useState<ServiceWithTags[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const loadServices = async () => {
-      try {
-        const servicesData = await fetchServicesWithTags()
-        setServices(servicesData)
-      } catch (error) {
-        console.error('Error loading services:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadServices()
-  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -87,19 +66,9 @@ export default function HomePage() {
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Connect all your favorite apps and services with voice-controlled intelligence. 
-            Juniper integrates seamlessly with {services.length}+ platforms to streamline your workflow.
+            Juniper integrates seamlessly with multiple platforms to streamline your workflow.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {/* <Link href="/integration/setup">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Start Your Setup
-              </Button>
-            </Link>
-            <Link href="/integrations">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                Explore Integrations
-              </Button>
-            </Link> */}
           </div>
         </div>
       </section>
@@ -128,39 +97,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Integrations Preview */}
+      {/* Integrations Section */}
       <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h3 className="text-3xl font-bold text-gray-900 mb-4">Integrations</h3>
-          <p className="text-lg text-gray-600">Connect with all your essential tools and services</p>
-        </div>
-        
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">Loading integrations...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            {services.slice(0, 12).map((service) => (
-              <Card key={service.id} className="p-4 text-center border-0 shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Settings className="h-6 w-6 text-white" />
-                </div>
-                <h4 className="font-semibold text-sm text-gray-900 mb-1">{service.service_name}</h4>
-                {service.tags.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {service.tags[0]}
-                  </Badge>
-                )}
-              </Card>
-            ))}
-          </div>
-        )}
-        
         <div className="text-center">
+          <h3 className="text-3xl font-bold text-gray-900 mb-4">Explore Our Integrations</h3>
+          <p className="text-lg text-gray-600 mb-8">
+            Connect Juniper with your favorite apps and services
+          </p>
           <Link href="/integrations">
-            <Button variant="outline" size="lg">
-              View All Integrations
+            <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+              View Integrations
             </Button>
           </Link>
         </div>

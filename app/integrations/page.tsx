@@ -39,6 +39,14 @@ export default function IntegrationsPage() {
   const allCategories = ['All', ...new Set(services.flatMap(service => service.tags))]
 
   const filteredIntegrations = services.filter(service => {
+    // Hide Twitter/X integration
+    const isTwitterOrX = service.service_name.toLowerCase().includes('twitter') || 
+                        service.service_name.toLowerCase() === 'x'
+    
+    if (isTwitterOrX) {
+      return false
+    }
+    
     const matchesSearch = service.service_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          service.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -69,9 +77,9 @@ export default function IntegrationsPage() {
       {/* Page Header */}
       <section className="container mx-auto px-4 py-12">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">All Integrations</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Integrations</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect Juniper with your favorite apps and services to streamline your workflow and boost productivity.
+            {/* Connect Juniper with your favorite apps and services to streamline your workflow and boost productivity. */}
           </p>
         </div>
 
