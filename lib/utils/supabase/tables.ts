@@ -14,7 +14,7 @@ export type UserProfile = {
     wake_word_detection_enabled: boolean;
     selected_deepgram_voice: string;
     timezone: string;
-    preferences: Record<string, any>;
+    preferences: Record<string, unknown>;
     // XAI LiveSearch settings
     xai_live_search_enabled?: boolean;
     xai_live_search_safe_search?: boolean;
@@ -43,7 +43,7 @@ export type UserProfile = {
     summary?: string;
     conversation_type: string;
     status: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
     created_at: Date;
     updated_at: Date;
   };
@@ -62,8 +62,8 @@ export type UserProfile = {
     content: string;
     audio_url?: string;
     transcription_confidence?: number;
-    tool_calls?: Record<string, any>;
-    metadata: Record<string, any>;
+    tool_calls?: Record<string, unknown>;
+    metadata: Record<string, unknown>;
     created_at: Date;
   };
   
@@ -115,7 +115,7 @@ export type UserProfile = {
     user_id: string;
     habit_type: string;
     pattern: string;
-    frequency_data: Record<string, any>;
+    frequency_data: Record<string, unknown>;
     confidence_score: number;
     suggested_automation?: string;
     automation_approved: boolean;
@@ -149,8 +149,8 @@ export type UserProfile = {
     id: string;
     user_id: string;
     name: string;
-    trigger_conditions: Record<string, any>;
-    actions: Record<string, any>;
+    trigger_conditions: Record<string, unknown>;
+    actions: Record<string, unknown>;
     is_active: boolean;
     execution_count: number;
     last_executed?: Date;
@@ -168,7 +168,7 @@ export type UserProfile = {
   export type ConfigForm = {
     id: string;
     service_id: string;
-    json: Record<string, any>;
+    json: Record<string, unknown>;
     setup_instructions?: string;
     updated_at: Date;
   };
@@ -201,7 +201,7 @@ export type UserProfile = {
     workspace_name?: string;
     workspace_icon?: string;
     workspace_id?: string;
-    owner_info?: Record<string, any>;
+    owner_info?: Record<string, unknown>;
     duplicated_template_id?: string;
     // Common sync fields
     last_sync?: Date;
@@ -209,7 +209,7 @@ export type UserProfile = {
     client_id?: string;
     client_secret_id?: string;
     client_secret_value?: string;
-    configuration?: Record<string, any>; // New field for integration configuration
+    configuration?: Record<string, unknown>; // New field for integration configuration
   };
   
   export const integrationFields = [
@@ -258,9 +258,9 @@ export type UserProfile = {
     name: string;
     display_name?: string;
     description?: string;
-    parameters?: Record<string, any>;  // JSON schema for input parameters
-    returns?: Record<string, any>;     // JSON schema for output format
-    example?: Record<string, any>;     // Example usage
+    parameters?: Record<string, unknown>;  // JSON schema for input parameters
+    returns?: Record<string, unknown>;     // JSON schema for output format
+    example?: Record<string, unknown>;     // Example usage
     run_script?: string;               // Executable Python script/logic
     endpoint_url?: string;            // API endpoint if applicable
     http_method?: string;             // GET, POST, etc.
@@ -296,7 +296,7 @@ export type UserProfile = {
     request_id: string;          // Unique identifier for the request to cancel
     request_type: string;        // Type of request (chat, integration, etc.)
     status: string;              // pending, processed, expired
-    metadata: Record<string, any>; // Additional cancellation context
+    metadata: Record<string, unknown>; // Additional cancellation context
     created_at: Date;
     processed_at?: Date;
   };
@@ -313,7 +313,7 @@ export type UserProfile = {
     service_name: string;
     completed_steps: string[];      // List of completed step names
     current_status: string;         // not_started, in_progress, form_ready, auth_ready, completed, failed
-    state_data: Record<string, any>; // Additional state information
+    state_data: Record<string, unknown>; // Additional state information
     created_at: Date;
     last_updated: Date;
     updated_by?: string;

@@ -99,7 +99,7 @@ export const enhancedMockConfigs = [...mockFormConfigs, fallbackFormConfig].map(
   json: {
     ...config.json,
     // Add mapping instructions for better field mapping
-    mapping_instructions: config.json.mapping_instructions || generateMappingInstructions(config.json.form_fields),
+    mapping_instructions: config.json.mapping_instructions || generateMappingInstructions(config.json.form_fields as FormField[]),
     mapping_confidence: config.json.mapping_confidence || 0.85,
     cached: config.json.cached || false
   }
