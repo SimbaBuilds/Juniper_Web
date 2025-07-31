@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "2D46F842HA.com.anonymous.MobileJarvisNative",
+        "paths": [
+          "/oauth/*/callback"
+        ],
+        "components": [
+          {
+            "/": "/oauth/*/callback",
+            "comment": "OAuth callback paths for all services"
+          }
+        ]
+      }
+    ]
+  }
+}
