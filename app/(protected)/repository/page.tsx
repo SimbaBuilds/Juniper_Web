@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { RESOURCE_TYPES } from '@/app/lib/repository/types'
-import { Resource } from '@/lib/utils/supabase/tables'
+import { Resource, Tag } from '@/lib/utils/supabase/tables'
 import { ResourceModal } from '@/app/components/repository/resource-modal'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { AddResourceSection } from '@/app/components/repository/add-resource-section'
+import { Plus, Pencil, Trash2, Tags } from 'lucide-react'
 import { createClient } from '@/lib/utils/supabase/client'
+import { createResourceWithTags, updateResourceWithTags } from '@/lib/client-services'
 
 function formatLastAccessed(date: Date): string {
   const now = new Date();
@@ -22,13 +24,16 @@ function formatLastAccessed(date: Date): string {
   }
 }
 
+interface ResourceWithTags extends Resource {
+  tags?: Tag[]
+}
+
 export default function RepositoryPage() {
   const [user, setUser] = useState<{ id: string } | null>(null)
-  const [resources, setResources] = useState<Resource[]>([])
+  const [resources, setResources] = useState<ResourceWithTags[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
+  const [selectedResource, setSelectedResource] = useState<ResourceWithTags | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -42,10 +47,17 @@ export default function RepositoryPage() {
           return
         }
         
-        // Fetch resources
+        // Fetch resources with tags
         const { data: resourcesData, error: resourcesError } = await supabase
           .from('resources')
-          .select('*')
+          .select(`
+            *,
+            tag_1:tags!resources_tag_1_id_fkey(id, name, type),
+            tag_2:tags!resources_tag_2_id_fkey(id, name, type),
+            tag_3:tags!resources_tag_3_id_fkey(id, name, type),
+            tag_4:tags!resources_tag_4_id_fkey(id, name, type),
+            tag_5:tags!resources_tag_5_id_fkey(id, name, type)
+          `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
         
@@ -54,8 +66,24 @@ export default function RepositoryPage() {
           return
         }
         
+        // Transform the data to include tags array
+        const resourcesWithTags = resourcesData?.map(resource => {
+          const tags = [
+            resource.tag_1,
+            resource.tag_2,
+            resource.tag_3,
+            resource.tag_4,
+            resource.tag_5
+          ].filter(Boolean) // Remove null values
+          
+          return {
+            ...resource,
+            tags
+          }
+        }) || []
+        
         setUser(user)
-        setResources(resourcesData || [])
+        setResources(resourcesWithTags)
       } catch (error) {
         console.error('Error loading data:', error)
       } finally {
@@ -65,14 +93,52 @@ export default function RepositoryPage() {
     loadData()
   }, [])
 
-  const handleAddResource = () => {
-    setModalMode('add')
-    setSelectedResource(null)
-    setShowModal(true)
+  const handleAddResource = async (resourceData: Partial<Resource>, tagIds: string[]) => {
+    if (!user) return
+    
+    try {
+      const newResource = await createResourceWithTags(user.id, resourceData, tagIds)
+      
+      // Fetch the resource with tags for display
+      const supabase = createClient()
+      const { data: resourceWithTags } = await supabase
+        .from('resources')
+        .select(`
+          *,
+          tag_1:tags!resources_tag_1_id_fkey(id, name, type),
+          tag_2:tags!resources_tag_2_id_fkey(id, name, type),
+          tag_3:tags!resources_tag_3_id_fkey(id, name, type),
+          tag_4:tags!resources_tag_4_id_fkey(id, name, type),
+          tag_5:tags!resources_tag_5_id_fkey(id, name, type)
+        `)
+        .eq('id', newResource.id)
+        .single()
+      
+      if (resourceWithTags) {
+        const tags = [
+          resourceWithTags.tag_1,
+          resourceWithTags.tag_2,
+          resourceWithTags.tag_3,
+          resourceWithTags.tag_4,
+          resourceWithTags.tag_5
+        ].filter(Boolean)
+        
+        setResources(prev => [{ ...resourceWithTags, tags }, ...prev])
+      }
+    } catch (error) {
+      console.error('Error saving resource:', error)
+      
+      // Check if this is a resource limit error
+      const errorStr = String(error).toLowerCase()
+      if (errorStr.includes('resource limit exceeded') || errorStr.includes('p0001')) {
+        alert('Resource Limit Reached\n\nYou have reached the maximum number of resources allowed. Please delete some existing resources before adding new ones.')
+      } else {
+        alert('Failed to save resource')
+      }
+    }
   }
 
-  const handleEditResource = (resource: Resource) => {
-    setModalMode('edit')
+  const handleEditResource = (resource: ResourceWithTags) => {
     setSelectedResource(resource)
     setShowModal(true)
   }
@@ -96,45 +162,46 @@ export default function RepositoryPage() {
     }
   }
 
-  const handleSaveResource = async (resourceData: Partial<Resource>) => {
+  const handleSaveResource = async (resourceData: Partial<Resource>, tagIds: string[]) => {
     if (!user) return
     
     try {
-      const supabase = createClient()
-      
-      if (modalMode === 'add') {
-        const { data: newResource, error } = await supabase
-          .from('resources')
-          .insert([{ ...resourceData, user_id: user.id }])
-          .select()
-          .single()
+      if (selectedResource) {
+        await updateResourceWithTags(selectedResource.id, resourceData, tagIds)
         
-        if (error) throw error
-        
-        setResources(prev => [newResource, ...prev])
-      } else if (selectedResource) {
-        const { data: updatedResource, error } = await supabase
+        // Fetch the updated resource with tags for display
+        const supabase = createClient()
+        const { data: resourceWithTags } = await supabase
           .from('resources')
-          .update({ ...resourceData, updated_at: new Date() })
+          .select(`
+            *,
+            tag_1:tags!resources_tag_1_id_fkey(id, name, type),
+            tag_2:tags!resources_tag_2_id_fkey(id, name, type),
+            tag_3:tags!resources_tag_3_id_fkey(id, name, type),
+            tag_4:tags!resources_tag_4_id_fkey(id, name, type),
+            tag_5:tags!resources_tag_5_id_fkey(id, name, type)
+          `)
           .eq('id', selectedResource.id)
-          .select()
           .single()
         
-        if (error) throw error
-        
-        setResources(prev => prev.map(r => r.id === selectedResource.id ? updatedResource : r))
+        if (resourceWithTags) {
+          const tags = [
+            resourceWithTags.tag_1,
+            resourceWithTags.tag_2,
+            resourceWithTags.tag_3,
+            resourceWithTags.tag_4,
+            resourceWithTags.tag_5
+          ].filter(Boolean)
+          
+          setResources(prev => prev.map(r => 
+            r.id === selectedResource.id ? { ...resourceWithTags, tags } : r
+          ))
+        }
       }
       setShowModal(false)
     } catch (error) {
       console.error('Error saving resource:', error)
-      
-      // Check if this is a resource limit error
-      const errorStr = String(error).toLowerCase()
-      if (errorStr.includes('resource limit exceeded') || errorStr.includes('p0001')) {
-        alert('Resource Limit Reached\n\nYou have reached the maximum number of resources allowed. Please delete some existing resources before adding new ones.')
-      } else {
-        alert('Failed to save resource')
-      }
+      alert('Failed to save resource')
     }
   }
 
@@ -150,27 +217,20 @@ export default function RepositoryPage() {
   const resourcesByType = RESOURCE_TYPES.reduce((acc, type) => {
     acc[type.value] = resources.filter(r => r.type === type.value)
     return acc
-  }, {} as Record<string, Resource[]>)
+  }, {} as Record<string, ResourceWithTags[]>)
 
   // Get expiring resources (relevance_score < 10)
   const expiringResources = resources.filter(r => r.relevance_score < 10)
 
   return (
-    <div className="space-y-8 relative">
-      {/* Floating Add Button */}
-      <button
-        onClick={handleAddResource}
-        className="fixed bottom-6 right-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-4 shadow-lg transition-colors z-50"
-        title="Add Resource"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Repository</h1>
-        <p className="text-muted-foreground">
-          Your saved memories, samples, references, and notes.
-        </p>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Repository</h1>
+          <p className="text-muted-foreground">
+            Your saved memories, samples, references, and notes.
+          </p>
+        </div>
       </div>
 
       {/* Overview Stats */}
@@ -185,6 +245,9 @@ export default function RepositoryPage() {
           </div>
         ))}
       </div>
+
+      {/* Add Resource Section */}
+      <AddResourceSection onSave={handleAddResource} />
 
       {/* Expiring Resources */}
       {expiringResources.length > 0 && (
@@ -238,6 +301,20 @@ export default function RepositoryPage() {
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium">Instructions:</span> {resource.instructions}
                     </p>
+                  </div>
+                )}
+
+                {resource.tags && resource.tags.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Tags className="h-4 w-4 text-muted-foreground" />
+                    {resource.tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground"
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
@@ -308,6 +385,20 @@ export default function RepositoryPage() {
                         </p>
                       </div>
                     )}
+
+                    {resource.tags && resource.tags.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Tags className="h-4 w-4 text-muted-foreground" />
+                        {resource.tags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground"
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -322,12 +413,7 @@ export default function RepositoryPage() {
           <p className="text-muted-foreground mb-4">
             Start building your repository by interacting with your AI assistant or click the + button to add manually.
           </p>
-          <button
-            onClick={handleAddResource}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md transition-colors"
-          >
-            Add Your First Resource
-          </button>
+          <AddResourceSection onSave={handleAddResource} />
         </div>
       )}
 
@@ -338,7 +424,7 @@ export default function RepositoryPage() {
         onClose={() => setShowModal(false)}
         onSave={handleSaveResource}
         resource={selectedResource}
-        mode={modalMode}
+        mode="edit"
       />
     </div>
   )

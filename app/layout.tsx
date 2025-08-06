@@ -16,21 +16,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Juniper - AI-Powered Mobile Assistant",
+    default: "Juniper - AI General Assistant Focused on Your Health and Wellness",
     template: "%s | Juniper"
   },
   description: "Connect all your favorite apps and services with voice-controlled intelligence. Juniper integrates seamlessly with over a dozen platforms to streamline your workflow.",
   keywords: ["mobile assistant", "AI", "integrations", "voice control", "productivity", "automation"],
   authors: [{ name: "Juniper Team" }],
   openGraph: {
-    title: "Juniper - AI-Powered Mobile Assistant",
+    title: "Juniper - AI General Assistant Focused on Your Health and Wellness",
     description: "Connect all your favorite apps and services with voice-controlled intelligence.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Juniper - AI-Powered Mobile Assistant",
+    title: "Juniper - AI General Assistant Focused on Your Health and Wellness",
     description: "Connect all your favorite apps and services with voice-controlled intelligence.",
   },
   robots: {
@@ -50,7 +50,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider
-          defaultTheme="light"
+          defaultTheme="default"
+          defaultMode="light"
           storageKey="juniper-ui-theme"
         >
           <AuthProvider>

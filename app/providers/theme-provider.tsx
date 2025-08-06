@@ -34,7 +34,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'vintage',
+  defaultTheme = 'default',
   defaultMode = 'light',
   storageKey = 'juniper-ui-theme',
   ...props

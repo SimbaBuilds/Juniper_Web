@@ -14,7 +14,7 @@ export type UserProfile = {
   wake_word_detection_enabled: boolean;
   selected_deepgram_voice: string;
   timezone: string;
-  preferences: Record<string, unknown>;
+  preferences: Record<string, any>;
   // XAI LiveSearch settings
   xai_live_search_enabled?: boolean;
   xai_live_search_safe_search?: boolean;
@@ -29,6 +29,10 @@ export type UserProfile = {
   requests_today: number;
   requests_week: number;
   requests_month: number;
+  // Service-specific usage tracking (monthly only)
+  perplexity_usage_month: number;
+  twitter_x_usage_month: number;
+  textbelt_usage_month: number;
   created_at: Date;
   updated_at: Date;
 };
@@ -37,7 +41,9 @@ export const userProfileFields = [
   'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
   'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
   'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags', 'enabled_system_integrations',
-  'requests_today', 'requests_week', 'requests_month', 'created_at', 'updated_at'
+  'requests_today', 'requests_week', 'requests_month', 
+  'perplexity_usage_month', 'twitter_x_usage_month', 'textbelt_usage_month',
+  'created_at', 'updated_at'
 ] as const;
 export type UserProfileField = (typeof userProfileFields)[number];
 
@@ -48,7 +54,7 @@ export type Conversation = {
   summary?: string;
   conversation_type: string;
   status: string;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, any>;
   created_at: Date;
   updated_at: Date;
 };
@@ -67,8 +73,8 @@ export type Message = {
   content: string;
   audio_url?: string;
   transcription_confidence?: number;
-  tool_calls?: Record<string, unknown>;
-  metadata: Record<string, unknown>;
+  tool_calls?: Record<string, any>;
+  metadata: Record<string, any>;
   created_at: Date;
 };
 
@@ -135,8 +141,8 @@ export type Automation = {
   id: string;
   user_id: string;
   name: string;
-  trigger_conditions: Record<string, unknown>;
-  actions: Record<string, unknown>;
+  trigger_conditions: Record<string, any>;
+  actions: Record<string, any>;
   is_active: boolean;
   execution_count: number;
   last_executed?: Date;
@@ -175,7 +181,7 @@ export type Integration = {
   workspace_name?: string;
   workspace_icon?: string;
   workspace_id?: string;
-  owner_info?: Record<string, unknown>;
+  owner_info?: Record<string, any>;
   duplicated_template_id?: string;
   // Common sync fields
   last_sync?: Date;
@@ -183,7 +189,7 @@ export type Integration = {
   client_id?: string;
   client_secret_id?: string;
   client_secret_value?: string;
-  configuration?: Record<string, unknown>; // New field for integration configuration
+  configuration?: Record<string, any>; // New field for integration configuration
 };
 
 export const integrationFields = [
@@ -233,9 +239,9 @@ export type ServiceTool = {
   name: string;
   display_name?: string;
   description?: string;
-  parameters?: Record<string, unknown>;  // JSON schema for input parameters
-  returns?: Record<string, unknown>;     // JSON schema for output format
-  example?: Record<string, unknown>;     // Example usage
+  parameters?: Record<string, any>;  // JSON schema for input parameters
+  returns?: Record<string, any>;     // JSON schema for output format
+  example?: Record<string, any>;     // Example usage
   run_script?: string;               // Executable Python script/logic
   endpoint_url?: string;            // API endpoint if applicable
   http_method?: string;             // GET, POST, etc.
@@ -271,7 +277,7 @@ export type CancellationRequest = {
   request_id: string;          // Unique identifier for the request to cancel
   request_type: string;        // Type of request (chat, integration, etc.)
   status: string;              // pending, processed, expired
-  metadata: Record<string, unknown>; // Additional cancellation context
+  metadata: Record<string, any>; // Additional cancellation context
   created_at: Date;
   processed_at?: Date;
 };
@@ -351,7 +357,7 @@ export type Request = {
   request_id: string;              // Unique identifier for tracking this specific request
   request_type: string;            // Type of request (chat, integration, etc.)
   status: string;                  // pending, processing, completed, failed, cancelled
-  metadata: Record<string, unknown>;   // Additional request context and data
+  metadata: Record<string, any>;   // Additional request context and data
   image_url?: string;              // Optional image URL for chat requests with image attachments
   created_at: Date;
   updated_at: Date;
@@ -384,20 +390,6 @@ export const hotPhraseFields = [
   'last_used', 'created_at', 'updated_at'
 ] as const;
 export type HotPhraseField = (typeof hotPhraseFields)[number];
-
-export type ConfigForm = {
-  id: string;
-  service_id: string;
-  setup_instructions: string;
-  json: Record<string, unknown>;
-  created_at?: Date;
-  updated_at?: Date;
-};
-
-export const configFormFields = [
-  'id', 'service_id', 'setup_instructions', 'json', 'created_at', 'updated_at'
-] as const;
-export type ConfigFormField = (typeof configFormFields)[number];
 
 
 

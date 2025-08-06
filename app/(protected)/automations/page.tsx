@@ -38,7 +38,7 @@ export default async function AutomationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-card p-6 rounded-lg border border-border">
           <h3 className="text-lg font-semibold text-foreground mb-2">Active Automations</h3>
-          <div className="text-3xl font-bold text-green-600 mb-1">{activeAutomations.length}</div>
+          <div className="text-3xl font-bold text-primary mb-1">{activeAutomations.length}</div>
           <p className="text-sm text-muted-foreground">Running workflows</p>
         </div>
         

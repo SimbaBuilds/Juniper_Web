@@ -19,23 +19,23 @@ const publicServicesCount = getPublicServices().length;
 const features = [
   {
     icon: Mic,
-    title: "Voice-to-Voice Chat",
-    description: "Hands-free conversation and configuration with natural voice commands"
+    title: "Chat Focused Processing",
+    description: "Control Juniper's behavior, complete integrations, and manage automations all through text and voice chat"
   },
   {
     icon: Smartphone,
-    title: "Cross-Platform Mobile",
-    description: "Available cross platform with Android featuring always-on wake word detection"
+    title: "Cross-Platform",
+    description: "Available on iOS and Android with a suplemental web application for enhanced views and easier resource management"
   },
   {
     icon: Brain,
     title: "Smart Resource Management",
-    description: "Intuitive Storage of Memories and Resources to help your AI serve you"
+    description: "Intuitive Storage of resources like memories and samples to help your AI do things like write emails in your tone or create personalized workoouts based on your health metrics"
   },
   {
     icon: Zap,
     title: `${publicServicesCount}+ Integrations`,
-    description: "Connect to multiple services with seamless authentication and setup"
+    description: "Connect with services like Oura, Gmail, Slack, and Notion"
   }
 ]
 
@@ -48,7 +48,7 @@ export default function HomePage() {
       <header className="container mx-auto px-4 py-8">
         <nav className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-blue-600" />
+            <Brain className="h-8 w-8" style={{color: 'var(--muted-blue)'}} />
             <Link href="/" className="text-2xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer">Juniper</Link>
           </div>
           <div className="flex items-center space-x-4">
@@ -83,8 +83,9 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-5xl font-bold text-foreground mb-6">
-            Your AI-Powered 
-            <span className="text-blue-600"> Mobile Assistant</span>
+          An AI Personal Assistant with a 
+ 
+            <span style={{color: 'var(--muted-blue)'}}> Health and Wellness Focus</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Connect all your favorite apps and services with voice-controlled intelligence. 
@@ -124,7 +125,7 @@ export default function HomePage() {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center border border-border shadow-lg bg-card">
+            <Card key={index} className="text-center border border-border shadow-lg bg-muted">
               <CardHeader>
                 <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />

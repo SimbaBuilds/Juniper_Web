@@ -77,7 +77,7 @@ export default async function IntegrationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-card p-6 rounded-lg border border-border">
           <h3 className="text-lg font-semibold text-foreground mb-2">Connected</h3>
-          <div className="text-3xl font-bold text-green-600 mb-1">
+          <div className="text-3xl font-bold text-primary mb-1">
             {publicIntegrations.filter(i => i.status === 'connected').length}
           </div>
           <p className="text-sm text-muted-foreground">Active integrations</p>
