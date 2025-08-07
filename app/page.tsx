@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from './providers/auth-provider'
 import { ThemeToggle } from './components/theme-toggle'
+import { PublicMobileMenu } from './components/public-mobile-menu'
 import { getPublicServices } from './lib/integrations/constants'
 
 const publicServicesCount = getPublicServices().length;
@@ -53,28 +54,31 @@ export default function HomePage() {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            {loading ? (
-              <div className="text-muted-foreground">Loading...</div>
-            ) : user ? (
-              <>
-                <span className="text-foreground">{user.email}</span>
-                <Link href="/dashboard">
-                  <Button variant="outline">Dashboard</Button>
-                </Link>
-                <Button variant="ghost" onClick={signOut}>
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost">Sign in</Button>
-                </Link>
-                <Link href="/signup">
-                  <Button>Get Started</Button>
-                </Link>
-              </>
-            )}
+            <div className="hidden md:flex items-center space-x-4">
+              {loading ? (
+                <div className="text-muted-foreground">Loading...</div>
+              ) : user ? (
+                <>
+                  <span className="text-foreground">{user.email}</span>
+                  <Link href="/dashboard">
+                    <Button variant="outline">Dashboard</Button>
+                  </Link>
+                  <Button variant="ghost" onClick={signOut}>
+                    Sign out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="ghost">Sign in</Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button>Get Started</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+            <PublicMobileMenu user={user} loading={loading} signOut={signOut} />
           </div>
         </nav>
       </header>

@@ -1,7 +1,6 @@
 import { createClient } from './utils/supabase/client'
-import { createClient as createServerClient } from './utils/supabase/server'
+import { createSupabaseAppServerClient } from './utils/supabase/server'
 import { Service, Automation, HotPhrase, Resource, Tag } from './utils/supabase/tables'
-import { cookies } from 'next/headers'
 
 export interface ServiceWithTags extends Service {
   tags: string[]
@@ -80,7 +79,7 @@ export async function fetchServicesWithTags(): Promise<ServiceWithTags[]> {
 }
 
 export async function fetchAutomations(userId?: string): Promise<Automation[]> {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('automations')
@@ -102,7 +101,7 @@ export async function fetchAutomations(userId?: string): Promise<Automation[]> {
 }
 
 export async function fetchHotPhrases(userId?: string): Promise<HotPhrase[]> {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('hot_phrases')
@@ -124,7 +123,7 @@ export async function fetchHotPhrases(userId?: string): Promise<HotPhrase[]> {
 }
 
 export async function fetchUserProfile(userId: string) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   const { data: profile, error } = await supabase
     .from('user_profiles')
@@ -141,7 +140,7 @@ export async function fetchUserProfile(userId: string) {
 }
 
 export async function fetchIntegrations(userId?: string) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('integrations')
@@ -170,7 +169,7 @@ export async function fetchIntegrations(userId?: string) {
 }
 
 export async function fetchResources(userId?: string) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('resources')
@@ -222,7 +221,7 @@ export async function getDashboardStats(userId: string) {
 }
 
 export async function createResource(userId: string, resourceData: Partial<Resource>) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   const { data: resource, error } = await supabase
     .from('resources')
@@ -239,7 +238,7 @@ export async function createResource(userId: string, resourceData: Partial<Resou
 }
 
 export async function updateResource(resourceId: string, resourceData: Partial<Resource>) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   const { data: resource, error } = await supabase
     .from('resources')
@@ -257,7 +256,7 @@ export async function updateResource(resourceId: string, resourceData: Partial<R
 }
 
 export async function deleteResource(resourceId: string) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   const { error } = await supabase
     .from('resources')
@@ -273,7 +272,7 @@ export async function deleteResource(resourceId: string) {
 }
 
 export async function fetchResourcesWithTags(userId?: string) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('resources')
@@ -318,7 +317,7 @@ export async function fetchResourcesWithTags(userId?: string) {
 }
 
 export async function getTags(userId?: string, types?: string[]): Promise<Tag[]> {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   let query = supabase
     .from('tags')
@@ -345,7 +344,7 @@ export async function getTags(userId?: string, types?: string[]): Promise<Tag[]>
 }
 
 export async function getUserTags(userId: string): Promise<Tag[]> {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   const { data: tags, error } = await supabase
     .from('tags')
@@ -363,7 +362,7 @@ export async function getUserTags(userId: string): Promise<Tag[]> {
 }
 
 export async function createResourceWithTags(userId: string, resourceData: Partial<Resource>, tagIds: string[]) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   // Map tag IDs to the tag_1_id through tag_5_id fields
   const tagFields: Record<string, string | undefined> = {}
@@ -392,7 +391,7 @@ export async function createResourceWithTags(userId: string, resourceData: Parti
 }
 
 export async function updateResourceWithTags(resourceId: string, resourceData: Partial<Resource>, tagIds: string[]) {
-  const supabase = createServerClient(cookies())
+  const supabase = await createSupabaseAppServerClient()
   
   // Map tag IDs to the tag_1_id through tag_5_id fields
   const tagFields: Record<string, string | null> = {

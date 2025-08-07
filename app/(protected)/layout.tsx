@@ -1,5 +1,6 @@
 import { getUser } from '@/lib/auth/get-user'
 import { ThemeToggle } from '@/app/components/theme-toggle'
+import { MobileMenu } from '@/app/components/mobile-menu'
 import Link from 'next/link'
 
 export default async function ProtectedLayout({
@@ -15,6 +16,7 @@ export default async function ProtectedLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
+              <MobileMenu userEmail={user.email} />
               <Link href="/" className="text-xl font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">Juniper</Link>
               <div className="hidden md:flex space-x-6">
                 <a href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>

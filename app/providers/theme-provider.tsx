@@ -9,7 +9,6 @@ type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: ThemeName
   defaultMode?: Mode
-  storageKey?: string
 }
 
 type ThemeProviderState = {
@@ -36,7 +35,6 @@ export function ThemeProvider({
   children,
   defaultTheme = 'default',
   defaultMode = 'light',
-  storageKey = 'juniper-ui-theme',
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<ThemeName>(defaultTheme)
@@ -45,21 +43,7 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true)
-    const storedData = localStorage.getItem(storageKey)
-    if (storedData) {
-      try {
-        const { theme: storedTheme, mode: storedMode } = JSON.parse(storedData)
-        if (storedTheme && themes[storedTheme]) {
-          setTheme(storedTheme)
-        }
-        if (storedMode && (storedMode === 'light' || storedMode === 'dark')) {
-          setMode(storedMode)
-        }
-      } catch {
-        // Invalid JSON, ignore
-      }
-    }
-  }, [storageKey])
+  }, [])
 
   useEffect(() => {
     if (!mounted) return
@@ -83,27 +67,15 @@ export function ThemeProvider({
     })
   }, [theme, mode, mounted])
 
-  const updateTheme = (newTheme: ThemeName) => {
-    const data = { theme: newTheme, mode }
-    localStorage.setItem(storageKey, JSON.stringify(data))
-    setTheme(newTheme)
-  }
-
-  const updateMode = (newMode: Mode) => {
-    const data = { theme, mode: newMode }
-    localStorage.setItem(storageKey, JSON.stringify(data))
-    setMode(newMode)
-  }
-
   const toggleMode = () => {
-    updateMode(mode === 'light' ? 'dark' : 'light')
+    setMode(mode === 'light' ? 'dark' : 'light')
   }
 
   const value = {
     theme,
     mode,
-    setTheme: updateTheme,
-    setMode: updateMode,
+    setTheme,
+    setMode,
     toggleMode,
     mounted,
   }
