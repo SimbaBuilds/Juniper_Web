@@ -5,7 +5,7 @@ import { RESOURCE_TYPES } from '@/app/lib/repository/types'
 import { Resource, Tag } from '@/lib/utils/supabase/tables'
 import { ResourceModal } from '@/app/components/repository/resource-modal'
 import { AddResourceSection } from '@/app/components/repository/add-resource-section'
-import { Plus, Pencil, Trash2, Tags } from 'lucide-react'
+import { Pencil, Trash2, Tags } from 'lucide-react'
 import { createClient } from '@/lib/utils/supabase/client'
 import { createResourceWithTags, updateResourceWithTags } from '@/lib/client-services'
 

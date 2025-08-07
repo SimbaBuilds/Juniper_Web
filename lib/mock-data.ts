@@ -1,4 +1,13 @@
-import { ConfigForm, Service } from './utils/supabase/tables'
+import { Service } from './utils/supabase/tables'
+
+// Temporary type definition for ConfigForm
+interface ConfigForm {
+  id: string;
+  service_id: string;
+  setup_instructions: string;
+  json: FormJson;
+  updated_at: Date;
+}
 
 export interface FormField {
   field_name: string

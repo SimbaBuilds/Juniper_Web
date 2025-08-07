@@ -14,9 +14,6 @@ interface ResourceModalProps {
   mode: 'add' | 'edit'
 }
 
-interface ResourceWithTags extends Resource {
-  tags?: Tag[]
-}
 
 export function ResourceModal({ isOpen, onClose, onSave, resource, mode }: ResourceModalProps) {
   const [userId, setUserId] = useState<string | null>(null)

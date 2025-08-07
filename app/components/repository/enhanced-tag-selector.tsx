@@ -69,7 +69,7 @@ export function EnhancedTagSelector({
     if (isOpen) {
       loadTags()
     }
-  }, [isOpen, userId])
+  }, [isOpen, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTagToggle = (tag: Tag) => {
     const isSelected = selectedTags.some(t => t.id === tag.id)
