@@ -28,7 +28,7 @@ export function MobileMenu({ userEmail }: MobileMenuProps) {
         <SheetHeader>
           <SheetTitle>Juniper</SheetTitle>
         </SheetHeader>
-        <nav className="flex flex-col space-y-4 mt-6">
+        <nav className="flex flex-col space-y-4 mt-6 pl-4">
           <SheetClose asChild>
             <Link 
               href="/dashboard" 

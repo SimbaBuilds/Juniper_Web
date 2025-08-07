@@ -34,7 +34,7 @@ export function PublicMobileMenu({ user, loading, signOut }: PublicMobileMenuPro
             <SheetTitle>Juniper</SheetTitle>
           </div>
         </SheetHeader>
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4 pl-4">
           {loading ? (
             <div className="text-muted-foreground">Loading...</div>
           ) : user ? (

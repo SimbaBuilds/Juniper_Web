@@ -50,9 +50,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider
-          defaultTheme="default"
           defaultMode="light"
-          storageKey="juniper-ui-theme"
         >
           <AuthProvider>
             {children}

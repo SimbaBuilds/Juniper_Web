@@ -7,23 +7,18 @@ type Mode = 'dark' | 'light'
 
 type ThemeProviderProps = {
   children: React.ReactNode
-  defaultTheme?: ThemeName
   defaultMode?: Mode
 }
 
 type ThemeProviderState = {
-  theme: ThemeName
   mode: Mode
-  setTheme: (theme: ThemeName) => void
   setMode: (mode: Mode) => void
   toggleMode: () => void
   mounted: boolean
 }
 
 const initialState: ThemeProviderState = {
-  theme: 'default',
   mode: 'light',
-  setTheme: () => null,
   setMode: () => null,
   toggleMode: () => null,
   mounted: false,
@@ -33,13 +28,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'default',
   defaultMode = 'light',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<ThemeName>(defaultTheme)
   const [mode, setMode] = useState<Mode>(defaultMode)
   const [mounted, setMounted] = useState(false)
+  const theme: ThemeName = 'vintage' // Fixed theme
 
   useEffect(() => {
     setMounted(true)
@@ -56,9 +50,9 @@ export function ThemeProvider({
       root.classList.remove(themeName)
     })
     
-    // Add current mode and theme classes
+    // Add current mode and vintage theme classes
     root.classList.add(mode)
-    root.classList.add(theme)
+    root.classList.add('vintage')
     
     // Apply CSS variables
     const cssVariables = getCSSVariables(theme, mode)
@@ -72,9 +66,7 @@ export function ThemeProvider({
   }
 
   const value = {
-    theme,
     mode,
-    setTheme,
     setMode,
     toggleMode,
     mounted,
