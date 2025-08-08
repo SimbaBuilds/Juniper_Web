@@ -17,6 +17,7 @@ const relevantEvents = new Set([
   'customer.subscription.deleted',
   'invoice.payment_succeeded',
   'invoice.payment_failed',
+  'invoice.paid', // Add this event that Stripe actually sends
 ]);
 
 export async function POST(req: Request) {
@@ -55,21 +56,38 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
         
+        console.log('🔄 Processing checkout session completed:', {
+          sessionId: session.id,
+          userId: userId,
+          customerId: session.customer,
+          subscriptionId: session.subscription
+        });
+        
         if (!userId || !session.subscription) {
-          console.error('No user ID or subscription in checkout session metadata');
+          console.error('❌ No user ID or subscription in checkout session metadata');
           break;
         }
 
-        // Store subscription details immediately since checkout completed successfully
-        await supabase
+        // Store all subscription details immediately since checkout completed successfully
+        const updateData = {
+          stripe_subscription_id: session.subscription as string,
+          stripe_customer_id: session.customer as string,
+          subscription_tier: 'pro',
+          subscription_status: 'active',
+        };
+
+        console.log('📝 Updating user profile with checkout data:', { userId, updateData });
+
+        const { error: updateError } = await supabase
           .from('user_profiles')
-          .update({
-            stripe_subscription_id: session.subscription as string,
-            subscription_tier: 'pro',
-            subscription_status: 'active',
-            stripe_customer_id: session.customer as string,
-          })
+          .update(updateData)
           .eq('id', userId);
+
+        if (updateError) {
+          console.error('❌ Failed to update user profile after checkout:', updateError);
+        } else {
+          console.log('✅ Successfully updated user profile after checkout:', userId);
+        }
 
         break;
       }
@@ -78,42 +96,92 @@ export async function POST(req: Request) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
+        const periodEnd = new Date(((subscription as any).current_period_end) * 1000);
 
-        console.log('Processing subscription event:', {
+        console.log('🔄 Processing subscription event:', {
           eventType: event.type,
           subscriptionId: subscription.id,
           customerId: customerId,
-          status: subscription.status
+          status: subscription.status,
+          periodEnd: periodEnd.toISOString(),
+          cancelAtPeriodEnd: (subscription as any).cancel_at_period_end
         });
 
-        // Get user by stripe customer ID
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('stripe_customer_id', customerId)
-          .single();
+        // Find user by subscription ID (more reliable than customer ID)
+        console.log('🔍 Looking up user by subscription ID:', subscription.id);
+                                    const { data: profileData, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('id, stripe_customer_id, subscription_status, subscription_tier')
+                    .eq('stripe_subscription_id', subscription.id)
+                    .single();
+                  let profile = profileData || null
 
         if (profileError) {
-          console.error('Failed to find user profile:', profileError, 'for customer:', customerId);
-        } else if (profile) {
-          console.log('Found user profile:', profile.id, 'updating subscription data');
+          console.error('❌ Failed to find user by subscription ID:', {
+            error: profileError,
+            subscriptionId: subscription.id,
+            customerId: customerId
+          });
           
-          const { error: updateError } = await supabase
+          // Try fallback: look by customer ID in case subscription ID wasn't saved yet
+          console.log('🔍 Trying fallback lookup by customer ID...');
+          const { data: fallbackProfile, error: fallbackError } = await supabase
             .from('user_profiles')
-            .update({
-              stripe_subscription_id: subscription.id,
-              subscription_status: subscription.status,
-              subscription_tier: subscription.status === 'active' ? 'pro' : 'free',
-              subscription_current_period_end: new Date(((subscription as any).current_period_end) * 1000),
-              subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end,
-            })
-            .eq('id', profile.id);
+            .select('id, stripe_customer_id, subscription_status, subscription_tier')
+            .eq('stripe_customer_id', customerId)
+            .single();
 
-          if (updateError) {
-            console.error('Failed to update subscription data:', updateError);
-          } else {
-            console.log('Successfully updated subscription data for user:', profile.id);
+          if (fallbackError) {
+            console.error('❌ Fallback customer lookup also failed:', fallbackError);
+            break;
           }
+          
+          if (fallbackProfile) {
+            console.log('✅ Found user via customer ID fallback:', fallbackProfile.id);
+            // Use fallback profile for update
+            profile = fallbackProfile;
+          } else {
+            console.error('❌ No fallback profile found');
+            break;
+          }
+        } else if (profile) {
+          console.log('✅ Found user by subscription ID:', profile.id);
+        } else {
+          console.error('❌ No user profile found by subscription ID');
+          break;
+        }
+
+        // Ensure we have a valid profile before proceeding
+        if (!profile) {
+          console.error('❌ No user profile found after lookup attempts');
+          break;
+        }
+
+        // Update subscription data
+        const updateData = {
+          stripe_subscription_id: subscription.id,
+          stripe_customer_id: customerId, // Ensure customer ID is always set
+          subscription_status: subscription.status,
+          subscription_tier: subscription.status === 'active' ? 'pro' : 'free',
+          subscription_current_period_end: periodEnd,
+          subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end,
+        };
+
+        console.log('📝 Updating subscription data:', { userId: profile.id, updateData });
+
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update(updateData)
+          .eq('id', profile.id);
+
+        if (updateError) {
+          console.error('❌ Failed to update subscription data:', {
+            error: updateError,
+            userId: profile.id,
+            updateData: updateData
+          });
+        } else {
+          console.log('✅ Successfully updated subscription data for user:', profile.id);
         }
 
         break;
@@ -144,31 +212,62 @@ export async function POST(req: Request) {
         break;
       }
 
-      case 'invoice.payment_succeeded': {
+      case 'invoice.payment_succeeded':
+      case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
         const subscriptionId = (invoice as any).subscription;
+        
+        console.log('🔄 Processing invoice payment event:', {
+          eventType: event.type,
+          invoiceId: invoice.id,
+          subscriptionId: subscriptionId,
+          customerId: (invoice as any).customer,
+          status: (invoice as any).status
+        });
         
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           const customerId = subscription.customer as string;
 
+          console.log('🔍 Looking up user for invoice payment by customer ID:', customerId);
+
           // Get user by stripe customer ID
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('user_profiles')
             .select('id')
             .eq('stripe_customer_id', customerId)
             .single();
 
-          if (profile) {
-            await supabase
+          if (profileError) {
+            console.error('❌ Failed to find user profile for invoice payment:', {
+              error: profileError,
+              customerId: customerId,
+              subscriptionId: subscriptionId
+            });
+          } else if (profile) {
+            console.log('✅ Found user profile for invoice payment:', profile.id);
+            
+            const updateData = {
+              subscription_status: 'active',
+              subscription_tier: 'pro',
+              subscription_current_period_end: new Date(((subscription as any).current_period_end) * 1000),
+            };
+
+            console.log('📝 Updating subscription status for successful payment:', updateData);
+
+            const { error: updateError } = await supabase
               .from('user_profiles')
-              .update({
-                subscription_status: 'active',
-                subscription_tier: 'pro',
-                subscription_current_period_end: new Date(((subscription as any).current_period_end) * 1000),
-              })
+              .update(updateData)
               .eq('id', profile.id);
+
+            if (updateError) {
+              console.error('❌ Failed to update subscription for invoice payment:', updateError);
+            } else {
+              console.log('✅ Successfully updated subscription for invoice payment:', profile.id);
+            }
           }
+        } else {
+          console.log('⚠️ Invoice payment event has no subscription ID');
         }
 
         break;
