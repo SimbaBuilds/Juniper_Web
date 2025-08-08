@@ -144,11 +144,11 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
           <button
             onClick={userProfile.subscription_tier === 'pro' ? handleManageSubscription : handleSubscribeToPro}
             disabled={isLoading}
-            className="flex items-center space-x-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 disabled:opacity-50"
+            className="flex items-center space-x-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/80 disabled:opacity-50 text-sm"
           >
-            <CreditCard className="h-4 w-4" />
+            <CreditCard className="h-3.5 w-3.5" />
             <span>{userProfile.subscription_tier === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}</span>
-            {userProfile.subscription_tier === 'pro' && <ExternalLink className="h-4 w-4" />}
+            {userProfile.subscription_tier === 'pro' && <ExternalLink className="h-3.5 w-3.5" />}
           </button>
         </div>
         
