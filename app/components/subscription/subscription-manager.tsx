@@ -126,23 +126,15 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
   }
 
   const freeTierFeatures = [
-    '100 requests per month',
-    '10 Perplexity searches',
-    '5 Twitter/X interactions',
-    '3 SMS messages',
-    'Basic voice AI assistant',
-    'Community support'
+    '50 requests per month',
+    '$2.50 worth of usage based services (Perplexity, SMS, XAI LiveSearch, etc.)'
   ]
 
   const proTierFeatures = [
-    '10,000 requests per month',
-    '1,000 Perplexity searches',
-    '500 Twitter/X interactions',
-    '200 SMS messages',
-    'Advanced voice AI assistant',
-    'Priority support',
-    'Early access to new features',
-    'Custom integrations'
+    '$29.99',
+    '500 requests per month',
+    '$10 worth of usage based services (XAI LiveSearch, Perplexity, SMS, etc.)',
+    'Usage based pricing thereafter'
   ]
 
   return (
@@ -302,7 +294,7 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
           
           <PricingCard
             title="Pro"
-            price="$29"
+            price="$29.99"
             period="/month"
             features={proTierFeatures}
             isCurrentPlan={userProfile.subscription_tier === 'pro'}

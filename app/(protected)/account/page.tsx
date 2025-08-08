@@ -84,8 +84,37 @@ export default async function AccountPage() {
       {/* Subscription & Billing */}
       <SubscriptionManager userProfile={userProfile} />
 
-
-
+      {/* Usage Tracking */}
+      <div className="bg-card p-6 rounded-lg border border-border">
+        <h2 className="text-xl font-semibold text-foreground mb-6">Usage Tracking</h2>
+        <p className="text-sm text-muted-foreground mb-4">Monthly usage for system integrations</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-foreground mb-2">Perplexity</h3>
+            <p className="text-2xl font-bold text-primary">
+              {userProfile?.perplexity_usage_month || 0}
+            </p>
+            <p className="text-sm text-muted-foreground">searches this month</p>
+          </div>
+          
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-foreground mb-2">Textbelt</h3>
+            <p className="text-2xl font-bold text-primary">
+              {userProfile?.textbelt_usage_month || 0}
+            </p>
+            <p className="text-sm text-muted-foreground">messages this month</p>
+          </div>
+          
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-foreground mb-2 leading-tight">XAI Live Search</h3>
+            <p className="text-2xl font-bold text-primary">
+              {userProfile?.xai_ls_usage_month || 0}
+            </p>
+            <p className="text-sm text-muted-foreground">searches this month</p>
+          </div>
+        </div>
+      </div>
 
       {/* Account Management */}
       <div className="bg-card p-6 rounded-lg border border-border">
