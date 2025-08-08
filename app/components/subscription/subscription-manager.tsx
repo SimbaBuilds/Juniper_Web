@@ -141,18 +141,15 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
       <div className="bg-card p-6 rounded-lg border border-border">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-foreground">Subscription & Billing</h2>
-          {/* Show for testing - remove in production */}
-          {true && (
-            <button
-              onClick={handleManageSubscription}
-              disabled={isLoading}
-              className="flex items-center space-x-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 disabled:opacity-50"
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Manage Billing</span>
-              <ExternalLink className="h-4 w-4" />
-            </button>
-          )}
+          <button
+            onClick={userProfile.subscription_tier === 'pro' ? handleManageSubscription : handleSubscribeToPro}
+            disabled={isLoading}
+            className="flex items-center space-x-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 disabled:opacity-50"
+          >
+            <CreditCard className="h-4 w-4" />
+            <span>{userProfile.subscription_tier === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}</span>
+            {userProfile.subscription_tier === 'pro' && <ExternalLink className="h-4 w-4" />}
+          </button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

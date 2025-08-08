@@ -1,8 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextRequest, NextResponse } from "next/server";
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { stripe } from "@/lib/stripe";
 import { createSupabaseServiceClient } from "@/lib/utils/supabase/service";
 import Stripe from "stripe";
+
+// Route Segment Config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 59;
 
 const relevantEvents = new Set([
   'checkout.session.completed',
@@ -13,39 +19,38 @@ const relevantEvents = new Set([
   'invoice.payment_failed',
 ]);
 
-export async function POST(request: NextRequest) {
-  const body = await request.text();
-  const sig = request.headers.get('stripe-signature') as string;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-
-  let event: Stripe.Event;
-
+export async function POST(req: Request) {
   try {
-    if (!sig || !webhookSecret) {
-      return NextResponse.json(
-        { error: 'Missing webhook signature or secret' },
-        { status: 400 }
-      );
+    const rawBody = await req.text();
+    const signature = headers().get('stripe-signature');
+
+    // Debug logging
+    console.log('Webhook Secret:', process.env.STRIPE_WEBHOOK_SECRET?.slice(0, 5) + '...');
+    console.log('Raw Body Length:', rawBody.length);
+    console.log('Raw Body Type:', typeof rawBody);
+    console.log('First 100 chars of Raw Body:', rawBody.slice(0, 100));
+
+    if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error('Missing signature or webhook secret');
+      return new NextResponse('Webhook signature or secret missing', { status: 400 });
     }
-    
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`Webhook signature verification failed: ${errorMessage}`);
-    return NextResponse.json(
-      { error: `Webhook Error: ${errorMessage}` },
-      { status: 400 }
-    );
-  }
 
-  if (!relevantEvents.has(event.type)) {
-    return NextResponse.json({ received: true });
-  }
+    try {
+      const event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+      
+      console.log('Event successfully constructed:', event.type);
 
-  const supabase = createSupabaseServiceClient();
+      if (!relevantEvents.has(event.type)) {
+        return NextResponse.json({ received: true });
+      }
 
-  try {
-    switch (event.type) {
+      const supabase = createSupabaseServiceClient();
+
+      switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
@@ -55,12 +60,14 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        // Just store the subscription ID for now - details will be handled by subscription events
+        // Store subscription details immediately since checkout completed successfully
         await supabase
           .from('user_profiles')
           .update({
             stripe_subscription_id: session.subscription as string,
             subscription_tier: 'pro',
+            subscription_status: 'active',
+            stripe_customer_id: session.customer as string,
           })
           .eq('id', userId);
 
@@ -178,16 +185,30 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      default:
-        console.log(`Unhandled relevant event type: ${event.type}`);
-    }
+        default:
+          console.log(`Unhandled relevant event type: ${event.type}`);
+      }
 
-    return NextResponse.json({ received: true });
+      return NextResponse.json({ received: true });
+    } catch (verifyError) {
+      console.error('Verification Error Details:', {
+        signatureHeader: signature?.slice(0, 50),
+        bodyPreview: rawBody.slice(0, 50) + '...'
+      });
+      throw verifyError;
+    }
   } catch (error) {
-    console.error('Webhook handler error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message.slice(0, 50),
+        name: error.name.slice(0, 50),
+        stack: error.stack?.slice(0, 50),
+      });
+    }
+    return new NextResponse(
+      error instanceof Error ? error.message.slice(0, 50) : 'Webhook handler failed',
+      { status: 400 }
     );
   }
 }
+

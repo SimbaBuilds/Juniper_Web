@@ -47,6 +47,7 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
     }
   }
 
+
   return (
     <div className="bg-card p-6 rounded-lg border border-border">
       <h2 className="text-xl font-semibold text-foreground mb-6">Usage Based Pricing Limits</h2>
