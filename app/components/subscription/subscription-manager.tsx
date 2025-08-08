@@ -131,10 +131,8 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
   ]
 
   const proTierFeatures = [
-    '$29.99',
     '500 requests per month',
-    '$10 worth of usage based services (XAI LiveSearch, Perplexity, SMS, etc.)',
-    'Usage based pricing thereafter'
+    '$10 worth of usage based services (XAI LiveSearch, Perplexity, SMS, etc.) - usage based pricing thereafter'
   ]
 
   return (

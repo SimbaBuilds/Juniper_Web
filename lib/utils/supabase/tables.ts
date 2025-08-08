@@ -41,6 +41,7 @@ export type UserProfile = {
     'user_tags', 'enabled_system_integrations',
     'requests_today', 'requests_week', 'requests_month', 
     'perplexity_usage_month', 'textbelt_usage_month', 'xai_ls_usage_month',
+    'ubp_current', 'ubp_max',
     'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];

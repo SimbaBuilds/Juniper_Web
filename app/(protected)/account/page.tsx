@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/auth/get-user'
 import { fetchUserProfile } from '@/lib/services'
 import SubscriptionManager from '@/app/components/subscription/subscription-manager'
+import MaxUbpSetting from '@/app/components/max-ubp-setting'
 
 export default async function AccountPage() {
   const user = await getUser()
@@ -115,6 +116,9 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Max Usage Based Pricing */}
+      <MaxUbpSetting userProfile={userProfile} />
 
       {/* Account Management */}
       <div className="bg-card p-6 rounded-lg border border-border">
