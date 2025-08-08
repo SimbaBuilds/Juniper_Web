@@ -140,7 +140,7 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
       {/* Current Plan Status */}
       <div className="bg-card p-6 rounded-lg border border-border">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Subscription & Billing</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Subscription & Billing</h2>
           <button
             onClick={userProfile.subscription_tier === 'pro' ? handleManageSubscription : handleSubscribeToPro}
             disabled={isLoading}
