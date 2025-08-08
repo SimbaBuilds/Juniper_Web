@@ -8,7 +8,12 @@ interface MaxUbpSettingProps {
 }
 
 export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
-  const [maxUbp, setMaxUbp] = useState(userProfile?.ubp_max?.toString() || '')
+  const isFreeUser = !userProfile?.subscription_tier || userProfile.subscription_tier === 'free'
+  const freeUbpLimit = '1.00'
+  
+  const [maxUbp, setMaxUbp] = useState(
+    isFreeUser ? freeUbpLimit : (userProfile?.ubp_max?.toString() || '')
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -17,13 +22,15 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
     setMessage('')
 
     try {
+      const ubpValue = isFreeUser ? parseFloat(freeUbpLimit) : (parseFloat(maxUbp) || 0)
+      
       const response = await fetch('/api/user/update-ubp-max', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ubp_max: parseFloat(maxUbp) || 0,
+          ubp_max: ubpValue,
         }),
       })
 
@@ -71,21 +78,30 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
               step="0.01"
               min="0"
               value={maxUbp}
-              onChange={(e) => setMaxUbp(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Enter maximum UBP limit"
+              onChange={(e) => !isFreeUser && setMaxUbp(e.target.value)}
+              disabled={isFreeUser}
+              className={`w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                isFreeUser 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : 'bg-background text-foreground'
+              }`}
+              placeholder={isFreeUser ? "Free tier limit: $1.00" : "Enter maximum UBP limit"}
             />
-            <p className="text-xs text-muted-foreground mt-1">Set your spending limit for usage-based features</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isFreeUser 
+                ? 'Free tier includes $1.00 worth of usage-based services'
+                : 'Set your spending limit for usage-based features'}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <button
             onClick={handleSave}
-            disabled={isLoading || !maxUbp}
+            disabled={isLoading || (!maxUbp && !isFreeUser)}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Saving...' : 'Save Max UBP'}
+            {isLoading ? 'Saving...' : (isFreeUser ? 'Update Free Tier Limit' : 'Save Max UBP')}
           </button>
           
           {message && (
