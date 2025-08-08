@@ -22,7 +22,7 @@ const relevantEvents = new Set([
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
-    const signature = headers().get('stripe-signature');
+    const signature = (await headers()).get('stripe-signature');
 
     // Debug logging
     console.log('Webhook Secret:', process.env.STRIPE_WEBHOOK_SECRET?.slice(0, 5) + '...');
@@ -79,15 +79,26 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
+        console.log('Processing subscription event:', {
+          eventType: event.type,
+          subscriptionId: subscription.id,
+          customerId: customerId,
+          status: subscription.status
+        });
+
         // Get user by stripe customer ID
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
-        if (profile) {
-          await supabase
+        if (profileError) {
+          console.error('Failed to find user profile:', profileError, 'for customer:', customerId);
+        } else if (profile) {
+          console.log('Found user profile:', profile.id, 'updating subscription data');
+          
+          const { error: updateError } = await supabase
             .from('user_profiles')
             .update({
               stripe_subscription_id: subscription.id,
@@ -97,6 +108,12 @@ export async function POST(req: Request) {
               subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end,
             })
             .eq('id', profile.id);
+
+          if (updateError) {
+            console.error('Failed to update subscription data:', updateError);
+          } else {
+            console.log('Successfully updated subscription data for user:', profile.id);
+          }
         }
 
         break;
