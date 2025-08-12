@@ -2,11 +2,34 @@ import { getUser } from '@/lib/auth/get-user'
 import { fetchUserProfile } from '@/lib/services'
 import SubscriptionManager from '@/app/components/subscription/subscription-manager'
 import MaxUbpSetting from '@/app/components/max-ubp-setting'
+import AccountDeleteButton from '@/app/components/account-delete-button'
 import { OVERAGE_PRICE } from '@/app/lib/constants'
 
 export default async function AccountPage() {
   const user = await getUser()
   const userProfile = await fetchUserProfile(user.id)
+
+  // If no user profile is found, show an error message
+  if (!userProfile) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
+          <p className="text-muted-foreground">
+            View your account information and preferences. Most settings are managed through the mobile app.
+          </p>
+        </div>
+        
+        <div className="bg-card p-6 rounded-lg border border-border">
+          <div className="text-center">
+            <p className="text-lg text-red-600 dark:text-red-300 mb-4">
+              Unable to load your profile information. Please try refreshing the page or contact support if the issue persists.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -118,7 +141,7 @@ export default async function AccountPage() {
           <div className="bg-muted p-4 rounded-lg min-w-0">
             <h3 className="text-lg font-medium text-foreground mb-2 break-words">XAI Live Search</h3>
             <p className="text-2xl font-bold text-primary">
-              {userProfile?.xai_ls_usage_month || 0}
+              {userProfile?.xai_live_search_month || 0}
             </p>
             <p className="text-sm text-muted-foreground">searches this month</p>
           </div>
@@ -136,7 +159,7 @@ export default async function AccountPage() {
       <MaxUbpSetting userProfile={userProfile} />
 
       {/* Account Management */}
-      {/* <div className="bg-card p-6 rounded-lg border border-border">
+      <div className="bg-card p-6 rounded-lg border border-border">
         <h2 className="text-xl font-semibold text-foreground mb-6">Account Management</h2>
         
         <div className="space-y-4">
@@ -154,15 +177,10 @@ export default async function AccountPage() {
             <p className="text-sm text-red-600 dark:text-red-300 mb-4">
               Account deletion is permanent and cannot be undone. All your data, including integrations, automations, and repository items, will be permanently deleted.
             </p>
-            <button className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-              Delete Account
-            </button>
-            <p className="text-xs text-red-500 mt-2">
-              Account deletion must be performed through the mobile app for security reasons
-            </p>
+            <AccountDeleteButton />
           </div>
         </div>
-      </div> */}
+      </div>
       
       {/* Legal Links */}
       <div className="bg-card p-6 rounded-lg border border-border">

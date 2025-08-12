@@ -43,6 +43,12 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
 
+  // Safely get subscription tier with fallback to 'free'
+  const subscriptionTier = userProfile?.subscription_tier || 'free'
+  const subscriptionStatus = userProfile?.subscription_status
+  const subscriptionCurrentPeriodEnd = userProfile?.subscription_current_period_end
+  const subscriptionCancelAtPeriodEnd = userProfile?.subscription_cancel_at_period_end
+
   useEffect(() => {
     fetchUsageData()
     
@@ -143,13 +149,13 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-foreground mb-4">Subscription & Billing</h2>
           <button
-            onClick={userProfile.subscription_tier === 'pro' ? handleManageSubscription : handleSubscribeToPro}
+            onClick={subscriptionTier === 'pro' ? handleManageSubscription : handleSubscribeToPro}
             disabled={isLoading}
-            className="flex items-center space-x-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/80 disabled:opacity-50 text-sm"
+            className="flex items-center space-x-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             <CreditCard className="h-3.5 w-3.5" />
-            <span>{userProfile.subscription_tier === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}</span>
-            {userProfile.subscription_tier === 'pro' && <ExternalLink className="h-3.5 w-3.5" />}
+            <span>{subscriptionTier === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}</span>
+            {subscriptionTier === 'pro' && <ExternalLink className="h-3.5 w-3.5" />}
           </button>
         </div>
         
@@ -159,25 +165,25 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
               <label className="block text-sm font-medium text-foreground mb-2">Current Plan</label>
               <div className="flex items-center space-x-2">
                 <span className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-sm font-medium">
-                  {userProfile.subscription_tier?.toUpperCase() || 'FREE'}
+                  {subscriptionTier.toUpperCase()}
                 </span>
-                {userProfile.subscription_status && (
+                {subscriptionStatus && (
                   <span className={`px-2 py-1 rounded-full text-xs ${
-                    userProfile.subscription_status === 'active' 
+                    subscriptionStatus === 'active' 
                       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                   }`}>
-                    {userProfile.subscription_status}
+                    {subscriptionStatus}
                   </span>
                 )}
               </div>
             </div>
             
-            {userProfile.subscription_current_period_end && (
+            {subscriptionCurrentPeriodEnd && (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Next Billing Date</label>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(userProfile.subscription_current_period_end).toLocaleDateString()}
+                  {new Date(subscriptionCurrentPeriodEnd).toLocaleDateString()}
                 </p>
               </div>
             )}
@@ -206,12 +212,12 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
           </div>
         </div>
 
-        {userProfile.subscription_cancel_at_period_end && (
+        {subscriptionCancelAtPeriodEnd && (
           <div className="p-3 bg-yellow-100 text-yellow-800 rounded-md dark:bg-yellow-900 dark:text-yellow-200">
             <p className="text-sm">
               Your subscription will be canceled at the end of the current billing period 
-              {userProfile.subscription_current_period_end && 
-                ` (${new Date(userProfile.subscription_current_period_end).toLocaleDateString()})`}.
+              {subscriptionCurrentPeriodEnd && 
+                ` (${new Date(subscriptionCurrentPeriodEnd).toLocaleDateString()})`}.
             </p>
           </div>
         )}
@@ -284,7 +290,7 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
             price="$0"
             period="/month"
             features={freeTierFeatures}
-            isCurrentPlan={userProfile.subscription_tier === 'free' || !userProfile.subscription_tier}
+            isCurrentPlan={subscriptionTier === 'free'}
             buttonText="Current Plan"
           />
           
@@ -293,9 +299,9 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
             price="$29.99"
             period="/month"
             features={proTierFeatures}
-            isCurrentPlan={userProfile.subscription_tier === 'pro'}
-            onSubscribe={userProfile.subscription_tier !== 'pro' ? handleSubscribeToPro : undefined}
-            buttonText={userProfile.subscription_tier === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
+            isCurrentPlan={subscriptionTier === 'pro'}
+            onSubscribe={subscriptionTier !== 'pro' ? handleSubscribeToPro : undefined}
+            buttonText={subscriptionTier === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
             popular={true}
           />
         </div>
