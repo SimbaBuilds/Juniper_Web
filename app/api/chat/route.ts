@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAppServerClient } from '@/lib/utils/supabase/server'
+import { serverRequestService } from '@/lib/services/requestService'
 
 const PYTHON_BACKEND_URL = process.env.PYTHON_BACKEND_URL || 'https://mobile-jarvis-backend.onrender.com'
 
@@ -15,6 +16,7 @@ interface ChatRequest {
 }
 
 export async function POST(request: NextRequest) {
+  let requestId: string | undefined;
  
   try {
     // Get authenticated user (recommended for server-side validation)
@@ -66,6 +68,35 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
+    // Generate request ID
+    requestId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+    // Create request record in database
+    try {
+      await serverRequestService.createRequest(user.id, {
+        request_id: requestId,
+        request_type: 'chat',
+        status: 'pending',
+        metadata: {
+          message: message.trim(),
+          timestamp: Date.now()
+        }
+      })
+    } catch (requestError) {
+      console.error('Failed to create request record:', requestError)
+      return NextResponse.json(
+        { error: 'Failed to create request record' },
+        { status: 500 }
+      )
+    }
+
+    // Update request status to processing
+    try {
+      await serverRequestService.updateRequestStatus(requestId, 'processing')
+    } catch (updateError) {
+      console.error('Failed to update request status to processing:', updateError)
+    }
+
     // Prepare request for Python backend (matching backend ChatRequest model)
     const chatRequest = {
       message: message.trim(),
@@ -81,7 +112,7 @@ export async function POST(request: NextRequest) {
         base_language_model: profile?.base_language_model || 'gpt-4',
         timezone: profile?.timezone || 'UTC'
       },
-      request_id: `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      request_id: requestId,
       integration_in_progress: false,
       image_url: null
     }
@@ -124,18 +155,42 @@ export async function POST(request: NextRequest) {
       // The Python backend handles usage updates, but we could add additional logic here if needed
     }
 
+    // Update request status to completed
+    try {
+      await serverRequestService.updateRequestStatus(requestId, 'completed', {
+        response: data.response,
+        backend_timestamp: data.timestamp
+      })
+    } catch (updateError) {
+      console.error('Failed to update request status to completed:', updateError)
+    }
+
     console.log('=== CHAT API REQUEST SUCCESS ===')
     return NextResponse.json({
       response: data.response,
       timestamp: data.timestamp,
       settings_updated: data.settings_updated || false,
       integration_in_progress: data.integration_in_progress || false,
+      request_id: requestId,
     })
 
   } catch (error) {
     console.error('=== CHAT API REQUEST FAILED ===')
     console.error('Chat API error:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    // Update request status to failed if we have a requestId in scope
+    if (typeof requestId !== 'undefined') {
+      try {
+        await serverRequestService.updateRequestStatus(requestId, 'failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          error_timestamp: Date.now()
+        })
+      } catch (updateError) {
+        console.error('Failed to update request status to failed:', updateError)
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

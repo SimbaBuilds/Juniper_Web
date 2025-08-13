@@ -4,11 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Send, Plus, Copy, Loader2 } from 'lucide-react'
+import { Send, Plus, Copy, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
 import { createClient } from '@/lib/utils/supabase/client'
+import { useRequestStatusPolling } from '@/hooks/useRequestStatusPolling'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -23,8 +24,24 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null)
+  const [requestStatus, setRequestStatus] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Integrate polling hook
+  const { status: polledStatus } = useRequestStatusPolling({
+    requestId: currentRequestId,
+    onStatusChange: (status) => {
+      setRequestStatus(status)
+      if (['completed', 'failed', 'cancelled'].includes(status)) {
+        setCurrentRequestId(null)
+        setIsLoading(false)
+        abortControllerRef.current = null
+      }
+    }
+  })
 
   // Get current user on mount
   useEffect(() => {
@@ -70,6 +87,43 @@ export default function ChatPage() {
     }
   }, [messages, resetAutoRefreshTimer])
 
+  const handleCancelRequest = async () => {
+    if (!currentRequestId) return
+
+    try {
+      // Cancel via API
+      const response = await fetch('/api/chat/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          request_id: currentRequestId,
+        }),
+      })
+
+      if (response.ok) {
+        // Also abort the HTTP request
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort()
+        }
+        
+        setCurrentRequestId(null)
+        setIsLoading(false)
+        setRequestStatus(null)
+        abortControllerRef.current = null
+        
+        toast.success('Request cancelled successfully')
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to cancel request')
+      }
+    } catch (error) {
+      console.error('Error cancelling request:', error)
+      toast.error('Failed to cancel request')
+    }
+  }
+
   const handleSendMessage = async () => {
     const trimmedMessage = inputValue.trim()
     if (!trimmedMessage || isLoading) return
@@ -84,6 +138,9 @@ export default function ChatPage() {
     setInputValue('')
     setIsLoading(true)
 
+    // Create AbortController for this request
+    abortControllerRef.current = new AbortController()
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -94,6 +151,7 @@ export default function ChatPage() {
           message: trimmedMessage,
           history: [...messages, userMessage],
         }),
+        signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
@@ -102,6 +160,12 @@ export default function ChatPage() {
 
       const data = await response.json()
       
+      // Set the request ID from the response to start polling
+      if (data.request_id) {
+        setCurrentRequestId(data.request_id)
+        setRequestStatus('processing')
+      }
+      
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.response,
@@ -109,9 +173,26 @@ export default function ChatPage() {
       }
 
       setMessages(prev => [...prev, assistantMessage])
+      
+      // Clear request tracking on successful completion
+      setCurrentRequestId(null)
+      setRequestStatus(null)
+      abortControllerRef.current = null
+      
     } catch (error) {
+      // Check if error was due to cancellation
+      if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('aborted'))) {
+        console.log('Request was cancelled by user')
+        return // Don't show error toast for user-initiated cancellation
+      }
+      
       console.error('Error sending message:', error)
       toast.error('Failed to send message. Please try again.')
+      
+      // Clear request tracking on error
+      setCurrentRequestId(null)
+      setRequestStatus(null)
+      abortControllerRef.current = null
     } finally {
       setIsLoading(false)
     }
@@ -191,12 +272,12 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-[calc(100vh-13rem)] overflow-hidden bg-background mb-4 border rounded-lg">
       <ConversationHistory onContinueChat={handleContinueChat} />
       
       <div className="flex-1 flex flex-col min-h-0 border-l">
         <div className="flex justify-between items-center p-4 border-b flex-shrink-0 bg-background">
-          <h1 className="text-2xl font-bold">Chat</h1>
+          <h1 className="text-2xl font-bold">Chat with Juniper</h1>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -219,10 +300,9 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 min-h-0 bg-background">
+        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pb-8 min-h-0 bg-background">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-8">
-              Start a conversation by typing a message below
             </div>
           ) : (
             <div>
@@ -232,7 +312,22 @@ export default function ChatPage() {
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground mb-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Thinking...</span>
+                  <span>
+                    {requestStatus === 'pending' ? 'Sending...' : 
+                     requestStatus === 'processing' ? 'Thinking...' : 
+                     'Processing...'}
+                  </span>
+                  {currentRequestId && requestStatus === 'processing' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelRequest}
+                      className="text-xs h-6 px-2 ml-2"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
