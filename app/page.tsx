@@ -132,9 +132,9 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-5xl font-bold text-foreground mb-6">
-          An AI Personal Assistant with a 
+          An AI Personal Assistant for 
  
-            <span style={{color: 'var(--muted-blue)'}}> Health and Wellness Focus</span>
+            <span style={{color: 'var(--muted-blue)'}}> Wellness and Productivity</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Connect all your favorite apps and services with voice-controlled intelligence. 
