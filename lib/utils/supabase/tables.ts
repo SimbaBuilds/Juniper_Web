@@ -63,7 +63,7 @@ export type UserProfile = {
     summary?: string;
     conversation_type: string;
     status: string;
-    metadata: Record<string, unknown>;
+    metadata: Record<string, any>;
     created_at: Date;
     updated_at: Date;
   };
@@ -82,8 +82,8 @@ export type UserProfile = {
     content: string;
     audio_url?: string;
     transcription_confidence?: number;
-    tool_calls?: Record<string, unknown>;
-    metadata: Record<string, unknown>;
+    tool_calls?: Record<string, any>;
+    metadata: Record<string, any>;
     created_at: Date;
   };
   
@@ -150,8 +150,8 @@ export type UserProfile = {
     id: string;
     user_id: string;
     name: string;
-    trigger_conditions: Record<string, unknown>;
-    actions: Record<string, unknown>;
+    trigger_conditions: Record<string, any>;
+    actions: Record<string, any>;
     is_active: boolean;
     execution_count: number;
     last_executed?: Date;
@@ -190,7 +190,7 @@ export type UserProfile = {
     workspace_name?: string;
     workspace_icon?: string;
     workspace_id?: string;
-    owner_info?: Record<string, unknown>;
+    owner_info?: Record<string, any>;
     duplicated_template_id?: string;
     // Common sync fields
     last_sync?: Date;
@@ -198,7 +198,7 @@ export type UserProfile = {
     client_id?: string;
     client_secret_id?: string;
     client_secret_value?: string;
-    configuration?: Record<string, unknown>; // New field for integration configuration
+    configuration?: Record<string, any>; // New field for integration configuration
   };
   
   export const integrationFields = [
@@ -248,9 +248,9 @@ export type UserProfile = {
     name: string;
     display_name?: string;
     description?: string;
-    parameters?: Record<string, unknown>;  // JSON schema for input parameters
-    returns?: Record<string, unknown>;     // JSON schema for output format
-    example?: Record<string, unknown>;     // Example usage
+    parameters?: Record<string, any>;  // JSON schema for input parameters
+    returns?: Record<string, any>;     // JSON schema for output format
+    example?: Record<string, any>;     // Example usage
     run_script?: string;               // Executable Python script/logic
     endpoint_url?: string;            // API endpoint if applicable
     http_method?: string;             // GET, POST, etc.
@@ -287,7 +287,7 @@ export type UserProfile = {
     request_id: string;          // Unique identifier for the request to cancel
     request_type: string;        // Type of request (chat, integration, etc.)
     status: string;              // pending, processed, expired
-    metadata: Record<string, unknown>; // Additional cancellation context
+    metadata: Record<string, any>; // Additional cancellation context
     created_at: Date;
     processed_at?: Date;
   };
@@ -367,7 +367,7 @@ export type UserProfile = {
     request_id: string;              // Unique identifier for tracking this specific request
     request_type: string;            // Type of request (chat, integration, etc.)
     status: string;                  // pending, processing, completed, failed, cancelled
-    metadata: Record<string, unknown>;   // Additional request context and data
+    metadata: Record<string, any>;   // Additional request context and data
     image_url?: string;              // Optional image URL for chat requests with image attachments
     created_at: Date;
     updated_at: Date;
@@ -400,6 +400,4 @@ export type UserProfile = {
     'last_used', 'created_at', 'updated_at'
   ] as const;
   export type HotPhraseField = (typeof hotPhraseFields)[number];
-
-
 

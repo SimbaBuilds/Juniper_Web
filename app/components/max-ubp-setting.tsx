@@ -25,6 +25,7 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
       const ubpValueInDollars = isFreeUser ? parseFloat(freeUbpLimit) : (parseFloat(maxUbp) || 0)
       const ubpValueInCents = Math.round(ubpValueInDollars * 100)
       
+      
       const response = await fetch('/api/user/update-ubp-max', {
         method: 'POST',
         headers: {
