@@ -12,7 +12,7 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
   const freeUbpLimit = '1.00'
   
   const [maxUbp, setMaxUbp] = useState(
-    isFreeUser ? freeUbpLimit : (userProfile?.ubp_max?.toString() || '')
+    isFreeUser ? freeUbpLimit : ((userProfile?.ubp_max || 0) / 100).toFixed(2)
   )
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -22,7 +22,8 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
     setMessage('')
 
     try {
-      const ubpValue = isFreeUser ? parseFloat(freeUbpLimit) : (parseFloat(maxUbp) || 0)
+      const ubpValueInDollars = isFreeUser ? parseFloat(freeUbpLimit) : (parseFloat(maxUbp) || 0)
+      const ubpValueInCents = Math.round(ubpValueInDollars * 100)
       
       const response = await fetch('/api/user/update-ubp-max', {
         method: 'POST',
@@ -30,7 +31,7 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ubp_max: ubpValue,
+          ubp_max: ubpValueInCents,
         }),
       })
 
@@ -61,12 +62,15 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
             <label className="block text-sm font-medium text-foreground mb-2">
               Current UBP
             </label>
-            <input
-              type="number"
-              value={userProfile?.ubp_current || 0}
-              disabled
-              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-muted-foreground"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+              <input
+                type="number"
+                value={((userProfile?.ubp_current || 0) / 100).toFixed(2)}
+                disabled
+                className="w-full pl-8 pr-3 py-2 border border-border rounded-md bg-muted text-muted-foreground"
+              />
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Your current usage-based pricing amount</p>
           </div>
           
@@ -74,20 +78,23 @@ export default function MaxUbpSetting({ userProfile }: MaxUbpSettingProps) {
             <label className="block text-sm font-medium text-foreground mb-2">
               Max UBP Limit
             </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={maxUbp}
-              onChange={(e) => !isFreeUser && setMaxUbp(e.target.value)}
-              disabled={isFreeUser}
-              className={`w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                isFreeUser 
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                  : 'bg-background text-foreground'
-              }`}
-              placeholder={isFreeUser ? "Free tier limit: $1.00" : "Enter maximum UBP limit"}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={maxUbp}
+                onChange={(e) => !isFreeUser && setMaxUbp(e.target.value)}
+                disabled={isFreeUser}
+                className={`w-full pl-8 pr-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  isFreeUser 
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                    : 'bg-background text-foreground'
+                }`}
+                placeholder={isFreeUser ? "1.00" : "Enter maximum UBP limit"}
+              />
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               {isFreeUser 
                 ? 'Free tier includes $1.00 worth of usage-based services'
