@@ -35,7 +35,7 @@ interface UsageData {
 }
 
 interface SubscriptionManagerProps {
-  userProfile: UserProfile
+  userProfile: UserProfile | null
 }
 
 export default function SubscriptionManager({ userProfile }: SubscriptionManagerProps) {

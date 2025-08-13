@@ -9,28 +9,6 @@ export default async function AccountPage() {
   const user = await getUser()
   const userProfile = await fetchUserProfile(user.id)
 
-  // If no user profile is found, show an error message
-  if (!userProfile) {
-    return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
-          <p className="text-muted-foreground">
-            View your account information and preferences. Most settings are managed through the mobile app.
-          </p>
-        </div>
-        
-        <div className="bg-card p-6 rounded-lg border border-border">
-          <div className="text-center">
-            <p className="text-lg text-red-600 dark:text-red-300 mb-4">
-              Unable to load your profile information. Please try refreshing the page or contact support if the issue persists.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-8">
       <div>
