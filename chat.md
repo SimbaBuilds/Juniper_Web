@@ -1,13 +1,35 @@
-We are adding chat functionality to this web app mimcking the functionality in the React Native implementation (/Users/cameronhightower/Software_Projects/juniper_web/react_native_reference).  Specs below.  Please reference the Reat Native reference throughout the build out. 
-
-- Chat functionality on web app
-    - yes text input and text response
-    - yes conversation history
-    - yes "new" button
-    - yes clear after x minutes w/o new message
-    - yes enforce char limit
-    - no image upload
-    - no voice or voice mode
+class Message(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    type: Literal["text", "image"]
+    timestamp: int
 
 
-Note: the majority of the chat build out is in react_native_reference/src/voice
+class ChatRequest(BaseModel):
+    message: str
+    timestamp: int
+    history: List[Message]
+    preferences: Optional[Dict[str, Any]] = None
+    request_id: Optional[str] = None  # Optional request ID from frontend
+    integration_in_progress: bool = False
+    image_url: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    timestamp: int
+    settings_updated: bool = False
+    integration_in_progress: bool = False
+
+
+@router.post("/api/chat", response_model=ChatResponse)
+async def chat_endpoint(
+    request: Request,
+    user_id: Annotated[str, Depends(get_current_user)],
+    supabase: Annotated[SupabaseClient, Depends(get_supabase_client)],
+    json_data: str = Form(...),
+) -> ChatResponse:
+    try:
+        request_data = ChatRequest(**json.loads(json_data))
+        image_url = None  # Initialize image_url variable for scope access throughout function
+        
+

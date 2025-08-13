@@ -17,7 +17,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   
   return (
     <div className={cn(
-      "flex gap-3",
+      "flex gap-3 mb-4 last:mb-0",
       isUser ? "justify-end" : "justify-start"
     )}>
       {!isUser && (
@@ -27,7 +27,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       )}
       
       <div className={cn(
-        "max-w-[80%] rounded-lg px-4 py-2",
+        "max-w-[80%] rounded-lg px-4 py-3",
         isUser ? "bg-primary text-primary-foreground" : "bg-muted"
       )}>
         <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -58,7 +58,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           </ReactMarkdown>
         </div>
         <div className={cn(
-          "text-xs mt-1 opacity-60",
+          "text-xs mt-2 opacity-60",
           isUser ? "text-primary-foreground" : "text-foreground"
         )}>
           {new Date(message.timestamp).toLocaleTimeString([], { 

@@ -16,13 +16,23 @@ interface ChatRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
+    // Get authenticated user (recommended for server-side validation)
     const supabase = await createSupabaseAppServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get session to extract access token for external API
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError || !session?.access_token) {
+      return NextResponse.json(
+        { error: 'No valid session token' },
         { status: 401 }
       )
     }
@@ -45,7 +55,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Prepare request for Python backend
+    // Prepare request for Python backend (matching backend ChatRequest model)
     const chatRequest = {
       message: message.trim(),
       timestamp: Date.now(),
@@ -55,22 +65,26 @@ export async function POST(request: NextRequest) {
         timestamp: msg.timestamp,
         type: 'text'
       })),
-      user_id: user.id,
-      settings: {
+      preferences: {
         general_instructions: profile?.general_instructions || '',
         base_language_model: profile?.base_language_model || 'gpt-4',
         timezone: profile?.timezone || 'UTC'
-      }
+      },
+      request_id: `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      integration_in_progress: false,
+      image_url: null
     }
 
-    // Call Python backend
+    // Call Python backend using FormData format (matching React Native)
+    const formData = new FormData()
+    formData.append('json_data', JSON.stringify(chatRequest))
+
     const response = await fetch(`${PYTHON_BACKEND_URL}/api/chat`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.id}`, // Use user ID as auth token
+        'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify(chatRequest),
+      body: formData,
     })
 
     if (!response.ok) {

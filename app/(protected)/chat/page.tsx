@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Send, Plus, History, Copy, Loader2 } from 'lucide-react'
+import { Send, Plus, Copy, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
@@ -24,7 +23,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -139,6 +137,8 @@ export default function ChatPage() {
           .select()
           .single()
 
+        console.log('Conversation save result:', { conversation, convError })
+
         if (!convError && conversation) {
           // Save messages
           const messagesToSave = messages.map(msg => ({
@@ -150,7 +150,8 @@ export default function ChatPage() {
             created_at: new Date(msg.timestamp).toISOString()
           }))
 
-          await supabase.from('messages').insert(messagesToSave)
+          const { data: savedMessages, error: msgError } = await supabase.from('messages').insert(messagesToSave)
+          console.log('Messages save result:', { savedMessages, msgError })
         }
       }
     } catch (error) {
@@ -186,57 +187,50 @@ export default function ChatPage() {
 
   const handleContinueChat = (loadedMessages: Message[]) => {
     setMessages(loadedMessages)
-    setShowHistory(false)
     toast.success('Previous conversation has been loaded.')
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Chat</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowHistory(true)}
-            title="View history"
-          >
-            <History className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleCopyChat}
-            disabled={messages.length === 0}
-            title="Copy chat"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handleClearChat(false)}
-            disabled={messages.length === 0}
-            title="New chat"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+    <div className="flex h-screen overflow-hidden bg-background">
+      <ConversationHistory onContinueChat={handleContinueChat} />
+      
+      <div className="flex-1 flex flex-col min-h-0 border-l">
+        <div className="flex justify-between items-center p-4 border-b flex-shrink-0 bg-background">
+          <h1 className="text-2xl font-bold">Chat</h1>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCopyChat}
+              disabled={messages.length === 0}
+              title="Copy chat"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleClearChat(false)}
+              disabled={messages.length === 0}
+              title="New chat"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <Card className="h-[600px] flex flex-col">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 min-h-0 bg-background">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-8">
               Start a conversation by typing a message below
             </div>
           ) : (
-            <div className="space-y-4">
+            <div>
               {messages.map((message, index) => (
                 <ChatMessage key={index} message={message} />
               ))}
               {isLoading && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground mb-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Thinking...</span>
                 </div>
@@ -245,7 +239,7 @@ export default function ChatPage() {
           )}
         </ScrollArea>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t flex-shrink-0 bg-background">
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -273,13 +267,7 @@ export default function ChatPage() {
             {inputValue.length}/2000
           </div>
         </div>
-      </Card>
-
-      <ConversationHistory
-        open={showHistory}
-        onOpenChange={setShowHistory}
-        onContinueChat={handleContinueChat}
-      />
+      </div>
     </div>
   )
 }

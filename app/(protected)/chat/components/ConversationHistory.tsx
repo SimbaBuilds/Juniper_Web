@@ -1,19 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { createClient } from '@/lib/utils/supabase/client'
-import { Loader2, Play, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Play, Trash2, Copy } from 'lucide-react'
 import { toast } from 'sonner'
-import { ChatMessage } from './ChatMessage'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -25,26 +16,20 @@ interface Conversation {
   id: string
   title: string
   created_at: string
-  messages?: Message[]
-  isExpanded?: boolean
-  isLoading?: boolean
+  message_count?: number
 }
 
 interface ConversationHistoryProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   onContinueChat: (messages: Message[]) => void
 }
 
-export function ConversationHistory({ open, onOpenChange, onContinueChat }: ConversationHistoryProps) {
+export function ConversationHistory({ onContinueChat }: ConversationHistoryProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (open) {
-      loadConversations()
-    }
-  }, [open])
+    loadConversations()
+  }, [])
 
   const loadConversations = async () => {
     setIsLoading(true)
@@ -54,22 +39,38 @@ export function ConversationHistory({ open, onOpenChange, onContinueChat }: Conv
       
       if (!user) throw new Error('Not authenticated')
 
-      // Load conversations from the last 7 days
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      // Load conversations from the past month
+      const oneMonthAgo = new Date()
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
+      // Load conversations from both chat and voice_chat types with message count
       const { data: conversations, error } = await supabase
         .from('conversations')
-        .select('id, title, created_at')
+        .select(`
+          id, 
+          title, 
+          created_at,
+          messages(count)
+        `)
         .eq('user_id', user.id)
-        .eq('conversation_type', 'chat')
-        .gte('created_at', sevenDaysAgo.toISOString())
+        .in('conversation_type', ['chat', 'voice_chat'])
+        .gte('created_at', oneMonthAgo.toISOString())
         .order('created_at', { ascending: false })
-        .limit(20)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error loading conversations:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
+        throw error
+      }
 
-      setConversations(conversations || [])
+      const formattedConversations = conversations?.map(conv => ({
+        id: conv.id,
+        title: conv.title || 'Untitled Conversation',
+        created_at: conv.created_at,
+        message_count: conv.messages?.[0]?.count || 0
+      })) || []
+
+      setConversations(formattedConversations)
     } catch (error) {
       console.error('Error loading conversations:', error)
       toast.error('Failed to load conversation history')
@@ -78,47 +79,55 @@ export function ConversationHistory({ open, onOpenChange, onContinueChat }: Conv
     }
   }
 
-  const toggleConversation = async (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId)
-    if (!conversation) return
+  const continueConversation = async (conversationId: string) => {
+    try {
+      const supabase = createClient()
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('role, content, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
 
-    if (conversation.isExpanded) {
-      // Collapse
-      setConversations(prev => prev.map(c => 
-        c.id === conversationId ? { ...c, isExpanded: false, messages: undefined } : c
-      ))
-    } else {
-      // Expand and load messages
-      setConversations(prev => prev.map(c => 
-        c.id === conversationId ? { ...c, isExpanded: true, isLoading: true } : c
-      ))
+      if (error) throw error
 
-      try {
-        const supabase = createClient()
-        const { data: messages, error } = await supabase
-          .from('messages')
-          .select('role, content, created_at')
-          .eq('conversation_id', conversationId)
-          .order('created_at', { ascending: true })
+      const formattedMessages: Message[] = messages?.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        timestamp: new Date(msg.created_at).getTime()
+      })) || []
 
-        if (error) throw error
+      onContinueChat(formattedMessages)
+    } catch (error) {
+      console.error('Error loading messages for continue:', error)
+      toast.error('Failed to load conversation messages')
+    }
+  }
 
-        const formattedMessages: Message[] = messages?.map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          timestamp: new Date(msg.created_at).getTime()
-        })) || []
+  const copyConversation = async (conversationId: string) => {
+    try {
+      const supabase = createClient()
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('role, content, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
 
-        setConversations(prev => prev.map(c => 
-          c.id === conversationId ? { ...c, messages: formattedMessages, isLoading: false } : c
-        ))
-      } catch (error) {
-        console.error('Error loading messages:', error)
-        toast.error('Failed to load messages')
-        setConversations(prev => prev.map(c => 
-          c.id === conversationId ? { ...c, isExpanded: false, isLoading: false } : c
-        ))
-      }
+      if (error) throw error
+
+      const conversationText = messages?.map(msg => {
+        const time = new Date(msg.created_at).toLocaleTimeString([], { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+        const role = msg.role === 'user' ? 'You' : 'Assistant'
+        return `[${time}] ${role}: ${msg.content}`
+      }).join('\n\n') || ''
+
+      await navigator.clipboard.writeText(conversationText)
+      toast.success('Conversation copied to clipboard!')
+    } catch (error) {
+      console.error('Error copying conversation:', error)
+      toast.error('Failed to copy conversation')
     }
   }
 
@@ -165,99 +174,80 @@ export function ConversationHistory({ open, onOpenChange, onContinueChat }: Conv
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Conversation History</DialogTitle>
-          <DialogDescription>
-            Your conversations from the past 7 days
-          </DialogDescription>
-        </DialogHeader>
+    <div className="w-80 bg-muted/30 border-r flex flex-col h-full">
+      <div className="p-4 border-b">
+        <h2 className="font-semibold text-lg">Chat History</h2>
+        <p className="text-sm text-muted-foreground">Past month conversations</p>
+      </div>
 
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : conversations.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+          <div>
+            <p className="text-muted-foreground">No conversations found</p>
+            <p className="text-sm text-muted-foreground mt-1">Start chatting to see your history here</p>
           </div>
-        ) : conversations.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            No conversations found
-          </div>
-        ) : (
-          <ScrollArea className="flex-1">
-            <div className="space-y-2 p-4">
-              {conversations.map((conversation) => (
-                <div key={conversation.id} className="border rounded-lg overflow-hidden">
-                  <div className="p-4 flex items-center justify-between">
-                    <button
-                      onClick={() => toggleConversation(conversation.id)}
-                      className="flex-1 text-left"
-                    >
-                      <h3 className="font-semibold truncate">{conversation.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-2">
+            {conversations.map((conversation) => (
+              <div key={conversation.id} className="mb-2 p-3 rounded-lg hover:bg-muted/50 border">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium truncate text-sm" title={conversation.title}>
+                      {conversation.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-muted-foreground">
                         {formatDate(conversation.created_at)}
                       </p>
-                    </button>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => deleteConversation(conversation.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      
-                      {conversation.messages && conversation.messages.length > 0 && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => onContinueChat(conversation.messages!)}
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
+                      {conversation.message_count && (
+                        <span className="text-xs text-muted-foreground">
+                          • {conversation.message_count} messages
+                        </span>
                       )}
-                      
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => toggleConversation(conversation.id)}
-                      >
-                        {conversation.isExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
                     </div>
                   </div>
-
-                  {conversation.isExpanded && (
-                    <div className="border-t p-4 bg-muted/50">
-                      {conversation.isLoading ? (
-                        <div className="flex justify-center py-4">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : conversation.messages ? (
-                        <ScrollArea className="h-[300px]">
-                          <div className="space-y-4">
-                            {conversation.messages.map((message, index) => (
-                              <ChatMessage key={index} message={message} />
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      ) : (
-                        <div className="text-center text-muted-foreground py-4">
-                          No messages found
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-      </DialogContent>
-    </Dialog>
+                
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs flex-1"
+                    onClick={() => continueConversation(conversation.id)}
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Continue
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => copyConversation(conversation.id)}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => deleteConversation(conversation.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
