@@ -28,7 +28,6 @@ export const useRequestStatusPolling = (
   const finalStates = ['completed', 'failed', 'cancelled'];
 
   useEffect(() => {
-    console.log('[POLLING] useEffect triggered with requestId:', requestId);
     
     if (!requestId) {
       setStatus(null);
@@ -45,7 +44,6 @@ export const useRequestStatusPolling = (
 
         const pollStatus = async () => {
           try {
-            console.log('[POLLING] Polling status for requestId:', requestId);
             const supabase = createClient();
             
             const { data, error } = await supabase
@@ -63,7 +61,6 @@ export const useRequestStatusPolling = (
             }
 
             const currentStatus = data?.status;
-            console.log('[POLLING] Received status:', currentStatus, 'for requestId:', requestId);
             
             if (currentStatus) {
               setStatus(currentStatus);
@@ -84,7 +81,6 @@ export const useRequestStatusPolling = (
               }
             }
           } catch (err) {
-            console.error('[POLLING] Error polling status for requestId:', requestId, 'error:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch request status');
             setIsPolling(false);
           }
@@ -94,7 +90,6 @@ export const useRequestStatusPolling = (
         await pollStatus();
 
         // Set up interval for subsequent polls
-        console.log('[POLLING] Setting up polling interval:', intervalMs, 'ms');
         intervalRef.current = setInterval(pollStatus, intervalMs);
       };
 
