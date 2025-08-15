@@ -110,6 +110,13 @@ export default async function IntegrationsPage() {
         </p>
       </div>
 
+      {/* Prominent mobile app integration message */}
+      <div className="bg-primary/10 border-2 border-primary rounded-lg p-6">
+        <p className="text-lg font-semibold text-foreground text-center">
+          Integrate with the services below in our mobile app
+        </p>
+      </div>
+
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-card p-6 rounded-lg border border-border">
