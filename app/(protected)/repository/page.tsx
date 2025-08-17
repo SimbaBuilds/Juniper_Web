@@ -249,6 +249,20 @@ export default function RepositoryPage() {
       {/* Add Resource Section */}
       <AddResourceSection onSave={handleAddResource} />
 
+      {/* Tip Banner */}
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <Tags className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <span className="font-medium">Tip:</span> Use tags to improve retrieval (e.g. add the "email" tag to a resource to make sure Juniper has access to it every time it does something with email).
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Expiring Resources */}
       {expiringResources.length > 0 && (
         <div className="space-y-4">
