@@ -73,9 +73,14 @@ const CHART_CONFIG = {
   }
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+// Use theme-aware colors that match repository screen
+const COLORS = {
+  light: ['#1e40af', '#166534', '#f59e0b', '#ef4444', '#8b5cf6'], // blue-800, green-800, amber-500, red-500, violet-500
+  dark: ['#60a5fa', '#bbf7d0', '#fbbf24', '#f87171', '#a78bfa']   // blue-400, green-200, amber-400, red-400, violet-400
+}
 
 export default function WellnessPage() {
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [healthData, setHealthData] = useState<HealthMetric[]>([])
   const [resources, setResources] = useState<ResourceWithTags[]>([])
@@ -95,6 +100,23 @@ export default function WellnessPage() {
     showStepsCard: true,
     showReadinessCard: true
   })
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    }
+    checkDarkMode()
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    })
+    
+    return () => observer.disconnect()
+  }, [])
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -468,9 +490,27 @@ export default function WellnessPage() {
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="sleep_score" stroke="#6366f1" strokeWidth={2} name="Sleep Score" />
-                      <Line type="monotone" dataKey="activity_score" stroke="#f59e0b" strokeWidth={2} name="Activity Score" />
-                      <Line type="monotone" dataKey="readiness_score" stroke="#ef4444" strokeWidth={2} name="Readiness Score" />
+                      <Line 
+                        type="monotone" 
+                        dataKey="sleep_score" 
+                        stroke={isDarkMode ? "#60a5fa" : "#1e40af"} 
+                        strokeWidth={2} 
+                        name="Sleep Score" 
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="activity_score" 
+                        stroke={isDarkMode ? "#bbf7d0" : "#166534"} 
+                        strokeWidth={2} 
+                        name="Activity Score" 
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="readiness_score" 
+                        stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
+                        strokeWidth={2} 
+                        name="Readiness Score" 
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -488,19 +528,41 @@ export default function WellnessPage() {
               <CardContent className="pt-0">
                 <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                    <PieChart margin={{ top: 20, right: 90, left: 90, bottom: 20 }}>
                       <Pie
                         data={activityDistribution}
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
+                        outerRadius={140}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                        label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent, value, index }) => {
+                          const RADIAN = Math.PI / 180
+                          const radius = outerRadius + 35
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                          
+                          const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
+                          return (
+                            <text 
+                              x={x} 
+                              y={y} 
+                              fill={colorPalette[index % colorPalette.length]}
+                              textAnchor={x > cx ? 'start' : 'end'}
+                              dominantBaseline="central"
+                              className="text-xs font-medium"
+                            >
+                              <tspan x={x} dy="0">{name}</tspan>
+                              <tspan x={x} dy="16">{`${(percent * 100).toFixed(0)}% (${value}/${healthData.length} days)`}</tspan>
+                            </text>
+                          )
+                        }}
                       >
-                        {activityDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                        {activityDistribution.map((entry, index) => {
+                          const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
+                          return <Cell key={`cell-${index}`} fill={colorPalette[index % colorPalette.length]} />
+                        })}
                       </Pie>
                       <Tooltip />
                     </PieChart>
@@ -524,7 +586,7 @@ export default function WellnessPage() {
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="steps" fill="#3b82f6" name="Steps" />
+                      <Bar dataKey="steps" fill={isDarkMode ? "#60a5fa" : "#1e40af"} name="Steps" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -546,7 +608,7 @@ export default function WellnessPage() {
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="calories" fill="#10b981" name="Calories" />
+                      <Bar dataKey="calories" fill={isDarkMode ? "#bbf7d0" : "#166534"} name="Calories" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
