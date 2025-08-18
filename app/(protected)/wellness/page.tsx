@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/utils/supabase/client'
 import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3 } from 'lucide-react'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -44,6 +43,10 @@ interface FilterPrefs {
   showResources: boolean
   showAutomations: boolean
   sortBy: string
+  showHealthScoresTrend: boolean
+  showActivityDistribution: boolean
+  showDailySteps: boolean
+  showDailyCalories: boolean
 }
 
 const CHART_CONFIG = {
@@ -76,7 +79,11 @@ export default function WellnessPage() {
     timeRange: '30',
     showResources: true,
     showAutomations: true,
-    sortBy: 'date'
+    sortBy: 'date',
+    showHealthScoresTrend: true,
+    showActivityDistribution: true,
+    showDailySteps: true,
+    showDailyCalories: true
   })
 
   // Load preferences from localStorage
@@ -188,7 +195,7 @@ export default function WellnessPage() {
     avgSleepScore: Math.round(healthData.reduce((sum, d) => sum + (d.sleep_score || 0), 0) / healthData.length),
     avgActivityScore: Math.round(healthData.reduce((sum, d) => sum + (d.activity_score || 0), 0) / healthData.length),
     totalSteps: healthData.reduce((sum, d) => sum + (d.total_steps || 0), 0),
-    avgReadiness: Math.round(healthData.reduce((sum, d) => sum + (d.readiness_score || 0), 0) / healthData.filter(d => d.readiness_score).length || 0)
+    avgReadiness: Math.round(healthData.reduce((sum, d) => sum + (d.readiness_score || 0), 0) / Math.max(healthData.filter(d => d.readiness_score && d.readiness_score > 0).length, 1))
   } : null
 
   // Prepare chart data
@@ -229,66 +236,96 @@ export default function WellnessPage() {
       </div>
 
       {/* Filter Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Dashboard Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Time Range</Label>
-              <Select 
-                value={filterPrefs.timeRange} 
-                onValueChange={(value) => updateFilterPref('timeRange', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Last 7 days</SelectItem>
-                  <SelectItem value="30">Last 30 days</SelectItem>
-                  <SelectItem value="90">Last 90 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Sort By</Label>
-              <Select 
-                value={filterPrefs.sortBy} 
-                onValueChange={(value) => updateFilterPref('sortBy', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="sleep_score">Sleep Score</SelectItem>
-                  <SelectItem value="activity_score">Activity Score</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-resources"
-                checked={filterPrefs.showResources}
-                onCheckedChange={(checked) => updateFilterPref('showResources', checked)}
-              />
-              <Label htmlFor="show-resources">Show Resources</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-automations"
-                checked={filterPrefs.showAutomations}
-                onCheckedChange={(checked) => updateFilterPref('showAutomations', checked)}
-              />
-              <Label htmlFor="show-automations">Show Automations</Label>
-            </div>
+      <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+        <h3 className="font-medium text-sm flex items-center gap-2">
+          <Filter className="h-4 w-4" />
+          Dashboard Settings
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs">Time Range</Label>
+            <Select 
+              value={filterPrefs.timeRange} 
+              onValueChange={(value) => updateFilterPref('timeRange', value)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-2">
+            <Label className="text-xs">Sort By</Label>
+            <Select 
+              value={filterPrefs.sortBy} 
+              onValueChange={(value) => updateFilterPref('sortBy', value)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="sleep_score">Sleep Score</SelectItem>
+                <SelectItem value="activity_score">Activity Score</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-health-scores"
+              checked={filterPrefs.showHealthScoresTrend}
+              onCheckedChange={(checked) => updateFilterPref('showHealthScoresTrend', checked)}
+            />
+            <Label htmlFor="show-health-scores" className="text-xs">Health Scores</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-activity-dist"
+              checked={filterPrefs.showActivityDistribution}
+              onCheckedChange={(checked) => updateFilterPref('showActivityDistribution', checked)}
+            />
+            <Label htmlFor="show-activity-dist" className="text-xs">Activity Chart</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-steps"
+              checked={filterPrefs.showDailySteps}
+              onCheckedChange={(checked) => updateFilterPref('showDailySteps', checked)}
+            />
+            <Label htmlFor="show-steps" className="text-xs">Steps Chart</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-calories"
+              checked={filterPrefs.showDailyCalories}
+              onCheckedChange={(checked) => updateFilterPref('showDailyCalories', checked)}
+            />
+            <Label htmlFor="show-calories" className="text-xs">Calories Chart</Label>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-resources"
+              checked={filterPrefs.showResources}
+              onCheckedChange={(checked) => updateFilterPref('showResources', checked)}
+            />
+            <Label htmlFor="show-resources" className="text-xs">Show Resources Section</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-automations"
+              checked={filterPrefs.showAutomations}
+              onCheckedChange={(checked) => updateFilterPref('showAutomations', checked)}
+            />
+            <Label htmlFor="show-automations" className="text-xs">Show Automations Section</Label>
+          </div>
+        </div>
+      </div>
 
 
       {/* Summary Stats */}
@@ -330,7 +367,9 @@ export default function WellnessPage() {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{summaryStats.avgReadiness}</div>
+              <div className="text-2xl font-bold">
+                {healthData.some(d => d.readiness_score && d.readiness_score > 0) ? summaryStats.avgReadiness : 'N/A'}
+              </div>
               <p className="text-xs text-muted-foreground">readiness score</p>
             </CardContent>
           </Card>
@@ -339,90 +378,106 @@ export default function WellnessPage() {
 
       {/* Charts */}
       {chartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Health Scores Trend */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Health Scores Trend</CardTitle>
-              <CardDescription>Sleep, Activity, and Readiness scores over time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={CHART_CONFIG} className="h-[300px]">
-                <LineChart data={chartData}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="sleep_score" stroke="var(--color-sleep_score)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="activity_score" stroke="var(--color-activity_score)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="readiness_score" stroke="var(--color-readiness_score)" strokeWidth={2} />
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {filterPrefs.showHealthScoresTrend && (
+            <Card className="pb-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Health Scores Trend</CardTitle>
+                <CardDescription className="text-sm">Sleep, Activity, and Readiness scores over time</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="sleep_score" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Sleep Score" />
+                      <Line type="monotone" dataKey="activity_score" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Activity Score" />
+                      <Line type="monotone" dataKey="readiness_score" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Readiness Score" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Activity Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Distribution</CardTitle>
-              <CardDescription>Distribution of activity levels</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={CHART_CONFIG} className="h-[300px]">
-                <PieChart>
-                  <Pie
-                    data={activityDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {activityDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {filterPrefs.showActivityDistribution && (
+            <Card className="pb-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Activity Distribution</CardTitle>
+                <CardDescription className="text-sm">Distribution of activity levels</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                      <Pie
+                        data={activityDistribution}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {activityDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Steps and Calories */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily Steps</CardTitle>
-              <CardDescription>Steps taken each day</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={CHART_CONFIG} className="h-[300px]">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="steps" fill="hsl(var(--chart-1))" />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {/* Daily Steps */}
+          {filterPrefs.showDailySteps && (
+            <Card className="pb-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Daily Steps</CardTitle>
+                <CardDescription className="text-sm">Steps taken each day</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="steps" fill="hsl(var(--chart-1))" name="Steps" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Calories Burned */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily Calories</CardTitle>
-              <CardDescription>Calories burned each day</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={CHART_CONFIG} className="h-[300px]">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="calories" fill="hsl(var(--chart-2))" />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {/* Daily Calories */}
+          {filterPrefs.showDailyCalories && (
+            <Card className="pb-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Daily Calories</CardTitle>
+                <CardDescription className="text-sm">Calories burned each day</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="calories" fill="hsl(var(--chart-2))" name="Calories" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

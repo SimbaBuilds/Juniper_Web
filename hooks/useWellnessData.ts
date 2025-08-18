@@ -124,12 +124,22 @@ export function useWellnessData(timeRangeDays: number = 30) {
     loadData()
   }, [timeRangeDays])
 
-  // Aggregate health aggregation function
+  // Aggregate health aggregation function using Supabase Edge Function
   const aggregateHealthData = async () => {
     try {
-      const response = await fetch('/api/health-aggregation', {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        console.error('No authentication token available')
+        return
+      }
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const response = await fetch(`${supabaseUrl}/functions/v1/health-aggregation`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -145,7 +155,6 @@ export function useWellnessData(timeRangeDays: number = 30) {
         const cutoffDate = new Date(Date.now() - timeRangeDays * 24 * 60 * 60 * 1000)
           .toISOString().split('T')[0]
         
-        const supabase = createClient()
         const { data: metricsData } = await supabase
           .from('health_metrics_daily')
           .select('*')
@@ -156,6 +165,8 @@ export function useWellnessData(timeRangeDays: number = 30) {
         if (metricsData) {
           setHealthData(metricsData)
         }
+      } else {
+        console.error('Health aggregation failed:', result)
       }
     } catch (error) {
       console.error('Health aggregation failed:', error)
