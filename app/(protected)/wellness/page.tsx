@@ -116,6 +116,7 @@ export default function WellnessPage() {
   useEffect(() => {
     async function loadData() {
       try {
+        setLoading(true)
         const supabase = createClient()
         
         // Get current user
