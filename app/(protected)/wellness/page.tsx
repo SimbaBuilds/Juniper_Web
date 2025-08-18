@@ -290,6 +290,7 @@ export default function WellnessPage() {
         </CardContent>
       </Card>
 
+
       {/* Summary Stats */}
       {summaryStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -424,6 +425,20 @@ export default function WellnessPage() {
           </Card>
         </div>
       )}
+
+      {/* Tip Banner */}
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <span className="font-medium">Tip:</span> Add tag “Health and Wellness” to a resource to have it appear below.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Resources Section */}
       {filterPrefs.showResources && (

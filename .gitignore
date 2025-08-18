@@ -41,3 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 react_native_reference/
+.playwright-mcp/wellness-dashboard-full.png
