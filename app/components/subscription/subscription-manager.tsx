@@ -122,7 +122,7 @@ export default function SubscriptionManager({ userProfile }: SubscriptionManager
       const { url } = await response.json()
       
       if (url) {
-        window.open(url, '_blank')
+        window.open(url, '_blank', 'noopener,noreferrer')
       }
     } catch (error) {
       console.error('Portal error:', error)
