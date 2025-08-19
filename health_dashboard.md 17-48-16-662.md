@@ -1,162 +1,133 @@
+Based on the edge function logic, here are my recommendations for
+different scenarios:
 
-**`wearables_data` - Raw Time-Series Storage**
-- **Purpose**: Append-only historical record of ALL incoming data points from wearables APIs
-- **Scalability**: Handles millions of rows (heart rate every minute, stress every hour, etc.)
-- **Data Integrity**: Preserves original API responses without transformation
-- **Flexibility**: JSONB allows different services to store their unique metrics without schema changes
-- **Audit Trail**: Complete history for debugging and reprocessing
+Initial Integration Record Creation (OAuth callback)
 
-**`health_metrics_daily` - Aggregated Performance Layer**
-- **Query Speed**: Dashboard loads instantly (1 row/day vs 1000s of raw records)
-- **Reduced Computation**: Pre-calculated scores, no real-time aggregation needed
-- **Cost Efficiency**: Fewer database reads for common operations
-- **Standardization**: Normalized metrics across different device types
-
-#### Understanding `wearables_data` Table
-
-The **`metric_value` (JSONB)** field stores data exactly as the API provides:
-
-```json
-// Example for sleep metric from Oura
+Recommended Flow:
+// 1. After OAuth tokens are saved to integrations table
+POST /functions/v1/health-data-sync
 {
-  "duration": 27480,
-  "efficiency": 85,
-  "rem_sleep": 5520,
-  "deep_sleep": 7200,
-  "light_sleep": 14760,
-  "awake_time": 1920,
-  "onset_latency": 540,
-  "temperature_deviation": -0.2
+"action": "backfill",
+"user_id": "user-uuid",
+"service_name": "Oura", // or "Fitbit"
+"days": 7  // Start with recent week for immediate use
 }
 
-// Example for heart_rate metric from Fitbit
+Why this approach:
+
+- Gets immediate usable data (last 7 days)
+- Auto-triggers aggregation after backfill completes
+- User sees populated dashboard right away
+- Can extend to 30+ days in background later
+
+Health Dashboard Page Refresh/Load
+
+Option A: Sync + Aggregate (Recommended)
+// First check if we have recent data, if not:
+POST /functions/v1/health-data-sync
 {
-  "bpm": 72,
-  "confidence": "high",
-  "context": "resting"
+"action": "backfill",
+"user_id": "user-uuid",
+"days": 3  // Just last few days to catch up
 }
+
+Option B: Aggregate Only (If raw data exists)
+POST /functions/v1/health-data-sync
+{
+"action": "aggregate",
+"user_id": "user-uuid",
+"days": 7  // Re-aggregate recent week
+}
+
+Background Maintenance
+
+Hourly Sync (for all users):
+POST /functions/v1/health-data-sync
+{
+"action": "sync_hourly",
+"services": ["Oura", "Fitbit"]
+}
+
+Recommended Implementation Strategy:
+
+Frontend Dashboard Load:
+
+async function loadHealthDashboard(userId) {
+// 1. Check if we have recent aggregated data
+const recentMetrics = await checkRecentMetrics(userId, 3); //
+last 3 days
+
+```
+if (!recentMetrics.length) {
+  // 2. No recent data - trigger backfill + aggregation
+  await fetch('/functions/v1/health-data-sync', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: "backfill",
+      user_id: userId,
+      days: 7
+    })
+  });
+} else {
+  // 3. Have recent data - just sync last 2 days
+  await fetch('/functions/v1/health-data-sync', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: "backfill",
+      user_id: userId,
+      days: 2
+    })
+  });
+}
+
+// 4. Load dashboard with latest data
+return loadMetrics(userId);
+
 ```
 
-**Why JSONB?**
-- Different devices send different structures (Oura's sleep data ≠ Fitbit's sleep data)
-- APIs evolve - new fields can be added without migrations
-- Query flexibility - PostgreSQL can query inside JSONB: `WHERE metric_value->>'bpm' > 100`
-- No data loss - store everything now, decide what to use later
+}
 
-#### Real-World Data Flow Example
+OAuth Integration Flow:
 
-1. **3:00 AM**: Cron job triggers
-2. **3:01 AM**: Fetches last 24h of data from Oura API
-3. **3:02 AM**: Creates multiple `wearables_data` rows:
-   - 1 row for sleep session
-   - 1,440 rows for heart rate (one per minute)
-   - 24 rows for hourly stress levels
-   - 1 row for daily readiness score
-4. **3:03 AM**: Aggregation job processes new raw data
-5. **3:04 AM**: Updates `health_metrics_daily` with calculated daily summaries
-6. **3:05 AM**: Dashboard cache refreshes with new data
+async function handleOAuthSuccess(userId, serviceName) {
+// 1. Save tokens to integrations table
+await saveIntegrationTokens(userId, serviceName, tokens);
 
-This design follows the "write once, read many" pattern - optimizing for the most common use case (viewing dashboards) while maintaining complete data integrity
+```
+// 2. Immediate backfill for dashboard
+const result = await fetch('/functions/v1/health-data-sync', {
+  method: 'POST',
+  body: JSON.stringify({
+    action: "backfill",
+    user_id: userId,
+    service_name: serviceName,
+    days: 7  // Week of data for immediate use
+  })
+});
 
----------
+// 3. Optional: Queue longer backfill for background
+queueBackgroundJob({
+  action: "backfill",
+  user_id: userId,
+  service_name: serviceName,
+  days: 90  // 3 months historical
+});
 
-INTEGRATION GUIDE:
-🎯 Quick Integration
+```
 
-  React Native / Next.js Implementation
+}
 
-  // Call when health dashboard loads
-  const aggregateHealthData = async () => {
-    try {
-      const response = await
-  fetch(`${SUPABASE_URL}/functions/v1/health-aggregation`,
-  {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer 
-  ${supabase.auth.session()?.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          days: 3  // Optional: defaults to 3 days for 
-  real-time updates
-        })
-      });
+Key Benefits:
 
-      const result = await response.json();
+1. Immediate Data: Users see results right after OAuth
+2. Duplicate Safe: Upsert logic prevents data corruption
+3. Auto-Aggregation: Backfill triggers aggregation automatically
+4. Efficient: Only syncs recent days on refreshes
+5. Consistent: Always gets latest data from APIs
 
-      if (response.ok) {
-        console.log(`✅ Aggregated ${result.days_processed}
-   days in ${result.latency_ms}ms`);
-        // Refresh your health dashboard data here
-        refreshDashboard();
-      }
-    } catch (error) {
-      console.error('Health aggregation failed:', error);
-    }
-  };
+Performance Considerations:
 
-  📱 Integration Points
-
-  1. Health Dashboard Screen Load
-
-  useEffect(() => {
-    // Trigger aggregation when user opens health screen
-    aggregateHealthData();
-  }, []);
-
-  2. Pull-to-Refresh
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await aggregateHealthData();
-    setRefreshing(false);
-  };
-
------------
-
-## Dashboard Visualizations
-
-### Sleep Analytics
-- **Sleep Architecture Chart**: Stacked area showing REM, deep, light sleep phases
-- **Weekly Sleep Trends**: Line graph of sleep duration and efficiency
-- **Sleep Debt Tracker**: Running calculation showing accumulated deficit/surplus
-
-### Activity & Movement
-- **Daily Activity Rings**: Circular progress for steps, calories, active minutes
-- **Weekly Activity Heatmap**: Calendar view showing intensity levels
-- **Exercise Distribution**: Pie chart of activity types (cardio, strength, flexibility)
-
-### Recovery & Readiness
-- **HRV Trend Line**: 7/30/90 day moving averages with normal range bands
-- **Recovery Score Gauge**: Speedometer-style display (0-100)
-- **Readiness Factors**: Radar chart showing sleep, HRV, temperature, activity balance
-
-### Cardiovascular Health
-- **Resting Heart Rate Trends**: Line graph with weekly/monthly comparisons
-- **Heart Rate Zones**: During workouts - time spent in each zone
-- **Cardio Fitness Score**: VO2 max estimates over time
-
-### Stress & Well-being
-- **Stress Timeline**: Hour-by-hour stress levels throughout the day
-- **Meditation/Mindfulness Minutes**: Bar chart tracking practice consistency
-- **Mood Correlation Matrix**: Heatmap showing stress vs sleep, activity, etc.
-
-### Comprehensive Views
-- **Health Score Dashboard**: Combined metric showing overall wellness (0-100)
-- **Weekly/Monthly Reports**: PDF-style summary with key insights
-- **Goal Progress Trackers**: Multiple progress bars for various health goals
-- **Comparative Analytics**: Your metrics vs age/gender benchmarks
-
-### Advanced Analytics
-- **Correlation Discovery**: Scatter plots showing relationships (sleep vs performance)
-- **Predictive Insights**: "Based on your patterns, tomorrow's readiness will be..."
-- **Anomaly Detection**: Highlighting unusual patterns requiring attention
-- **Seasonal Trends**: Year-over-year comparisons for long-term users
-
-## Implementation Notes
-
-- **JSONB Storage**: The schema uses JSONB for `metric_value` to provide flexibility since different wearables provide varying data structures
-- **Daily Aggregation**: The `health_metrics_daily` table provides fast access to common queries and dashboard rendering
-- **Cron Job Updates**: Dashboard data updates via scheduled cron jobs pulling from each API endpoint based on user device configurations
-- **Multi-Device Support**: Schema supports users with multiple wearable devices, combining data from various sources
+- Start small (7 days) for immediate feedback
+- Extend gradually (30-90 days) in background
+- Cache check - only sync if no recent data exists
+- Service-specific - can backfill just Oura or just Fitbit
