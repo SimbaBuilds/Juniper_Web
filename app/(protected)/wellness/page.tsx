@@ -275,7 +275,7 @@ export default function WellnessPage() {
 
   // Prepare chart data
   const chartData = healthData.map(d => ({
-    date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     sleep_score: d.sleep_score || 0,
     activity_score: d.activity_score || 0,
     readiness_score: d.readiness_score || 0,
@@ -285,6 +285,9 @@ export default function WellnessPage() {
     steps: d.total_steps || 0,
     calories: d.calories_burned || 0
   }))
+
+  console.log('Chart data prepared:', chartData.length, 'points')
+  console.log('Chart dates:', chartData.map(d => d.date))
 
   // Activity distribution for pie chart
   const activityDistribution = healthData.length > 0 ? [
