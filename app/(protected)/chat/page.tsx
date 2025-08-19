@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Send, Plus, Copy, Loader2, X } from 'lucide-react'
+import { Send, Plus, Copy, Loader2, X, Smartphone } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
@@ -359,90 +359,106 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-13rem)] overflow-hidden bg-background mb-4 border rounded-lg">
-      <ConversationHistory onContinueChat={handleContinueChat} />
-      
-      <div className="flex-1 flex flex-col min-h-0 border-l">
-        <div className="flex justify-between items-center p-4 border-b flex-shrink-0 bg-background">
-          <h1 className="text-2xl font-bold">Chat with Juniper</h1>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleCopyChat}
-              disabled={messages.length === 0}
-              title="Copy chat"
+    <div className="space-y-4">
+      <div className="flex h-[calc(100vh-13rem)] overflow-hidden bg-background border rounded-lg">
+        <ConversationHistory onContinueChat={handleContinueChat} />
+        
+        <div className="flex-1 flex flex-col min-h-0 border-l">
+          <div className="flex justify-between items-center p-4 border-b flex-shrink-0 bg-background">
+            <h1 className="text-2xl font-bold">Chat with Juniper</h1>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCopyChat}
+                disabled={messages.length === 0}
+                title="Copy chat"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleClearChat(false)}
+                disabled={messages.length === 0}
+                title="New chat"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pb-8 min-h-0 bg-background">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground mt-8">
+              </div>
+            ) : (
+              <div>
+                {messages.map((message, index) => (
+                  <ChatMessage key={index} message={message} />
+                ))}
+                {isLoading && (
+                  <div className="flex items-center gap-2 text-muted-foreground mb-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>{getStatusMessage(requestStatus || (isLoading ? 'pending' : null))}</span>
+                    {isRequestInProgress && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelRequest}
+                        className="text-xs h-6 px-2 ml-2"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="p-4 border-t flex-shrink-0 bg-background">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSendMessage()
+              }}
+              className="flex gap-2"
             >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handleClearChat(false)}
-              disabled={messages.length === 0}
-              title="New chat"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type a message..."
+                maxLength={2000}
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button
+                type="submit"
+                disabled={!inputValue.trim() || isLoading}
+                size="icon"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+            <div className="text-xs text-muted-foreground mt-1 text-right">
+              {inputValue.length}/2000
+            </div>
           </div>
         </div>
+      </div>
 
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pb-8 min-h-0 bg-background">
-          {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground mt-8">
-            </div>
-          ) : (
-            <div>
-              {messages.map((message, index) => (
-                <ChatMessage key={index} message={message} />
-              ))}
-              {isLoading && (
-                <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>{getStatusMessage(requestStatus || (isLoading ? 'pending' : null))}</span>
-                  {isRequestInProgress && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelRequest}
-                      className="text-xs h-6 px-2 ml-2"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
-
-        <div className="p-4 border-t flex-shrink-0 bg-background">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSendMessage()
-            }}
-            className="flex gap-2"
-          >
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type a message..."
-              maxLength={2000}
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={!inputValue.trim() || isLoading}
-              size="icon"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-          <div className="text-xs text-muted-foreground mt-1 text-right">
-            {inputValue.length}/2000
+      {/* Tip Banner */}
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <Smartphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <span className="font-medium">Tip:</span> Get the full Juniper experience in our iOS/Android apps with voice mode options, image upload, integration flows and, with Android, always-on wake word detection.
+            </p>
           </div>
         </div>
       </div>
