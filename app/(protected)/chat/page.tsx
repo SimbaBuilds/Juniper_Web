@@ -457,7 +457,7 @@ export default function ChatPage() {
           </div>
           <div>
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-medium">Tip:</span> Get the full Juniper experience in our iOS/Android apps with voice mode options, image upload, integration flows and, with Android, always-on wake word detection.
+              <span className="font-medium">Tip:</span> Get the full Juniper experience in our iOS/Android apps with voice options, image upload, integration flows and, with Android, always-on wake word detection.
             </p>
           </div>
         </div>
