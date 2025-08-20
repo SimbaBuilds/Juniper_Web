@@ -8,12 +8,17 @@ interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  imageUrl?: string
 }
 
 interface ChatRequest {
   message: string
+  imageUrl?: string
   history: ChatMessage[]
   request_id?: string
+  integration_in_progress?: boolean
+  service_name?: string
+  user_id?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -53,11 +58,11 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: ChatRequest = await request.json()
-    const { message, history, request_id } = body
+    const { message, imageUrl, history, request_id, integration_in_progress, service_name } = body
 
-    if (!message || typeof message !== 'string') {
+    if ((!message || typeof message !== 'string') && !imageUrl) {
       return NextResponse.json(
-        { error: 'Invalid message' },
+        { error: 'Message or image is required' },
         { status: 400 }
       )
     }
@@ -80,7 +85,10 @@ export async function POST(request: NextRequest) {
         request_type: 'chat',
         status: 'pending',
         metadata: {
-          message: message.trim(),
+          message: message?.trim() || '',
+          imageUrl: imageUrl || null,
+          integration_in_progress: integration_in_progress || false,
+          service_name: service_name || null,
           timestamp: Date.now()
         }
       })
@@ -101,13 +109,14 @@ export async function POST(request: NextRequest) {
 
     // Prepare request for Python backend (matching backend ChatRequest model)
     const chatRequest = {
-      message: message.trim(),
+      message: message?.trim() || '',
       timestamp: Date.now(),
       history: history.map(msg => ({
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp,
-        type: 'text'
+        type: msg.imageUrl ? 'image' : 'text',
+        image_url: msg.imageUrl || null
       })),
       preferences: {
         general_instructions: profile?.general_instructions || '',
@@ -115,8 +124,9 @@ export async function POST(request: NextRequest) {
         timezone: profile?.timezone || 'UTC'
       },
       request_id: requestId,
-      integration_in_progress: false,
-      image_url: null
+      integration_in_progress: integration_in_progress || false,
+      image_url: imageUrl || null,
+      service_name: service_name || null
     }
 
     // Call Python backend using FormData format (matching React Native)

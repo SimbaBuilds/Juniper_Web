@@ -1,15 +1,11 @@
-Please:
+We are building out this web application with some additoinal features already present in the React Native mobile application
 
-1. Review the health_dashboard markdown
-2. Review the example daily metrics csv record 
-3. Strategically review the raw lake wearables_data csv without reading the entire thing as it is too much data to read in its entirety.
-4. Create a “Wellness” protected route and associated hook
-5. Build out the page and logic according to the markdown using the edge function and necessary supabase interaction following existing supabase interaction and styling patterns in the codebase
-    
-    Specifications:
-    
-    - Use Rechart
-    - Display any resources with “Health and Wellness” tag in “Resources” section
-    - Basic filtering and sorting options with prefs cached in browser
-        - Can sort/filter displays or all metrics as well as toggle on/off displays of resources and automations
-    - Display “Tip: Add tag “Health and Wellness” to a resource to have it appear on this screen” (Use same blue tones as the tip in the repo screen)
+1. All auth flows and related functionality /Users/cameronhightower/Software_Projects/juniper_web/react_native_reference/src/integrations
+    1.1 All integration infrastructure and service speciifc auth flows including but not limited to:
+        1.1.2 “Let’s complete integration for <service_name>” with integration_in_progress flag for integration completion
+        1.1.3 Health data edge function call on Oura and Fitbit callback
+
+2. Image upload for chat /Users/cameronhightower/Software_Projects/juniper_web/react_native_reference/src/voice/components/TextChatInput.tsx
+
+
+For task 1: there is a lot of code to copy, but both this web application and the React Native app are in Typescript so you could try using your bulk edit parsing tool or create a parsing script to speed up the copying process.  Make sure the callback routes for this web application don't overlap with the App Links and Universal Links routes in the mobile app as they use the domain of this web application.

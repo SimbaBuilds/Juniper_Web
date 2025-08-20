@@ -6,6 +6,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  imageUrl?: string
 }
 
 interface ChatMessageProps {
@@ -30,33 +31,49 @@ export function ChatMessage({ message }: ChatMessageProps) {
         "max-w-[80%] rounded-lg px-4 py-3",
         isUser ? "bg-primary text-primary-foreground" : "bg-muted"
       )}>
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-              ul: ({ children }) => <ul className="mb-2 list-disc pl-4">{children}</ul>,
-              ol: ({ children }) => <ol className="mb-2 list-decimal pl-4">{children}</ol>,
-              li: ({ children }) => <li className="mb-1">{children}</li>,
-              code: ({ node, inline, className, children, ...props }) => {
-                if (inline) {
-                  return <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono text-sm" {...props}>{children}</code>
-                }
-                return (
-                  <pre className="overflow-x-auto p-2 rounded bg-black/10 dark:bg-white/10">
-                    <code className="font-mono text-sm" {...props}>{children}</code>
-                  </pre>
-                )
-              },
-              a: ({ children, href }) => (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
-                  {children}
-                </a>
-              ),
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
-        </div>
+        {/* Image Display */}
+        {message.imageUrl && (
+          <div className="mb-3">
+            <img
+              src={message.imageUrl}
+              alt="Shared image"
+              className="max-w-full h-auto rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(message.imageUrl, '_blank')}
+              style={{ maxHeight: '300px', objectFit: 'contain' }}
+            />
+          </div>
+        )}
+        
+        {/* Text Content */}
+        {message.content && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="mb-2 list-disc pl-4">{children}</ul>,
+                ol: ({ children }) => <ol className="mb-2 list-decimal pl-4">{children}</ol>,
+                li: ({ children }) => <li className="mb-1">{children}</li>,
+                code: ({ node, inline, className, children, ...props }) => {
+                  if (inline) {
+                    return <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono text-sm" {...props}>{children}</code>
+                  }
+                  return (
+                    <pre className="overflow-x-auto p-2 rounded bg-black/10 dark:bg-white/10">
+                      <code className="font-mono text-sm" {...props}>{children}</code>
+                    </pre>
+                  )
+                },
+                a: ({ children, href }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        )}
         <div className={cn(
           "text-xs mt-2 opacity-60",
           isUser ? "text-primary-foreground" : "text-foreground"

@@ -4,10 +4,11 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Send, Plus, Copy, Loader2, X, Smartphone } from 'lucide-react'
+import { Send, Plus, Copy, Loader2, X, Smartphone, ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
+import { ImageUpload } from './components/ImageUpload'
 import { createClient } from '@/lib/utils/supabase/client'
 import { useRequestStatusPolling } from '@/hooks/useRequestStatusPolling'
 
@@ -15,6 +16,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  imageUrl?: string
 }
 
 const AUTO_CLEAR_DELAY = 10 * 60 * 1000 // 10 minutes
@@ -27,6 +29,7 @@ export default function ChatPage() {
   const [isRequestInProgress, setIsRequestInProgress] = useState(false)
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null)
   const [requestStatus, setRequestStatus] = useState<string | null>(null)
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -201,7 +204,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async () => {
     const trimmedMessage = inputValue.trim()
-    if (!trimmedMessage || isLoading) return
+    if ((!trimmedMessage && !selectedImageUrl) || isLoading) return
 
     console.log('[CHAT] Starting to send message:', {
       messageLength: trimmedMessage.length,
@@ -212,12 +215,14 @@ export default function ChatPage() {
 
     const userMessage: Message = {
       role: 'user',
-      content: trimmedMessage,
-      timestamp: Date.now()
+      content: trimmedMessage || '',
+      timestamp: Date.now(),
+      imageUrl: selectedImageUrl || undefined
     }
 
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
+    setSelectedImageUrl(null) // Clear selected image
     setIsLoading(true)
     setIsRequestInProgress(true)
     setRequestStatus('pending') // Set initial status
@@ -239,7 +244,8 @@ export default function ChatPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: trimmedMessage,
+          message: trimmedMessage || '',
+          imageUrl: selectedImageUrl,
           history: [...messages, userMessage],
           request_id: requestId,
         }),
@@ -419,6 +425,24 @@ export default function ChatPage() {
           </ScrollArea>
 
           <div className="p-4 border-t flex-shrink-0 bg-background">
+            {/* Selected Image Preview */}
+            {selectedImageUrl && (
+              <div className="relative inline-block mb-2">
+                <img
+                  src={selectedImageUrl}
+                  alt="Selected image"
+                  className="max-w-32 max-h-32 rounded-lg border border-border object-cover"
+                />
+                <button
+                  onClick={() => setSelectedImageUrl(null)}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors"
+                  title="Remove image"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+            
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -426,6 +450,17 @@ export default function ChatPage() {
               }}
               className="flex gap-2"
             >
+              {/* Image Upload Button - now inline */}
+              {user && (
+                <ImageUpload
+                  userId={user.id}
+                  onImageSelected={setSelectedImageUrl}
+                  onImageRemoved={() => setSelectedImageUrl(null)}
+                  disabled={isLoading}
+                  compact={true}
+                  hasSelectedImage={!!selectedImageUrl}
+                />
+              )}
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -436,14 +471,19 @@ export default function ChatPage() {
               />
               <Button
                 type="submit"
-                disabled={!inputValue.trim() || isLoading}
+                disabled={(!inputValue.trim() && !selectedImageUrl) || isLoading}
                 size="icon"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </form>
-            <div className="text-xs text-muted-foreground mt-1 text-right">
-              {inputValue.length}/2000
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-xs text-muted-foreground">
+                {!selectedImageUrl && 'JPEG, PNG, GIF, WebP • Max 10MB'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {inputValue.length}/2000
+              </span>
             </div>
           </div>
         </div>
@@ -457,7 +497,7 @@ export default function ChatPage() {
           </div>
           <div>
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-medium">Tip:</span> Get the full Juniper experience in our iOS/Android apps with voice options, image upload, integration flows and, with Android, always-on wake word detection.
+              <span className="font-medium">Tip:</span> Get the full Juniper experience in our iOS/Android apps with voice options and, with Android, always-on wake word detection.
             </p>
           </div>
         </div>

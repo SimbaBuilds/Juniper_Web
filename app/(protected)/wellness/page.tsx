@@ -42,7 +42,6 @@ interface ResourceWithTags {
 interface FilterPrefs {
   timeRange: string
   showResources: boolean
-  showAutomations: boolean
   sortBy: string
   showHealthScoresTrend: boolean
   showActivityDistribution: boolean
@@ -102,7 +101,6 @@ export default function WellnessPage() {
   const [filterPrefs, setFilterPrefs] = useState<FilterPrefs>({
     timeRange: '30',
     showResources: true,
-    showAutomations: true,
     sortBy: 'date',
     showHealthScoresTrend: true,
     showActivityDistribution: true,
@@ -541,14 +539,6 @@ export default function WellnessPage() {
                     onCheckedChange={(checked) => updateFilterPref('showResources', checked)}
                   />
                   <Label htmlFor="show-resources" className="text-xs">Resources</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-automations"
-                    checked={filterPrefs.showAutomations}
-                    onCheckedChange={(checked) => updateFilterPref('showAutomations', checked)}
-                  />
-                  <Label htmlFor="show-automations" className="text-xs">Automations</Label>
                 </div>
               </div>
             </div>
@@ -1024,25 +1014,6 @@ export default function WellnessPage() {
         </Card>
       )}
 
-      {/* Automations placeholder */}
-      {filterPrefs.showAutomations && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Health & Wellness Automations
-            </CardTitle>
-            <CardDescription>
-              Automated health tracking and insights
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No health automations configured yet.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {healthData.length === 0 && (
         <Card>

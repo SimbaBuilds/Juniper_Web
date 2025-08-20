@@ -14,7 +14,7 @@ interface FitbitWebhookEvent {
 }
 
 const FITBIT_VERIFICATION_CODE = process.env.FITBIT_VERIFICATION_CODE || '';
-const FITBIT_CLIENT_SECRET = process.env.FITBIT_CLIENT_SECRET || '';
+const FITBIT_CLIENT_SECRET_WEB = process.env.FITBIT_CLIENT_SECRET_WEB || '';
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.text();
     
     const expectedSignature = crypto
-      .createHmac('sha1', FITBIT_CLIENT_SECRET + '&')
+      .createHmac('sha1', FITBIT_CLIENT_SECRET_WEB + '&')
       .update(rawBody)
       .digest('base64');
     
