@@ -598,10 +598,10 @@ export default function WellnessPage() {
                 </CardContent>
               </Card>
             )}
-                      {filterPrefs.showReadinessCard && (
+                      {/* {filterPrefs.showReadinessCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Readiness</CardTitle>
+                  <CardTitle className="text-xs font-medium">Avg Readiness</CardTitle>
                   <Heart className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
@@ -611,7 +611,7 @@ export default function WellnessPage() {
                   <p className="text-xs text-muted-foreground">score</p>
                 </CardContent>
               </Card>
-            )}
+            )} */}
                       {filterPrefs.showAvgStepsCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
@@ -725,7 +725,7 @@ export default function WellnessPage() {
                       checked={filterPrefs.showReadinessTrend}
                       onCheckedChange={(checked) => updateFilterPref('showReadinessTrend', checked)}
                     />
-                    <Label htmlFor="readiness-trend" className="text-xs">Readiness</Label>
+                    <Label htmlFor="readiness-trend" className="text-xs">Avg Readiness</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -792,7 +792,7 @@ export default function WellnessPage() {
                           dataKey="readiness_score" 
                           stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
                           strokeWidth={2} 
-                          name="Readiness Score" 
+                          name="Avg Readiness" 
                         />
                       )}
                       {filterPrefs.showStressTrend && (
@@ -960,7 +960,7 @@ export default function WellnessPage() {
           </div>
           <div>
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-medium">Tip:</span> Add tag “Health and Wellness” to a resource to have it appear below.
+              <span className="font-medium">Tip:</span> Add tag “Health and Wellness” to a resource for it to appear below.
             </p>
           </div>
         </div>
@@ -1013,7 +1013,7 @@ export default function WellnessPage() {
                     </div>
                     <div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <span className="font-medium">Tip:</span> Add tag "Health and Wellness" to a resource to have it appear on this screen.
+                        <span className="font-medium">Tip:</span> Add tag "Health and Wellness" to a resource for it to appear on this screen.
                       </p>
                     </div>
                   </div>
