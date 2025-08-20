@@ -23,6 +23,7 @@ interface HealthMetric {
   calories_burned: number | null
   heart_rate_avg: number | null
   hrv_avg: number | null
+  resilience_score: number | null
   created_at: string
   updated_at: string
   native_scores: any
@@ -63,11 +64,12 @@ interface FilterPrefs {
   showStressTrend: boolean
   showHeartRateTrend: boolean
   showHrvTrend: boolean
+  showResilienceTrend: boolean
 }
 
 const CHART_CONFIG = {
   sleep_score: {
-    label: "Sleep Score",
+    label: "Sleep",
     color: "hsl(var(--chart-1))"
   },
   activity_score: {
@@ -121,7 +123,8 @@ export default function WellnessPage() {
     showReadinessTrend: true,
     showStressTrend: true,
     showHeartRateTrend: true,
-    showHrvTrend: true
+    showHrvTrend: true,
+    showResilienceTrend: true
   })
 
   // Detect dark mode
@@ -265,7 +268,7 @@ export default function WellnessPage() {
   const summaryStats = healthData.length > 0 ? {
     avgSleepScore: Math.round(healthData.reduce((sum, d) => sum + (d.sleep_score || 0), 0) / healthData.length),
     avgActivityScore: Math.round(healthData.reduce((sum, d) => sum + (d.activity_score || 0), 0) / healthData.length),
-    totalSteps: healthData.reduce((sum, d) => sum + (d.total_steps || 0), 0),
+    avgResilienceScore: Math.round(healthData.reduce((sum, d) => sum + (d.resilience_score || 0), 0) / Math.max(healthData.filter(d => d.resilience_score && d.resilience_score > 0).length, 1)),
     avgReadiness: Math.round(healthData.reduce((sum, d) => sum + (d.readiness_score || 0), 0) / Math.max(healthData.filter(d => d.readiness_score && d.readiness_score > 0).length, 1)),
     avgSteps: Math.round(healthData.reduce((sum, d) => sum + (d.total_steps || 0), 0) / Math.max(healthData.filter(d => d.total_steps && d.total_steps > 0).length, 1)),
     avgStressLevel: Math.round(healthData.reduce((sum, d) => sum + (d.stress_level || 0), 0) / Math.max(healthData.filter(d => d.stress_level && d.stress_level > 0).length, 1)),
@@ -282,6 +285,7 @@ export default function WellnessPage() {
     stress_level: d.stress_level || 0,
     heart_rate_avg: d.heart_rate_avg || 0,
     hrv_avg: d.hrv_avg || 0,
+    resilience_score: d.resilience_score || 0,
     steps: d.total_steps || 0,
     calories: d.calories_burned || 0
   }))
@@ -372,7 +376,7 @@ export default function WellnessPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="sleep_score">Sleep Score</SelectItem>
+                <SelectItem value="sleep_score">Sleep</SelectItem>
                 <SelectItem value="activity_score">Activity Score</SelectItem>
               </SelectContent>
             </Select>
@@ -471,7 +475,7 @@ export default function WellnessPage() {
                     checked={filterPrefs.showAvgStepsCard}
                     onCheckedChange={(checked) => updateFilterPref('showAvgStepsCard', checked)}
                   />
-                  <Label htmlFor="show-avg-steps-card" className="text-xs">Avg Steps</Label>
+                  <Label htmlFor="show-avg-steps-card" className="text-xs">Steps</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -479,7 +483,7 @@ export default function WellnessPage() {
                     checked={filterPrefs.showAvgStressCard}
                     onCheckedChange={(checked) => updateFilterPref('showAvgStressCard', checked)}
                   />
-                  <Label htmlFor="show-avg-stress-card" className="text-xs">Avg Stress</Label>
+                  <Label htmlFor="show-avg-stress-card" className="text-xs">Stress</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -533,7 +537,7 @@ export default function WellnessPage() {
                       {filterPrefs.showSleepCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Sleep Score</CardTitle>
+                  <CardTitle className="text-xs font-medium">Sleep</CardTitle>
                   <Moon className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
@@ -557,19 +561,21 @@ export default function WellnessPage() {
                       {filterPrefs.showStepsCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Total Steps</CardTitle>
+                  <CardTitle className="text-xs font-medium">Resilience</CardTitle>
                   <TrendingUp className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">{summaryStats.totalSteps.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">steps</p>
+                  <div className="text-lg font-bold">
+                    {healthData.some(d => d.resilience_score && d.resilience_score > 0) ? summaryStats.avgResilienceScore : 'N/A'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">/100</p>
                 </CardContent>
               </Card>
             )}
                       {filterPrefs.showReadinessCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Avg Readiness</CardTitle>
+                  <CardTitle className="text-xs font-medium">Readiness</CardTitle>
                   <Heart className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
@@ -583,7 +589,7 @@ export default function WellnessPage() {
                       {filterPrefs.showAvgStepsCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Avg Steps</CardTitle>
+                  <CardTitle className="text-xs font-medium">Steps</CardTitle>
                   <TrendingUp className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
@@ -597,7 +603,7 @@ export default function WellnessPage() {
                       {filterPrefs.showAvgStressCard && (
               <Card className="p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Avg Stress</CardTitle>
+                  <CardTitle className="text-xs font-medium">Stress</CardTitle>
                   <Activity className="h-3 w-3 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
@@ -650,7 +656,7 @@ export default function WellnessPage() {
                 <CardDescription className="text-sm">Health metrics over time</CardDescription>
                 
                 {/* Metric Toggles */}
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-2 mt-3">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="sleep-trend"
@@ -699,6 +705,14 @@ export default function WellnessPage() {
                     />
                     <Label htmlFor="hrv-trend" className="text-xs">HRV</Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="resilience-trend"
+                      checked={filterPrefs.showResilienceTrend}
+                      onCheckedChange={(checked) => updateFilterPref('showResilienceTrend', checked)}
+                    />
+                    <Label htmlFor="resilience-trend" className="text-xs">Resilience</Label>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -714,7 +728,7 @@ export default function WellnessPage() {
                           dataKey="sleep_score" 
                           stroke={isDarkMode ? "#60a5fa" : "#1e40af"} 
                           strokeWidth={2} 
-                          name="Sleep Score" 
+                          name="Sleep" 
                         />
                       )}
                       {filterPrefs.showActivityTrend && (
@@ -760,6 +774,15 @@ export default function WellnessPage() {
                           stroke={isDarkMode ? "#fb7185" : "#ec4899"} 
                           strokeWidth={2} 
                           name="HRV" 
+                        />
+                      )}
+                      {filterPrefs.showResilienceTrend && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="resilience_score" 
+                          stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
+                          strokeWidth={2} 
+                          name="Resilience Score" 
                         />
                       )}
                     </LineChart>
