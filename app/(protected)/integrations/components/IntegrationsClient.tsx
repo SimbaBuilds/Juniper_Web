@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, Unplug, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { IntegrationService } from '@/app/lib/integrations/IntegrationService';
-import { getServiceDescriptor } from '@/app/lib/integrations/oauth/OAuthConfig';
 // Remove server-side import and use direct API calls
 import { Switch } from '@/components/ui/switch';
 
@@ -223,15 +222,10 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       console.log('Database integrations:', dbIntegrations.length);
       console.log('Active integrations:', dbIntegrations.filter((int: any) => int.is_active).length);
       
-      // Get ALL OAuth services from config (regardless of client ID configuration)
-      const { OAUTH_CONFIG } = await import('@/app/lib/integrations/oauth/OAuthConfig');
-      const availableServices = Object.keys(OAUTH_CONFIG);
-      console.log('Available OAuth services:', availableServices.length, availableServices);
-      
-      // Create services list combining database services and OAuth config
+      // Create services list ONLY from database services (matching React Native exactly)
       const serviceResults: ServiceWithStatus[] = [];
       
-      // Process services from database first (they have the correct type field)
+      // Process ONLY services from database (like React Native line 263: allServices.map)
       allServices.forEach(service => {
         // Check if this is a system integration based on database type field
         if (service.type === 'system') {
@@ -300,57 +294,6 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
         }
       });
       
-      // Add OAuth services from config that aren't in the database
-      availableServices.forEach(serviceName => {
-        const descriptor = getServiceDescriptor(serviceName);
-        
-        // Check if this service is already in our results from database
-        const existingService = serviceResults.find(
-          s => s.service_name?.toLowerCase() === descriptor?.displayName?.toLowerCase()
-        );
-        
-        if (!existingService) {
-          // For OAuth services not in database, try to find integration by service name
-          // (This is fallback logic for services that exist as integrations but not as services)
-          const dbIntegration = dbIntegrations.find(
-            (int: any) => {
-              const integrationServiceName = int.service_name?.toLowerCase();
-              const configServiceName = serviceName.toLowerCase();
-              const displayName = descriptor?.displayName?.toLowerCase();
-              
-              return integrationServiceName === configServiceName ||
-                     integrationServiceName === displayName ||
-                     integrationServiceName === serviceName.replace(/_/g, ' ').toLowerCase();
-            }
-          );
-          
-          // Use is_active field like React Native
-          const isActive = dbIntegration?.is_active;
-          let isPendingSetup = false;
-          
-          if (dbIntegration && !isActive && dbIntegration.status === 'pending') {
-            isPendingSetup = true;
-          }
-          
-          console.log(`OAuth Service ${descriptor?.displayName || serviceName}: integration=`, dbIntegration?.id, 'is_active=', dbIntegration?.is_active, 'computed isActive=', !!isActive);
-          
-          serviceResults.push({
-            id: dbIntegration?.id || `oauth-${serviceName}`,
-            service_name: descriptor?.displayName || serviceName,
-            tags: [],
-            description: descriptor?.description || 'OAuth service integration',
-            isActive: !!isActive,  // Exactly like React Native line 324
-            isConnected: !!isActive,  // Exactly like React Native line 325
-            integration_id: dbIntegration?.id,
-            status: dbIntegration?.status || 'disconnected',
-            isPendingSetup,
-            isSystemIntegration: false,
-            public: true,
-            type: 'user'
-          });
-        }
-      });
-      
       console.log('Final service results:', serviceResults.length, serviceResults);
       setServices(serviceResults);
     } catch (err) {
@@ -374,8 +317,8 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
     try {
       console.log(`Initiating OAuth for ${service.service_name}`);
       
-      // Get ALL OAuth services from config
-      const { OAUTH_CONFIG } = await import('@/app/lib/integrations/oauth/OAuthConfig');
+      // Get OAuth services from config and import the descriptor function
+      const { OAUTH_CONFIG, getServiceDescriptor } = await import('@/app/lib/integrations/oauth/OAuthConfig');
       const availableServices = Object.keys(OAUTH_CONFIG);
       
       // Convert display name back to service name for OAuth config lookup
@@ -401,11 +344,56 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
     }
   };
 
+  const handleReconnect = async (service: ServiceWithStatus) => {
+    if (!service.integration_id) {
+      toast.error('No integration ID found');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to reconnect ${service.service_name}? This will start a new authentication flow.`
+    );
+    
+    if (!confirmed) return;
+
+    setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
+
+    try {
+      console.log(`🔄 Reconnecting ${service.service_name}...`);
+      
+      const result = await integrationService.reconnectIntegration(
+        service.integration_id,
+        service.service_name
+      );
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Reconnection failed');
+      }
+
+      // Reload services to update state
+      await loadServicesWithStatus();
+
+      toast.success('Reconnection initiated. Please complete the authorization in the popup window.');
+
+    } catch (error) {
+      console.error('Reconnection failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to reconnect integration');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [service.service_name]: false }));
+    }
+  };
+
   const handleDisconnect = async (service: ServiceWithStatus) => {
     if (!service.integration_id) {
       toast.error('No integration ID found');
       return;
     }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to disconnect ${service.service_name}? This will revoke access and you'll need to reconnect to use this service again.`
+    );
+    
+    if (!confirmed) return;
 
     setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
 
@@ -648,6 +636,25 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                           <span>Connected</span>
                         </div>
                         <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReconnect(service)}
+                            disabled={loadingStates[service.service_name]}
+                            className="flex-1"
+                          >
+                            {loadingStates[service.service_name] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Reconnecting...
+                              </>
+                            ) : (
+                              <>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Reconnect
+                              </>
+                            )}
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"

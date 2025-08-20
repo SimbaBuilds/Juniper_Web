@@ -182,6 +182,59 @@ export class IntegrationService {
     }
   }
 
+  async reconnectIntegration(integrationId: string, serviceName: string): Promise<IntegrationResult> {
+    try {
+      console.log(`🔄 Reconnecting ${serviceName} integration...`);
+
+      // Map service name to internal format (like React Native)
+      const serviceMap: Record<string, string> = {
+        'Notion': 'notion',
+        'Slack': 'slack', 
+        'Gmail': 'gmail',
+        'Google Calendar': 'google-calendar',
+        'Google Docs': 'google-docs',
+        'Google Sheets': 'google-sheets',
+        'Microsoft Excel Online': 'microsoft-excel',
+        'Microsoft Word Online': 'microsoft-word',
+        'Microsoft Outlook Calendar': 'microsoft-outlook-calendar',
+        'Microsoft Outlook Mail': 'microsoft-outlook-mail',
+        'Microsoft Teams': 'microsoft-teams',
+        'Todoist': 'todoist',
+        'Fitbit': 'fitbit',
+        'Oura': 'oura'
+      };
+      
+      const internalServiceName = serviceMap[serviceName] || serviceName.toLowerCase().replace(/\s+/g, '-');
+      console.log(`🔗 Mapped ${serviceName} to ${internalServiceName} for reconnection`);
+
+      // Update status to pending and is_active to false (like React Native)
+      const { error: updateError } = await this.supabase
+        .from('integrations')
+        .update({
+          status: 'pending',
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', integrationId);
+
+      if (updateError) {
+        throw new Error(`Failed to update integration status: ${updateError.message}`);
+      }
+
+      // Start OAuth flow with existing integration ID (skip completion message for reconnect)
+      const result = await this.initiateOAuth(internalServiceName);
+      
+      return result;
+
+    } catch (error) {
+      console.error(`❌ Error reconnecting ${serviceName}:`, error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
   async refreshIntegrationTokens(userId: string, serviceName: string): Promise<boolean> {
     try {
       const integration = await this.getIntegration(userId, serviceName);
