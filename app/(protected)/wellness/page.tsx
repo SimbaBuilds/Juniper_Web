@@ -264,6 +264,32 @@ export default function WellnessPage() {
     setFilterPrefs(prev => ({ ...prev, [key]: value }))
   }
 
+  const selectAllTrends = () => {
+    setFilterPrefs(prev => ({
+      ...prev,
+      showSleepTrend: true,
+      showActivityTrend: true,
+      showReadinessTrend: true,
+      showStressTrend: true,
+      showHeartRateTrend: true,
+      showHrvTrend: true,
+      showResilienceTrend: true
+    }))
+  }
+
+  const selectNoTrends = () => {
+    setFilterPrefs(prev => ({
+      ...prev,
+      showSleepTrend: false,
+      showActivityTrend: false,
+      showReadinessTrend: false,
+      showStressTrend: false,
+      showHeartRateTrend: false,
+      showHrvTrend: false,
+      showResilienceTrend: false
+    }))
+  }
+
   // Calculate summary stats
   const summaryStats = healthData.length > 0 ? {
     avgSleepScore: Math.round(healthData.reduce((sum, d) => sum + (d.sleep_score || 0), 0) / healthData.length),
@@ -655,6 +681,26 @@ export default function WellnessPage() {
                 <CardTitle className="text-lg">Trends</CardTitle>
                 <CardDescription className="text-sm">Health metrics over time</CardDescription>
                 
+                {/* Quick Select Buttons */}
+                <div className="flex gap-2 mb-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllTrends}
+                    className="h-7 px-2 text-xs"
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectNoTrends}
+                    className="h-7 px-2 text-xs"
+                  >
+                    None
+                  </Button>
+                </div>
+
                 {/* Metric Toggles */}
                 <div className="grid grid-cols-2 md:grid-cols-7 gap-2 mt-3">
                   <div className="flex items-center space-x-2">
