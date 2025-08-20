@@ -39,7 +39,7 @@ export function ImageUpload({
 
     // Validate file type
     if (!ImageStorageService.isSupportedFileType(file.type)) {
-      toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      toast.error('Please select a valid image file (JPEG, PNG)');
       return;
     }
 
@@ -211,7 +211,7 @@ export function ImageUpload({
 
       {/* Upload Guidelines */}
       <p className="text-xs text-muted-foreground">
-        Supported: JPEG, PNG, GIF, WebP • Max size: 10MB
+        Supported: JPEG, PNG Max size: 10MB
       </p>
     </div>
   );

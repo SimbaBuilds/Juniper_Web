@@ -479,7 +479,7 @@ export default function ChatPage() {
             </form>
             <div className="flex justify-between items-center mt-1">
               <span className="text-xs text-muted-foreground">
-                {!selectedImageUrl && 'JPEG, PNG, GIF, WebP • Max 10MB'}
+                {!selectedImageUrl && 'JPEG, PNG • Max 10MB'}
               </span>
               <span className="text-xs text-muted-foreground">
                 {inputValue.length}/2000

@@ -158,8 +158,8 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     useBasicAuth: true,
   },
   'todoist': {
-    clientId: process.env.TODOIST_CLIENT_ID || '',
-    clientSecret: process.env.TODOIST_CLIENT_SECRET || '',
+    clientId: process.env.TODOIST_CLIENT_ID_WEB || '',
+    clientSecret: process.env.TODOIST_CLIENT_SECRET_WEB || '',
     authorizationUrl: 'https://todoist.com/oauth/authorize',
     tokenUrl: 'https://todoist.com/oauth/access_token',
     scopes: ['data:read_write'],

@@ -30,14 +30,13 @@ interface IntegrationsClientProps {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'connected':
     case 'active':
       return 'bg-green-500';
-    case 'pending_setup':
     case 'pending':
       return 'bg-yellow-500';
-    case 'disconnected':
     case 'inactive':
+    case 'failed':
+    case 'disconnected':
       return 'bg-gray-400';
     default:
       return 'bg-gray-400';
@@ -46,17 +45,16 @@ function getStatusColor(status: string) {
 
 function getStatusText(status: string) {
   switch (status) {
-    case 'connected':
     case 'active':
       return 'Connected';
-    case 'pending_setup':
     case 'pending':
       return 'Pending Setup';
-    case 'disconnected':
     case 'inactive':
+    case 'failed':
+    case 'disconnected':
       return 'Disconnected';
     default:
-      return 'Unknown';
+      return 'Disconnected';
   }
 }
 
@@ -185,78 +183,160 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       setLoading(true);
       setError(null);
       
-      // Get database integrations via API
-      const response = await fetch('/api/integrations');
-      if (!response.ok) {
+      // Get database integrations, system integrations, and all services in parallel
+      const [integrationsResponse, systemIntegrationsResponse, servicesResponse] = await Promise.all([
+        fetch('/api/integrations'),
+        fetch(`/api/integrations/system?userId=${userId}`),
+        fetch('/api/services') // We need to create this endpoint to get all services from database
+      ]);
+
+      if (!integrationsResponse.ok) {
         throw new Error('Failed to fetch integrations');
       }
-      const { integrations: dbIntegrations } = await response.json();
+      
+      const { integrations: dbIntegrations } = await integrationsResponse.json();
+      
+      // Get system integrations from user profile
+      let systemIntegrations: Record<string, boolean> = {
+        perplexity: true,
+        textbelt: true,
+        xai_live_search: true
+      };
+      
+      if (systemIntegrationsResponse.ok) {
+        const systemResponse = await systemIntegrationsResponse.json();
+        if (systemResponse.success) {
+          systemIntegrations = systemResponse.enabled_system_integrations;
+        }
+      }
+
+      // Get all services from database if available, otherwise fallback to OAuth config
+      let allServices: any[] = [];
+      
+      if (servicesResponse.ok) {
+        const servicesData = await servicesResponse.json();
+        allServices = servicesData.services || [];
+      }
+
+      console.log('Services loaded from database:', allServices.length);
+      console.log('System services found:', allServices.filter(s => s.type === 'system').map(s => s.service_name));
       
       // Get ALL OAuth services from config (regardless of client ID configuration)
       const { OAUTH_CONFIG } = await import('@/app/lib/integrations/oauth/OAuthConfig');
       const availableServices = Object.keys(OAUTH_CONFIG);
       console.log('Available OAuth services:', availableServices.length, availableServices);
       
-      // Create services list combining OAuth config and database data
+      // Create services list combining database services and OAuth config
       const serviceResults: ServiceWithStatus[] = [];
       
-      // Add OAuth services from config
-      availableServices.forEach(serviceName => {
-        const descriptor = getServiceDescriptor(serviceName);
-        const dbIntegration = dbIntegrations.find(
-          (int: any) => int.services?.service_name?.toLowerCase() === descriptor?.displayName?.toLowerCase()
-        );
-        
-        const statusMap: Record<string, string> = {
-          'active': 'connected',
-          'pending': 'pending_setup',
-          'inactive': 'disconnected',
-          'failed': 'disconnected'
-        };
-        
-        const isActive = dbIntegration ? statusMap[dbIntegration.status] === 'connected' : false;
-        
-        serviceResults.push({
-          id: dbIntegration?.id || `oauth-${serviceName}`,
-          service_name: descriptor?.displayName || serviceName,
-          tags: [],
-          description: descriptor?.description || 'OAuth service integration',
-          isActive,
-          isConnected: isActive,
-          integration_id: dbIntegration?.id,
-          status: dbIntegration ? statusMap[dbIntegration.status] || 'disconnected' : 'disconnected',
-          isPendingSetup: false,
-          isSystemIntegration: false,
-          public: true,
-          type: 'user'
-        });
-      });
-      
-      // Add system integrations from database
-      dbIntegrations.forEach((dbIntegration: any) => {
-        if (dbIntegration.services?.type === 'system') {
-          const statusMap: Record<string, string> = {
-            'active': 'connected',
-            'pending': 'pending_setup',
-            'inactive': 'disconnected',
-            'failed': 'disconnected'
+      // Process services from database first (they have the correct type field)
+      allServices.forEach(service => {
+        // Check if this is a system integration based on database type field
+        if (service.type === 'system') {
+          // Map service names to integration keys
+          const serviceKeyMap: Record<string, string> = {
+            'Perplexity': 'perplexity',
+            'Textbelt': 'textbelt',
+            'XAI Live Search': 'xai_live_search'
           };
           
-          const isActive = statusMap[dbIntegration.status] === 'connected';
+          const integrationKey = serviceKeyMap[service.service_name];
+          if (!integrationKey) {
+            console.warn(`No integration key mapped for system service: ${service.service_name}`);
+            return;
+          }
+          
+          const isActive = systemIntegrations[integrationKey] ?? true;
           
           serviceResults.push({
-            id: dbIntegration.id,
-            service_name: dbIntegration.services.service_name,
-            tags: [],
-            description: dbIntegration.services.description || 'System integration',
+            id: service.id,
+            service_name: service.service_name,
+            tags: service.tagNames || [],
+            description: service.description,
             isActive,
             isConnected: isActive,
-            integration_id: dbIntegration.id,
-            status: statusMap[dbIntegration.status] || 'disconnected',
+            integration_id: undefined, // System integrations don't have integration_id
+            status: isActive ? 'active' : 'inactive',
             isPendingSetup: false,
             isSystemIntegration: true,
-            public: dbIntegration.services.public !== false,
-            type: 'system'
+            public: service.public,
+            type: service.type
+          });
+        } else {
+          // Handle regular user integrations
+          const integration = dbIntegrations.find(
+            (int: any) => int.service_name?.toLowerCase() === service.service_name?.toLowerCase()
+          );
+          
+          // Follow React Native pattern for status mapping
+          const isActive = integration ? (integration.status === 'active') : false;
+          let isPendingSetup = false;
+          
+          // Check for pending setup status (like React Native does for Twilio)
+          if (integration && !isActive && integration.status === 'pending') {
+            isPendingSetup = true;
+          }
+          
+          serviceResults.push({
+            id: service.id,
+            service_name: service.service_name,
+            tags: service.tagNames || [],
+            description: service.description,
+            isActive,
+            isConnected: isActive,
+            integration_id: integration?.id,
+            status: integration?.status || 'disconnected',
+            isPendingSetup,
+            isSystemIntegration: false,
+            public: service.public,
+            type: service.type
+          });
+        }
+      });
+      
+      // Add OAuth services from config that aren't in the database
+      availableServices.forEach(serviceName => {
+        const descriptor = getServiceDescriptor(serviceName);
+        
+        // Check if this service is already in our results from database
+        const existingService = serviceResults.find(
+          s => s.service_name?.toLowerCase() === descriptor?.displayName?.toLowerCase()
+        );
+        
+        if (!existingService) {
+          // Try to find integration by service name
+          const dbIntegration = dbIntegrations.find(
+            (int: any) => {
+              const integrationServiceName = int.service_name?.toLowerCase();
+              const configServiceName = serviceName.toLowerCase();
+              const displayName = descriptor?.displayName?.toLowerCase();
+              
+              return integrationServiceName === configServiceName ||
+                     integrationServiceName === displayName ||
+                     integrationServiceName === serviceName.replace(/_/g, ' ').toLowerCase();
+            }
+          );
+          
+          const isActive = dbIntegration ? (dbIntegration.status === 'active') : false;
+          let isPendingSetup = false;
+          
+          if (dbIntegration && !isActive && dbIntegration.status === 'pending') {
+            isPendingSetup = true;
+          }
+          
+          serviceResults.push({
+            id: dbIntegration?.id || `oauth-${serviceName}`,
+            service_name: descriptor?.displayName || serviceName,
+            tags: [],
+            description: descriptor?.description || 'OAuth service integration',
+            isActive,
+            isConnected: isActive,
+            integration_id: dbIntegration?.id,
+            status: dbIntegration?.status || 'disconnected',
+            isPendingSetup,
+            isSystemIntegration: false,
+            public: true,
+            type: 'user'
           });
         }
       });
@@ -360,7 +440,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
     try {
       console.log(`Toggling system integration: ${service.service_name} to ${enabled}`);
       
-      // Map specific system services to their integration keys
+      // Map specific system services to their integration keys (matching React Native pattern)
       const serviceKeyMap: Record<string, string> = {
         'Perplexity': 'perplexity',
         'Textbelt': 'textbelt',
@@ -389,8 +469,16 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
         throw new Error('Failed to update system integration');
       }
 
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error('System integration update failed');
+      }
+
       // Reload services to update state
       await loadServicesWithStatus();
+      
+      toast.success(`${service.service_name} ${enabled ? 'enabled' : 'disabled'} successfully`);
       
     } catch (error) {
       console.error('Error toggling system integration:', error);
@@ -543,7 +631,74 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
 
                   {/* Action Button */}
                   <div className="mt-4">
-                    {renderActionButton(service)}
+                    {service.isConnected ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span>Connected</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDisconnect(service)}
+                            disabled={loadingStates[service.service_name]}
+                            className="flex-1"
+                          >
+                            {loadingStates[service.service_name] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Disconnecting...
+                              </>
+                            ) : (
+                              <>
+                                <Unplug className="h-4 w-4 mr-2" />
+                                Disconnect
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : service.isPendingSetup ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-yellow-600">
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          <span>Setup In Progress</span>
+                        </div>
+                        <Button
+                          onClick={() => handleConnect(service)}
+                          disabled={loadingStates[service.service_name]}
+                          className="w-full"
+                        >
+                          {loadingStates[service.service_name] ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Finalizing...
+                            </>
+                          ) : (
+                            'Finalize Integration'
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => handleConnect(service)}
+                        disabled={loadingStates[service.service_name]}
+                        className="w-full flex items-center gap-2"
+                      >
+                        {loadingStates[service.service_name] ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="h-4 w-4" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

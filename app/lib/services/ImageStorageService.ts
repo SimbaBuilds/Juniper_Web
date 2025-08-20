@@ -201,8 +201,6 @@ export class ImageStorageService {
       'image/jpeg',
       'image/jpg', 
       'image/png',
-      'image/gif',
-      'image/webp'
     ];
     return supportedTypes.includes(mimeType.toLowerCase());
   }
