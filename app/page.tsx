@@ -123,7 +123,7 @@ export default function HomePage() {
                 </>
               )}
             </div>
-            <PublicMobileMenu user={user} loading={loading} signOut={signOut} />
+            <PublicMobileMenu user={user} loading={loading} />
           </div>
         </nav>
       </header>

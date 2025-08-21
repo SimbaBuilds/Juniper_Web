@@ -41,6 +41,7 @@ export class IntegrationService {
         user_id: userId,
         service_name: serviceName,
         status: 'active' as const,
+        is_active: true,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token || null,
         expires_at: expiresAt,

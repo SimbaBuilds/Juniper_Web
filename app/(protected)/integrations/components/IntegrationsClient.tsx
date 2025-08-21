@@ -350,11 +350,6 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to reconnect ${service.service_name}? This will start a new authentication flow.`
-    );
-    
-    if (!confirmed) return;
 
     setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
 

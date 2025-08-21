@@ -15,10 +15,9 @@ import {
 interface PublicMobileMenuProps {
   user?: { email?: string } | null
   loading?: boolean
-  signOut?: () => void
 }
 
-export function PublicMobileMenu({ user, loading, signOut }: PublicMobileMenuProps) {
+export function PublicMobileMenu({ user, loading }: PublicMobileMenuProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -45,9 +44,11 @@ export function PublicMobileMenu({ user, loading, signOut }: PublicMobileMenuPro
                   <Button variant="outline" className="w-full">Dashboard</Button>
                 </Link>
               </SheetClose>
-              <Button variant="ghost" onClick={signOut} className="w-full">
-                Sign out
-              </Button>
+              <form action="/api/auth/signout" method="POST" className="w-full">
+                <Button variant="ghost" type="submit" className="w-full">
+                  Sign out
+                </Button>
+              </form>
             </>
           ) : (
             <>
