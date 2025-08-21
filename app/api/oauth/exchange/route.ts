@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create/update integration in database
-    const integrationService = new IntegrationService();
+    const integrationService = new IntegrationService(supabase);
     const integrationResult = await integrationService.createOrUpdateIntegration(
       user.id,
       serviceName,

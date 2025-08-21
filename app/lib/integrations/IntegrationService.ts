@@ -5,12 +5,12 @@ import { getOAuthConfig, getServiceDescriptor } from './oauth/OAuthConfig';
 export interface Integration {
   id: string;
   user_id: string;
-  service_name: string;
+  service_id: string;
   status: 'pending' | 'active' | 'failed' | 'inactive';
   access_token?: string;
   refresh_token?: string;
   expires_at?: string;
-  config?: Record<string, any>;
+  configuration?: Record<string, any>;
   last_used?: string;
   created_at: string;
   updated_at: string;
@@ -23,13 +23,73 @@ export interface IntegrationResult {
 }
 
 export class IntegrationService {
-  private supabase = createClient();
+  private supabase: any;
+
+  constructor(supabaseClient?: any) {
+    this.supabase = supabaseClient || createClient();
+  }
+
+  private async getServiceId(serviceName: string): Promise<string | null> {
+    try {
+      // First, let's debug by listing all service names in the database
+      console.log(`Looking for service: ${serviceName}`);
+      const { data: allServices } = await this.supabase
+        .from('services')
+        .select('id, service_name');
+      
+      console.log('All services in database:', allServices?.map(s => s.service_name));
+      
+      // Map lowercase internal service names to possible database names (try multiple variations)
+      const serviceMap: Record<string, string[]> = {
+        'notion': ['Notion', 'NOTION'],
+        'slack': ['Slack', 'SLACK'], 
+        'gmail': ['Gmail', 'GMAIL'],
+        'google-calendar': ['Google Calendar', 'GOOGLE CALENDAR'],
+        'google-docs': ['Google Docs', 'GOOGLE DOCS'],
+        'google-sheets': ['Google Sheets', 'GOOGLE SHEETS'],
+        'microsoft-excel': ['Microsoft Excel Online', 'MICROSOFT EXCEL ONLINE'],
+        'microsoft-word': ['Microsoft Word Online', 'MICROSOFT WORD ONLINE'],
+        'microsoft-outlook-calendar': ['Microsoft Outlook Calendar', 'MICROSOFT OUTLOOK CALENDAR'],
+        'microsoft-outlook-mail': ['Microsoft Outlook Mail', 'MICROSOFT OUTLOOK MAIL'],
+        'microsoft-teams': ['Microsoft Teams', 'MICROSOFT TEAMS'],
+        'todoist': ['Todoist', 'TODOIST'],
+        'fitbit': ['Fitbit', 'FITBIT'],
+        'oura': ['Oura', 'OURA']
+      };
+      
+      // Get possible database names to try
+      const possibleNames = serviceMap[serviceName] || [serviceName, serviceName.toUpperCase()];
+      
+      // Try each possible name until we find a match
+      for (const dbServiceName of possibleNames) {
+        console.log(`Trying to find service with name: ${dbServiceName}`);
+        
+        const { data, error } = await this.supabase
+          .from('services')
+          .select('id')
+          .eq('service_name', dbServiceName)
+          .single();
+
+        if (!error && data) {
+          console.log(`Found service ${dbServiceName} with ID: ${data.id}`);
+          return data.id;
+        }
+      }
+      
+      // If we get here, none of the variations worked
+      console.error(`Failed to find service for any variation of: ${serviceName}`);
+      return null;
+    } catch (error) {
+      console.error('Error getting service ID:', error);
+      return null;
+    }
+  }
 
   async createOrUpdateIntegration(
     userId: string,
     serviceName: string,
     tokens: TokenData,
-    config?: Record<string, any>
+    configuration?: Record<string, any>
   ): Promise<IntegrationResult> {
     try {
       const now = new Date().toISOString();
@@ -37,15 +97,21 @@ export class IntegrationService {
         ? new Date(tokens.expires_at * 1000).toISOString()
         : null;
 
+      // First, get the service_id from the services table
+      const serviceId = await this.getServiceId(serviceName);
+      if (!serviceId) {
+        return { success: false, error: `Service ${serviceName} not found` };
+      }
+
       const integrationData = {
         user_id: userId,
-        service_name: serviceName,
+        service_id: serviceId,
         status: 'active' as const,
         is_active: true,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token || null,
         expires_at: expiresAt,
-        config: config || {},
+        configuration: configuration || {},
         last_used: now,
         updated_at: now,
       };
@@ -54,7 +120,7 @@ export class IntegrationService {
       const { data, error } = await this.supabase
         .from('integrations')
         .upsert(integrationData, {
-          onConflict: 'user_id,service_name',
+          onConflict: 'user_id,service_id',
           ignoreDuplicates: false
         })
         .select()
@@ -78,11 +144,16 @@ export class IntegrationService {
 
   async getIntegration(userId: string, serviceName: string): Promise<Integration | null> {
     try {
+      const serviceId = await this.getServiceId(serviceName);
+      if (!serviceId) {
+        return null;
+      }
+
       const { data, error } = await this.supabase
         .from('integrations')
         .select('*')
         .eq('user_id', userId)
-        .eq('service_name', serviceName)
+        .eq('service_id', serviceId)
         .single();
 
       if (error) {
@@ -123,6 +194,11 @@ export class IntegrationService {
     status: Integration['status']
   ): Promise<boolean> {
     try {
+      const serviceId = await this.getServiceId(serviceName);
+      if (!serviceId) {
+        return false;
+      }
+
       const { error } = await this.supabase
         .from('integrations')
         .update({
@@ -130,7 +206,7 @@ export class IntegrationService {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId)
-        .eq('service_name', serviceName);
+        .eq('service_id', serviceId);
 
       if (error) {
         console.error('Failed to update integration status:', error);
@@ -146,11 +222,16 @@ export class IntegrationService {
 
   async deleteIntegration(userId: string, serviceName: string): Promise<boolean> {
     try {
+      const serviceId = await this.getServiceId(serviceName);
+      if (!serviceId) {
+        return false;
+      }
+
       const { error } = await this.supabase
         .from('integrations')
         .delete()
         .eq('user_id', userId)
-        .eq('service_name', serviceName);
+        .eq('service_id', serviceId);
 
       if (error) {
         console.error('Failed to delete integration:', error);
@@ -275,7 +356,7 @@ export class IntegrationService {
         userId,
         serviceName,
         refreshResult.tokens,
-        integration.config
+        integration.configuration
       );
 
       return updateResult.success;
@@ -367,11 +448,17 @@ export class IntegrationService {
   async handleOAuthCallback(
     serviceName: string,
     code: string,
-    state?: string
+    state?: string,
+    supabase?: any
   ): Promise<IntegrationResult> {
     try {
-      // Call server-side API to exchange code for tokens and create integration
-      const response = await fetch('/api/oauth/exchange', {
+      // If supabase is provided, call exchange logic directly
+      if (supabase) {
+        return await this.exchangeOAuthCode(serviceName, code, state, supabase);
+      }
+
+      // Fallback to HTTP fetch for client-side calls
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/oauth/exchange`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -392,6 +479,101 @@ export class IntegrationService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'OAuth callback failed'
+      };
+    }
+  }
+
+  private async exchangeOAuthCode(
+    serviceName: string,
+    code: string,
+    state?: string,
+    supabase?: any
+  ): Promise<IntegrationResult> {
+    try {
+      // Import getOAuthConfig
+      const { getOAuthConfig } = await import('@/app/lib/integrations/oauth/OAuthConfig');
+      
+      // Get authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      const config = getOAuthConfig(serviceName);
+      if (!config) {
+        return { success: false, error: 'OAuth configuration not found for service' };
+      }
+
+      // Prepare token exchange request
+      const body = new URLSearchParams();
+      body.append('grant_type', 'authorization_code');
+      body.append('client_id', config.clientId);
+      body.append('code', code);
+      body.append('redirect_uri', config.redirectUri);
+
+      if (config.clientSecret) {
+        body.append('client_secret', config.clientSecret);
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      // Handle Basic Auth if required
+      if (config.useBasicAuth && config.clientSecret) {
+        const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+        headers['Authorization'] = `Basic ${credentials}`;
+      }
+
+      // Add custom headers if specified
+      if (config.customHeaders) {
+        Object.assign(headers, config.customHeaders);
+      }
+
+      // Exchange code for tokens
+      const response = await fetch(config.tokenUrl, {
+        method: 'POST',
+        headers,
+        body: body.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Token exchange failed for ${serviceName}:`, errorText);
+        return { success: false, error: `Token exchange failed: ${response.status} ${response.statusText}` };
+      }
+
+      const tokens = await response.json();
+
+      // Calculate expires_at if not provided
+      if (tokens.expires_in && !tokens.expires_at) {
+        tokens.expires_at = Date.now() / 1000 + tokens.expires_in;
+      }
+
+      // Create/update integration in database
+      const integrationResult = await this.createOrUpdateIntegration(
+        user.id,
+        serviceName,
+        tokens
+      );
+
+      if (!integrationResult.success) {
+        return { success: false, error: integrationResult.error };
+      }
+
+      // Trigger health data sync for health services
+      if (serviceName === 'oura' || serviceName === 'fitbit') {
+        this.triggerHealthDataSync(user.id, serviceName);
+      }
+
+      return { success: true, integration: integrationResult.integration };
+
+    } catch (error) {
+      console.error('Error in exchangeOAuthCode:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
     }
   }

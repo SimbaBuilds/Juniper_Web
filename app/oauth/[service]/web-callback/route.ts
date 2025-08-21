@@ -5,10 +5,10 @@ import { IntegrationCompletionService } from '@/app/lib/integrations/Integration
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { service: string } }
+  { params }: { params: Promise<{ service: string }> }
 ) {
   try {
-    const { service } = params;
+    const { service } = await params;
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -49,8 +49,8 @@ export async function GET(
     }
 
     // Handle OAuth callback
-    const integrationService = new IntegrationService();
-    const result = await integrationService.handleOAuthCallback(service, code, state || undefined);
+    const integrationService = new IntegrationService(supabase);
+    const result = await integrationService.handleOAuthCallback(service, code, state || undefined, supabase);
 
     if (!result.success) {
       console.error(`Integration failed for ${service}:`, result.error);

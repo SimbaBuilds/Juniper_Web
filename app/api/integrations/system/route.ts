@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Get current user profile
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('enabled_system_integrations')
       .eq('id', userId)
       .single();
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Update the profile
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ enabled_system_integrations: updatedIntegrations })
       .eq('id', userId);
 
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('enabled_system_integrations')
       .eq('id', userId)
       .single();
