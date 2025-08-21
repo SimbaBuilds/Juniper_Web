@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, ExternalLink, Unplug, Settings } from 'lucide-react';
+import { Loader2, ExternalLink, Unplug, Settings, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { IntegrationService } from '@/app/lib/integrations/IntegrationService';
 // Remove server-side import and use direct API calls
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ServiceWithStatus {
   id: string;
@@ -172,6 +174,8 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [showTextbeltForm, setShowTextbeltForm] = useState(false);
+  const [textbeltPhoneNumber, setTextbeltPhoneNumber] = useState('');
   const integrationService = new IntegrationService();
 
   // Load services and user integrations (following React Native pattern)
@@ -312,6 +316,12 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
   const systemIntegrations = getSystemIntegrations(services);
 
   const handleConnect = async (service: ServiceWithStatus) => {
+    // Special handling for Textbelt - show credential form instead of OAuth
+    if (service.service_name === 'Textbelt') {
+      setShowTextbeltForm(true);
+      return;
+    }
+
     setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
 
     try {
@@ -341,6 +351,54 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       toast.error(error instanceof Error ? error.message : 'Failed to start OAuth flow');
     } finally {
       setLoadingStates(prev => ({ ...prev, [service.service_name]: false }));
+    }
+  };
+
+  const handleTextbeltSubmit = async () => {
+    if (!textbeltPhoneNumber.trim()) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+
+    setLoadingStates(prev => ({ ...prev, 'Textbelt': true }));
+
+    try {
+      console.log('Submitting Textbelt credentials...');
+      
+      const response = await fetch('/api/integrations/textbelt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone_number: textbeltPhoneNumber.trim(),
+          userId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save Textbelt credentials');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save Textbelt credentials');
+      }
+
+      // Reset form and reload services
+      setTextbeltPhoneNumber('');
+      setShowTextbeltForm(false);
+      await loadServicesWithStatus();
+
+      toast.success('Textbelt connected successfully!');
+
+    } catch (error) {
+      console.error('Textbelt setup failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to setup Textbelt');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, 'Textbelt': false }));
     }
   };
 

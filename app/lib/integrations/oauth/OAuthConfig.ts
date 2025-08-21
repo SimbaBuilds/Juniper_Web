@@ -260,11 +260,39 @@ export const SERVICE_DESCRIPTORS: Record<string, ServiceDescriptor> = {
 };
 
 export function getOAuthConfig(serviceName: string): OAuthServiceConfig | null {
-  return OAUTH_CONFIG[serviceName] || null;
+  // Map URL-style service names (with hyphens) to config keys (with underscores)
+  const serviceNameMap: Record<string, string> = {
+    'google-calendar': 'google_calendar',
+    'google-docs': 'google_docs',
+    'google-sheets': 'google_sheets',
+    'google-meet': 'google_meet',
+    'microsoft-excel': 'microsoft_excel',
+    'microsoft-word': 'microsoft_word',
+    'microsoft-outlook-calendar': 'microsoft_outlook_calendar',
+    'microsoft-outlook-mail': 'microsoft_outlook_mail',
+    'microsoft-teams': 'microsoft_teams',
+  };
+  
+  const configKey = serviceNameMap[serviceName] || serviceName;
+  return OAUTH_CONFIG[configKey] || null;
 }
 
 export function getServiceDescriptor(serviceName: string): ServiceDescriptor | null {
-  return SERVICE_DESCRIPTORS[serviceName] || null;
+  // Map URL-style service names (with hyphens) to config keys (with underscores)
+  const serviceNameMap: Record<string, string> = {
+    'google-calendar': 'google_calendar',
+    'google-docs': 'google_docs',
+    'google-sheets': 'google_sheets',
+    'google-meet': 'google_meet',
+    'microsoft-excel': 'microsoft_excel',
+    'microsoft-word': 'microsoft_word',
+    'microsoft-outlook-calendar': 'microsoft_outlook_calendar',
+    'microsoft-outlook-mail': 'microsoft_outlook_mail',
+    'microsoft-teams': 'microsoft_teams',
+  };
+  
+  const configKey = serviceNameMap[serviceName] || serviceName;
+  return SERVICE_DESCRIPTORS[configKey] || null;
 }
 
 export function getAllConfiguredServices(): string[] {

@@ -39,19 +39,29 @@ export class IntegrationService {
       
       console.log('All services in database:', allServices?.map(s => s.service_name));
       
-      // Map lowercase internal service names to possible database names (try multiple variations)
+      // Map both URL-style (hyphenated) and config-style (underscored) service names to database names
       const serviceMap: Record<string, string[]> = {
         'notion': ['Notion', 'NOTION'],
         'slack': ['Slack', 'SLACK'], 
         'gmail': ['Gmail', 'GMAIL'],
         'google-calendar': ['Google Calendar', 'GOOGLE CALENDAR'],
+        'google_calendar': ['Google Calendar', 'GOOGLE CALENDAR'],
         'google-docs': ['Google Docs', 'GOOGLE DOCS'],
+        'google_docs': ['Google Docs', 'GOOGLE DOCS'],
         'google-sheets': ['Google Sheets', 'GOOGLE SHEETS'],
+        'google_sheets': ['Google Sheets', 'GOOGLE SHEETS'],
+        'google-meet': ['Google Meet', 'GOOGLE MEET'],
+        'google_meet': ['Google Meet', 'GOOGLE MEET'],
         'microsoft-excel': ['Microsoft Excel Online', 'MICROSOFT EXCEL ONLINE'],
+        'microsoft_excel': ['Microsoft Excel Online', 'MICROSOFT EXCEL ONLINE'],
         'microsoft-word': ['Microsoft Word Online', 'MICROSOFT WORD ONLINE'],
+        'microsoft_word': ['Microsoft Word Online', 'MICROSOFT WORD ONLINE'],
         'microsoft-outlook-calendar': ['Microsoft Outlook Calendar', 'MICROSOFT OUTLOOK CALENDAR'],
+        'microsoft_outlook_calendar': ['Microsoft Outlook Calendar', 'MICROSOFT OUTLOOK CALENDAR'],
         'microsoft-outlook-mail': ['Microsoft Outlook Mail', 'MICROSOFT OUTLOOK MAIL'],
+        'microsoft_outlook_mail': ['Microsoft Outlook Mail', 'MICROSOFT OUTLOOK MAIL'],
         'microsoft-teams': ['Microsoft Teams', 'MICROSOFT TEAMS'],
+        'microsoft_teams': ['Microsoft Teams', 'MICROSOFT TEAMS'],
         'todoist': ['Todoist', 'TODOIST'],
         'fitbit': ['Fitbit', 'FITBIT'],
         'oura': ['Oura', 'OURA']
@@ -272,7 +282,7 @@ export class IntegrationService {
     try {
       console.log(`🔄 Reconnecting ${serviceName} integration...`);
 
-      // Map service name to internal format (like React Native)
+      // Map database service names to URL-style service names (used in OAuth flow)
       const serviceMap: Record<string, string> = {
         'Notion': 'notion',
         'Slack': 'slack', 
@@ -280,6 +290,7 @@ export class IntegrationService {
         'Google Calendar': 'google-calendar',
         'Google Docs': 'google-docs',
         'Google Sheets': 'google-sheets',
+        'Google Meet': 'google-meet',
         'Microsoft Excel Online': 'microsoft-excel',
         'Microsoft Word Online': 'microsoft-word',
         'Microsoft Outlook Calendar': 'microsoft-outlook-calendar',
