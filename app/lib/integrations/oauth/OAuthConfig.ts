@@ -268,8 +268,10 @@ export function getOAuthConfig(serviceName: string): OAuthServiceConfig | null {
     'google-meet': 'google_meet',
     'microsoft-excel': 'microsoft_excel',
     'microsoft-word': 'microsoft_word',
-    'outlook-calendar': 'outlook_calendar',
-    'outlook-mail': 'outlook_mail',
+    'microsoft-outlook-calendar': 'microsoft_outlook_calendar',
+    'outlook-calendar': 'microsoft_outlook_calendar',
+    'microsoft-outlook-mail': 'microsoft_outlook_mail',
+    'outlook-mail': 'microsoft_outlook_mail',
     'microsoft-teams': 'microsoft_teams',
   };
   
@@ -286,8 +288,10 @@ export function getServiceDescriptor(serviceName: string): ServiceDescriptor | n
     'google-meet': 'google_meet',
     'microsoft-excel': 'microsoft_excel',
     'microsoft-word': 'microsoft_word',
-    'outlook-calendar': 'outlook_calendar',
-    'outlook-mail': 'outlook_mail',
+    'microsoft-outlook-calendar': 'microsoft_outlook_calendar',
+    'outlook-calendar': 'microsoft_outlook_calendar',
+    'microsoft-outlook-mail': 'microsoft_outlook_mail',
+    'outlook-mail': 'microsoft_outlook_mail',
     'microsoft-teams': 'microsoft_teams',
   };
   
