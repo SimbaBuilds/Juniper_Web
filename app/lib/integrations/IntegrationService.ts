@@ -686,15 +686,15 @@ export class IntegrationService {
       if (serviceName === 'oura' || serviceName === 'fitbit') {
         // Use capitalized service names like React Native
         const capitalizedServiceName = serviceName === 'oura' ? 'Oura' : 'Fitbit';
-        console.log(`🔍 [IntegrationService] Scheduling health data sync for ${capitalizedServiceName}`);
+        console.log(`🔍 [IntegrationService] Scheduling health data sync for ${capitalizedServiceName} with 1 second delay`);
         
-        // Run completely non-blocking to avoid any OAuth callback failures
+        // Run completely non-blocking with 1 second delay to ensure integration is fully saved
         setTimeout(() => {
-          console.log(`🔍 [IntegrationService] Starting health data sync for ${capitalizedServiceName}`);
+          console.log(`🔍 [IntegrationService] Starting health data sync for ${capitalizedServiceName} after 1 second delay`);
           this.triggerHealthDataSync(user.id, capitalizedServiceName).catch(error => {
             console.error(`🔍 [IntegrationService] Health data sync failed for ${capitalizedServiceName}:`, error);
           });
-        }, 0);
+        }, 1000);
       }
 
       return { success: true, integration: integrationResult.integration };

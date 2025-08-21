@@ -114,17 +114,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Trigger health data sync for health services (non-blocking)
-    if (serviceName === 'oura' || serviceName === 'fitbit') {
-      // Use capitalized service names like React Native
-      const capitalizedServiceName = serviceName === 'oura' ? 'Oura' : 'Fitbit';
-      // Run completely non-blocking to avoid any OAuth callback failures
-      setTimeout(() => {
-        triggerHealthDataSync(user.id, capitalizedServiceName, supabase).catch(error => {
-          console.warn(`Health data sync failed for ${capitalizedServiceName}, but OAuth completed:`, error);
-        });
-      }, 0);
-    }
+    // Note: Health data sync is triggered in IntegrationService.exchangeOAuthCode()
+    // This route is only used as a fallback when no supabase client is provided
+    // The web-callback route always provides the supabase client, so this code path is not used
 
     return NextResponse.json({
       success: true,
@@ -137,61 +129,5 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'Internal server error' },
       { status: 500 }
     );
-  }
-}
-
-async function triggerHealthDataSync(userId: string, serviceName: string, supabase: any): Promise<void> {
-  try {
-    console.log(`Triggering health data sync for ${serviceName}`);
-    
-    // Import and use the proper HealthDataSyncService that calls edge function directly with user tokens (like React Native)
-    const { HealthDataSyncService } = await import('@/lib/services/healthDataSync');
-    const healthDataSync = new HealthDataSyncService(supabase);
-    const result = await healthDataSync.syncHealthData('backfill', userId, 7, serviceName);
-
-    if (!result.success) {
-      console.warn(`Health data sync failed for ${serviceName}, but continuing OAuth flow:`, result.error);
-    } else {
-      console.log(`Health data sync triggered successfully for ${serviceName}, processed ${result.days_processed} days`);
-    }
-
-    // For Fitbit, also set up webhooks (non-blocking)
-    if (serviceName === 'fitbit') {
-      setupFitbitWebhooks(userId).catch(error => {
-        console.warn('Fitbit webhook setup failed, but continuing OAuth flow:', error);
-      });
-    }
-
-  } catch (error) {
-    console.warn(`Health data sync error for ${serviceName}, but continuing OAuth flow:`, error);
-  }
-}
-
-async function setupFitbitWebhooks(userId: string): Promise<void> {
-  try {
-    console.log('Setting up Fitbit webhooks');
-    
-    const collections = ['activities', 'sleep', 'body', 'foods'];
-    
-    for (const collection of collections) {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/integrations/fitbit-webhook`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'subscribe',
-          user_id: userId,
-          collection
-        }),
-      });
-
-      if (!response.ok) {
-        console.error(`Fitbit webhook setup failed for ${collection}:`, await response.text());
-      }
-    }
-
-  } catch (error) {
-    console.error('Error setting up Fitbit webhooks:', error);
   }
 }

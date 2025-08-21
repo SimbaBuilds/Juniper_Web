@@ -1,8 +1,10 @@
+Refused to load manifest from 'https://static.ouraring.com/web/favicons/manifest.json' because it violates the following Content Security Policy directive: "default-src 'self'". Note that 'manifest-src' was not explicitly set, so 'default-src' is used as a fallback.
+
+
 https://hightower-ai.com/integrations?error=function%20trigger_health_data_backfill(uuid%2C%20text%2C%20integer)%20does%20not%20exist&service=oura
 
 
-
-React Native Implementation Below"
+React Native Implementation Below:
 
  private async triggerHealthDataSync(integrationId: string): Promise<void> {
     try {

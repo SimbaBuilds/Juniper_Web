@@ -114,8 +114,21 @@ export class HealthDataSyncService {
       console.log(`🔍 [HealthDataSyncService] Response status:`, response.status);
       console.log(`🔍 [HealthDataSyncService] Response ok:`, response.ok);
       
-      const result = await response.json()
-      console.log(`🔍 [HealthDataSyncService] Response body:`, result);
+      const responseText = await response.text()
+      console.log(`🔍 [HealthDataSyncService] Raw response text:`, responseText);
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+        console.log(`🔍 [HealthDataSyncService] Parsed response body:`, result);
+      } catch (parseError) {
+        console.error(`🔍 [HealthDataSyncService] Failed to parse response as JSON:`, parseError);
+        console.error(`🔍 [HealthDataSyncService] Raw response was:`, responseText);
+        return {
+          success: false,
+          error: `Edge function returned non-JSON response: ${responseText}`
+        }
+      }
 
       if (response.ok) {
         console.log(`🔍 [HealthDataSyncService] Success! Returning:`, {
@@ -130,9 +143,10 @@ export class HealthDataSyncService {
         }
       } else {
         console.error(`🔍 [HealthDataSyncService] Error response:`, result);
+        console.error(`🔍 [HealthDataSyncService] Full error details:`, JSON.stringify(result, null, 2));
         return {
           success: false,
-          error: result.error || 'Health sync failed'
+          error: result.error || result.message || 'Health sync failed'
         }
       }
     } catch (error) {
