@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       const capitalizedServiceName = serviceName === 'oura' ? 'Oura' : 'Fitbit';
       // Run completely non-blocking to avoid any OAuth callback failures
       setTimeout(() => {
-        triggerHealthDataSync(user.id, capitalizedServiceName).catch(error => {
+        triggerHealthDataSync(user.id, capitalizedServiceName, supabase).catch(error => {
           console.warn(`Health data sync failed for ${capitalizedServiceName}, but OAuth completed:`, error);
         });
       }, 0);
@@ -140,13 +140,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function triggerHealthDataSync(userId: string, serviceName: string): Promise<void> {
+async function triggerHealthDataSync(userId: string, serviceName: string, supabase: any): Promise<void> {
   try {
     console.log(`Triggering health data sync for ${serviceName}`);
     
     // Import and use the proper HealthDataSyncService that calls edge function directly with user tokens (like React Native)
     const { HealthDataSyncService } = await import('@/lib/services/healthDataSync');
-    const healthDataSync = new HealthDataSyncService();
+    const healthDataSync = new HealthDataSyncService(supabase);
     const result = await healthDataSync.syncHealthData('backfill', userId, 7, serviceName);
 
     if (!result.success) {

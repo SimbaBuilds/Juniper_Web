@@ -781,7 +781,8 @@ export class IntegrationService {
       console.log(`Triggering health data sync for ${serviceName}`);
       
       // Use the proper HealthDataSyncService that calls edge function directly with user tokens (like React Native)
-      const healthDataSync = new HealthDataSyncService();
+      // Pass the supabase client to maintain the correct session context
+      const healthDataSync = new HealthDataSyncService(this.supabase);
       const result = await healthDataSync.syncHealthData('backfill', userId, 7, serviceName);
 
       if (!result.success) {

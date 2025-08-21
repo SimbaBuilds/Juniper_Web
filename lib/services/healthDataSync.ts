@@ -27,7 +27,11 @@ export interface SyncResult {
 }
 
 export class HealthDataSyncService {
-  private supabase = createClient()
+  private supabase: any
+
+  constructor(supabaseClient?: any) {
+    this.supabase = supabaseClient || createClient()
+  }
 
   /**
    * Check if we have recent health metrics data for a user
@@ -165,5 +169,5 @@ export class HealthDataSyncService {
   }
 }
 
-// Export singleton instance
+// Export singleton instance for client-side use
 export const healthDataSyncService = new HealthDataSyncService()
