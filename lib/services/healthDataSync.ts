@@ -62,7 +62,8 @@ export class HealthDataSyncService {
     action: 'backfill' | 'aggregate',
     userId: string,
     days?: number,
-    serviceName?: string
+    serviceName?: string,
+    accessToken?: string
   ): Promise<SyncResult> {
     try {
       console.log(`🔍 [HealthDataSyncService] syncHealthData called with:`, {
@@ -72,21 +73,30 @@ export class HealthDataSyncService {
         serviceName
       });
       
-      console.log(`🔍 [HealthDataSyncService] Getting session from supabase client`);
-      const { data: { session } } = await this.supabase.auth.getSession()
+      let finalAccessToken: string;
       
-      console.log(`🔍 [HealthDataSyncService] Session obtained:`, {
-        hasSession: !!session,
-        hasAccessToken: !!session?.access_token,
-        accessTokenLength: session?.access_token?.length || 0
-      });
-      
-      if (!session?.access_token) {
-        console.error(`🔍 [HealthDataSyncService] No authentication token available`);
-        return {
-          success: false,
-          error: 'No authentication token available'
+      if (accessToken) {
+        console.log(`🔍 [HealthDataSyncService] Using provided access token`);
+        finalAccessToken = accessToken;
+      } else {
+        console.log(`🔍 [HealthDataSyncService] Getting session from supabase client`);
+        const { data: { session } } = await this.supabase.auth.getSession()
+        
+        console.log(`🔍 [HealthDataSyncService] Session obtained:`, {
+          hasSession: !!session,
+          hasAccessToken: !!session?.access_token,
+          accessTokenLength: session?.access_token?.length || 0
+        });
+        
+        if (!session?.access_token) {
+          console.error(`🔍 [HealthDataSyncService] No authentication token available`);
+          return {
+            success: false,
+            error: 'No authentication token available'
+          }
         }
+        
+        finalAccessToken = session.access_token;
       }
 
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -105,7 +115,7 @@ export class HealthDataSyncService {
       const response = await fetch(`${supabaseUrl}/functions/v1/health-data-sync`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${finalAccessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestBody)

@@ -689,9 +689,14 @@ export class IntegrationService {
         console.log(`🔍 [IntegrationService] Scheduling health data sync for ${capitalizedServiceName} with 1 second delay`);
         
         // Run completely non-blocking with 1 second delay to ensure integration is fully saved
-        setTimeout(() => {
+        setTimeout(async () => {
           console.log(`🔍 [IntegrationService] Starting health data sync for ${capitalizedServiceName} after 1 second delay`);
-          this.triggerHealthDataSync(user.id, capitalizedServiceName).catch(error => {
+          
+          // Get the user's access token from the server-side client
+          const { data: { session } } = await supabase.auth.getSession();
+          const userAccessToken = session?.access_token;
+          
+          this.triggerHealthDataSync(user.id, capitalizedServiceName, userAccessToken).catch(error => {
             console.error(`🔍 [IntegrationService] Health data sync failed for ${capitalizedServiceName}:`, error);
           });
         }, 1000);
@@ -790,23 +795,24 @@ export class IntegrationService {
     }
   }
 
-  private async triggerHealthDataSync(userId: string, serviceName: string): Promise<void> {
+  private async triggerHealthDataSync(userId: string, serviceName: string, accessToken?: string): Promise<void> {
     try {
-      console.log(`🔍 [IntegrationService] triggerHealthDataSync called with userId: ${userId}, serviceName: ${serviceName}`);
+      console.log(`🔍 [IntegrationService] triggerHealthDataSync called with userId: ${userId}, serviceName: ${serviceName}, hasAccessToken: ${!!accessToken}`);
       
-      // Use the proper HealthDataSyncService that calls edge function directly with user tokens (like React Native)
-      // Pass the supabase client to maintain the correct session context
-      console.log(`🔍 [IntegrationService] Creating HealthDataSyncService with supabase client:`, !!this.supabase);
-      const healthDataSync = new HealthDataSyncService(this.supabase);
+      // Create a fresh client-side Supabase instance to match React Native pattern
+      // This ensures we have the correct user session context for the edge function
+      console.log(`🔍 [IntegrationService] Creating HealthDataSyncService with fresh client-side Supabase instance`);
+      const healthDataSync = new HealthDataSyncService(); // Don't pass server-side client
       
       console.log(`🔍 [IntegrationService] Calling syncHealthData with params:`, {
         action: 'backfill',
         userId,
         days: 7,
-        serviceName
+        serviceName,
+        hasAccessToken: !!accessToken
       });
       
-      const result = await healthDataSync.syncHealthData('backfill', userId, 7, serviceName);
+      const result = await healthDataSync.syncHealthData('backfill', userId, 7, serviceName, accessToken);
       
       console.log(`🔍 [IntegrationService] syncHealthData result:`, result);
 
