@@ -116,16 +116,16 @@ export class IntegrationCompletionService {
 
   // Method for handling completion events
   setupCompletionEventListeners(): void {
-    window.addEventListener('integration_completed', (event: CustomEvent<CompletionMessage>) => {
-      const { serviceName, userId } = event.detail;
+    window.addEventListener('integration_completed', (event: Event) => {
+      const { serviceName, userId } = (event as CustomEvent<CompletionMessage>).detail;
       console.log(`Integration completed event received for ${serviceName} (user: ${userId})`);
       
       // Additional UI updates can be handled here
       // For example, updating integration status displays
     });
 
-    window.addEventListener('integration_disconnected', (event: CustomEvent<{ serviceName: string }>) => {
-      const { serviceName } = event.detail;
+    window.addEventListener('integration_disconnected', (event: Event) => {
+      const { serviceName } = (event as CustomEvent<{ serviceName: string }>).detail;
       console.log(`Integration disconnected event received for ${serviceName}`);
       
       // Handle UI updates for disconnection
@@ -138,13 +138,13 @@ export class IntegrationCompletionService {
     window.removeEventListener('integration_disconnected', this.handleDisconnectionEvent);
   }
 
-  private handleCompletionEvent = (event: CustomEvent<CompletionMessage>) => {
-    const { serviceName, userId } = event.detail;
+  private handleCompletionEvent = (event: Event) => {
+    const { serviceName, userId } = (event as CustomEvent<CompletionMessage>).detail;
     console.log(`Handling completion event for ${serviceName} (user: ${userId})`);
   };
 
-  private handleDisconnectionEvent = (event: CustomEvent<{ serviceName: string }>) => {
-    const { serviceName } = event.detail;
+  private handleDisconnectionEvent = (event: Event) => {
+    const { serviceName } = (event as CustomEvent<{ serviceName: string }>).detail;
     console.log(`Handling disconnection event for ${serviceName}`);
   };
 }

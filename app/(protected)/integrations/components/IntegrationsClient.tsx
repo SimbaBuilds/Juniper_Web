@@ -202,7 +202,6 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       // Get system integrations from user profile
       let systemIntegrations: Record<string, boolean> = {
         perplexity: true,
-        textbelt: true,
         xai_live_search: true
       };
       
@@ -236,7 +235,6 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
           // Map service names to integration keys
           const serviceKeyMap: Record<string, string> = {
             'Perplexity': 'perplexity',
-            'Textbelt': 'textbelt',
             'XAI Live Search': 'xai_live_search'
           };
           
@@ -494,7 +492,6 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       // Map specific system services to their integration keys (matching React Native pattern)
       const serviceKeyMap: Record<string, string> = {
         'Perplexity': 'perplexity',
-        'Textbelt': 'textbelt',
         'XAI Live Search': 'xai_live_search'
       };
       
@@ -680,96 +677,155 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <div className="mt-4">
-                    {service.isConnected ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-green-600">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <span>Connected</span>
+                  {/* Textbelt Credential Form */}
+                  {service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Phone className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">SMS Setup</h4>
+                      </div>
+                      <p className="text-sm text-blue-700 mb-4">
+                        Enter your phone number to receive text messages from Juniper. You will not receive promotional content.
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="phone" className="text-sm font-medium text-blue-900">
+                            Phone Number
+                          </Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="1234567890"
+                            value={textbeltPhoneNumber}
+                            onChange={(e) => setTextbeltPhoneNumber(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Textbelt']}
+                          />
                         </div>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleReconnect(service)}
-                            disabled={loadingStates[service.service_name]}
+                            onClick={() => {
+                              setShowTextbeltForm(false);
+                              setTextbeltPhoneNumber('');
+                            }}
+                            disabled={loadingStates['Textbelt']}
                             className="flex-1"
                           >
-                            {loadingStates[service.service_name] ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                Reconnecting...
-                              </>
-                            ) : (
-                              <>
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Reconnect
-                              </>
-                            )}
+                            Cancel
                           </Button>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDisconnect(service)}
-                            disabled={loadingStates[service.service_name]}
+                            onClick={handleTextbeltSubmit}
+                            disabled={loadingStates['Textbelt'] || !textbeltPhoneNumber.trim()}
                             className="flex-1"
                           >
-                            {loadingStates[service.service_name] ? (
+                            {loadingStates['Textbelt'] ? (
                               <>
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                Disconnecting...
+                                Connecting...
                               </>
                             ) : (
-                              <>
-                                <Unplug className="h-4 w-4 mr-2" />
-                                Disconnect
-                              </>
+                              'Connect'
                             )}
                           </Button>
                         </div>
                       </div>
-                    ) : service.isPendingSetup ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-yellow-600">
-                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                          <span>Setup In Progress</span>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  {!(service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected) && (
+                    <div className="mt-4">
+                      {service.isConnected ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-green-600">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span>Connected</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReconnect(service)}
+                              disabled={loadingStates[service.service_name]}
+                              className="flex-1"
+                            >
+                              {loadingStates[service.service_name] ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Reconnecting...
+                                </>
+                              ) : (
+                                <>
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  Reconnect
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDisconnect(service)}
+                              disabled={loadingStates[service.service_name]}
+                              className="flex-1"
+                            >
+                              {loadingStates[service.service_name] ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Disconnecting...
+                                </>
+                              ) : (
+                                <>
+                                  <Unplug className="h-4 w-4 mr-2" />
+                                  Disconnect
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
+                      ) : service.isPendingSetup ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-yellow-600">
+                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <span>Setup In Progress</span>
+                          </div>
+                          <Button
+                            onClick={() => handleConnect(service)}
+                            disabled={loadingStates[service.service_name]}
+                            className="w-full"
+                          >
+                            {loadingStates[service.service_name] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Finalizing...
+                              </>
+                            ) : (
+                              'Finalize Integration'
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           onClick={() => handleConnect(service)}
                           disabled={loadingStates[service.service_name]}
-                          className="w-full"
+                          className="w-full flex items-center gap-2"
                         >
                           {loadingStates[service.service_name] ? (
                             <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              Finalizing...
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Connecting...
                             </>
                           ) : (
-                            'Finalize Integration'
+                            <>
+                              <ExternalLink className="h-4 w-4" />
+                              Connect
+                            </>
                           )}
                         </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => handleConnect(service)}
-                        disabled={loadingStates[service.service_name]}
-                        className="w-full flex items-center gap-2"
-                      >
-                        {loadingStates[service.service_name] ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Connecting...
-                          </>
-                        ) : (
-                          <>
-                            <ExternalLink className="h-4 w-4" />
-                            Connect
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

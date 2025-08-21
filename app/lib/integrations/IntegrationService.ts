@@ -64,7 +64,8 @@ export class IntegrationService {
         'microsoft_teams': ['Microsoft Teams', 'MICROSOFT TEAMS'],
         'todoist': ['Todoist', 'TODOIST'],
         'fitbit': ['Fitbit', 'FITBIT'],
-        'oura': ['Oura', 'OURA']
+        'oura': ['Oura', 'OURA'],
+        'textbelt': ['Textbelt', 'TEXTBELT']
       };
       
       // Get possible database names to try
@@ -298,7 +299,8 @@ export class IntegrationService {
         'Microsoft Teams': 'microsoft-teams',
         'Todoist': 'todoist',
         'Fitbit': 'fitbit',
-        'Oura': 'oura'
+        'Oura': 'oura',
+        'Textbelt': 'textbelt'
       };
       
       const internalServiceName = serviceMap[serviceName] || serviceName.toLowerCase().replace(/\s+/g, '-');
