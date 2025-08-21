@@ -788,18 +788,21 @@ export class IntegrationService {
       });
 
       if (!response.ok) {
-        console.error('Health data sync failed:', await response.text());
+        const errorText = await response.text();
+        console.warn(`Health data sync failed for ${serviceName}, but continuing OAuth flow:`, errorText);
       } else {
         console.log('Health data sync triggered successfully');
       }
 
-      // For Fitbit, also set up webhooks
+      // For Fitbit, also set up webhooks (non-blocking)
       if (serviceName === 'fitbit') {
-        this.setupFitbitWebhooks(userId);
+        this.setupFitbitWebhooks(userId).catch(error => {
+          console.warn('Fitbit webhook setup failed, but continuing OAuth flow:', error);
+        });
       }
 
     } catch (error) {
-      console.error('Error triggering health data sync:', error);
+      console.warn(`Health data sync error for ${serviceName}, but continuing OAuth flow:`, error);
     }
   }
 
