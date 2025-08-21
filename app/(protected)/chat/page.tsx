@@ -119,6 +119,127 @@ export default function ChatPage() {
     getUser()
   }, [])
 
+  // Function to get proper service display name
+  const getServiceDisplayName = (serviceName: string): string => {
+    const serviceMap: Record<string, string> = {
+      'google-calendar': 'Google Calendar',
+      'google-docs': 'Google Docs', 
+      'google-sheets': 'Google Sheets',
+      'google-meet': 'Google Meet',
+      'microsoft-excel': 'Microsoft Excel',
+      'microsoft-word': 'Microsoft Word',
+      'microsoft-outlook-calendar': 'Microsoft Outlook Calendar',
+      'outlook-calendar': 'Microsoft Outlook Calendar',
+      'microsoft-outlook-mail': 'Microsoft Outlook Mail',
+      'outlook-mail': 'Microsoft Outlook Mail',
+      'microsoft-teams': 'Microsoft Teams',
+      'notion': 'Notion',
+      'slack': 'Slack',
+      'gmail': 'Gmail',
+      'fitbit': 'Fitbit',
+      'textbelt': 'Textbelt',
+    };
+    
+    return serviceMap[serviceName] || serviceName;
+  };
+
+  // Auto-send integration completion message when redirected from OAuth callback
+  useEffect(() => {
+    async function handleIntegrationCompletion() {
+      if (!user) return
+
+      const urlParams = new URLSearchParams(window.location.search)
+      const integrationCompleted = urlParams.get('integration_completed')
+      const serviceName = urlParams.get('service_name')
+
+      if (integrationCompleted && serviceName) {
+        const displayName = getServiceDisplayName(serviceName)
+        console.log(`Auto-sending completion message for ${displayName} (${serviceName})`)
+        
+        // Clear URL params to prevent duplicate sends
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete('integration_completed')
+        newUrl.searchParams.delete('service_name')
+        window.history.replaceState({}, '', newUrl.toString())
+
+        // Send completion message using the normal chat API
+        const completionMessage = `Let's complete the integration for ${displayName}`
+        const requestId = `integration-completion-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        
+        // Add user message first (like normal chat flow)
+        const userMessage: Message = {
+          role: 'user',
+          content: completionMessage,
+          timestamp: Date.now()
+        }
+        
+        setMessages(prev => [...prev, userMessage])
+        
+        try {
+          setIsLoading(true)
+          setIsRequestInProgress(true)
+          setRequestStatus('pending')
+          setCurrentRequestId(requestId)
+
+          // Create AbortController for this request (like normal chat)
+          abortControllerRef.current = new AbortController()
+
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: completionMessage,
+              history: [...messages, userMessage],
+              request_id: requestId,
+              integration_in_progress: true,
+              service_name: serviceName,
+            }),
+            signal: abortControllerRef.current.signal,
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to send completion message')
+          }
+
+          const data = await response.json()
+          
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: data.response,
+            timestamp: Date.now()
+          }
+
+          setMessages(prev => [...prev, assistantMessage])
+          toast.success(`${displayName} integration completed successfully!`)
+          
+          // Don't clear request tracking here - let polling handle it like normal chat
+          console.log('[CHAT] Integration completion request completed, response received. Polling will handle cleanup.')
+          
+        } catch (error) {
+          // Check if error was due to cancellation
+          if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('aborted'))) {
+            console.log('Integration completion request was cancelled by user')
+            return // Don't show error toast for user-initiated cancellation
+          }
+          
+          console.error('Error sending integration completion message:', error)
+          toast.error(`Failed to complete ${displayName} integration. Please try again.`)
+          
+          // Clear request tracking on error
+          setCurrentRequestId(null)
+          setRequestStatus(null)
+          setIsLoading(false)
+          setIsRequestInProgress(false)
+          abortControllerRef.current = null
+        }
+      }
+    }
+
+    handleIntegrationCompletion()
+  }, [user, messages])
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollAreaRef.current) {

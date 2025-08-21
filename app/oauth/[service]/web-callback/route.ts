@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAppServerClient } from '@/lib/utils/supabase/server';
 import { IntegrationService } from '@/app/lib/integrations/IntegrationService';
-import { IntegrationCompletionService } from '@/app/lib/integrations/IntegrationCompletionService';
 
 export async function GET(
   request: NextRequest,
@@ -59,17 +58,13 @@ export async function GET(
       );
     }
 
-    console.log(`Integration successful for ${service}, sending completion message`);
+    console.log(`Integration successful for ${service}, redirecting to chat for completion`);
 
-    // Send completion message to chat
-    const completionSuccess = await IntegrationCompletionService.sendCompletionMessage(service, user.id);
-    
-    if (!completionSuccess) {
-      console.warn('Failed to send completion message, but integration was successful');
-    }
-
-    // Redirect to chat page for completion
-    return NextResponse.redirect(new URL('/chat', request.url));
+    // Redirect to chat page with integration completion metadata
+    const chatUrl = new URL('/chat', request.url);
+    chatUrl.searchParams.set('integration_completed', service);
+    chatUrl.searchParams.set('service_name', service);
+    return NextResponse.redirect(chatUrl);
 
   } catch (error) {
     console.error('OAuth callback error:', error);

@@ -114,6 +114,29 @@ export class IntegrationCompletionService {
     }
   }
 
+  // Server-side method that can be called from OAuth callback routes with authenticated supabase client
+  static async sendCompletionMessageServer(serviceName: string, userId: string, supabase: any): Promise<boolean> {
+    try {
+      console.log(`Sending completion message for ${serviceName} to user ${userId} (server-side)`);
+      
+      // Import the completion logic directly instead of making HTTP call
+      const { sendCompletionMessageDirect } = await import('./completion-logic');
+      const result = await sendCompletionMessageDirect(serviceName, userId, supabase);
+      
+      console.log('Integration completion message sent successfully via direct call:', {
+        success: result.success,
+        hasResponse: !!result.response,
+        integrationInProgress: result.integration_in_progress
+      });
+      
+      return result.success || false;
+
+    } catch (error) {
+      console.error('Error sending completion message from server:', error);
+      return false;
+    }
+  }
+
   // Method for handling completion events
   setupCompletionEventListeners(): void {
     window.addEventListener('integration_completed', (event: Event) => {
