@@ -1,1 +1,1 @@
-https://hightower-ai.com/integrations?error=Token%20exchange%20failed%3A%20400%20Bad%20Request&service=fitbit#_=_
+https://hightower-ai.com/integrations?error=function%20trigger_health_data_backfill(uuid%2C%20text%2C%20integer)%20does%20not%20exist&service=fitbit#_=_

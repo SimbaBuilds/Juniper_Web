@@ -45,7 +45,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     scopes: ['https://www.googleapis.com/auth/calendar'],
-    redirectUri: `${SITE_URL}/oauth/google_calendar/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/google-calendar/web-callback`,
     additionalParams: {
       access_type: 'offline',
       prompt: 'consent',
@@ -69,7 +69,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     scopes: ['https://www.googleapis.com/auth/documents'],
-    redirectUri: `${SITE_URL}/oauth/google_docs/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/google-docs/web-callback`,
     additionalParams: {
       access_type: 'offline',
       prompt: 'consent',
@@ -81,7 +81,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    redirectUri: `${SITE_URL}/oauth/google_sheets/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/google-sheets/web-callback`,
     additionalParams: {
       access_type: 'offline',
       prompt: 'consent',
@@ -93,7 +93,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     scopes: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
-    redirectUri: `${SITE_URL}/oauth/google_meet/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/google-meet/web-callback`,
     additionalParams: {
       access_type: 'offline',
       prompt: 'consent',
@@ -105,7 +105,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     scopes: ['https://graph.microsoft.com/Files.ReadWrite.All'],
-    redirectUri: `${SITE_URL}/oauth/microsoft_excel/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/microsoft-excel/web-callback`,
   },
   'microsoft_word': {
     clientId: process.env.MICROSOFT_CLIENT_ID || '',
@@ -113,7 +113,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     scopes: ['https://graph.microsoft.com/Files.ReadWrite.All'],
-    redirectUri: `${SITE_URL}/oauth/microsoft_word/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/microsoft-word/web-callback`,
   },
   'microsoft_outlook_calendar': {
     clientId: process.env.MICROSOFT_CLIENT_ID || '',
@@ -121,7 +121,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     scopes: ['https://graph.microsoft.com/Calendars.ReadWrite'],
-    redirectUri: `${SITE_URL}/oauth/microsoft_outlook_calendar/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/outlook-calendar/web-callback`,
   },
   'microsoft_outlook_mail': {
     clientId: process.env.MICROSOFT_CLIENT_ID || '',
@@ -129,7 +129,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     scopes: ['https://graph.microsoft.com/Mail.Send', 'https://graph.microsoft.com/Mail.Read'],
-    redirectUri: `${SITE_URL}/oauth/microsoft_outlook_mail/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/outlook-mail/web-callback`,
   },
   'microsoft_teams': {
     clientId: process.env.MICROSOFT_CLIENT_ID || '',
@@ -137,7 +137,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     scopes: ['https://graph.microsoft.com/TeamMember.Read.All', 'https://graph.microsoft.com/Chat.ReadWrite'],
-    redirectUri: `${SITE_URL}/oauth/microsoft_teams/web-callback`,
+    redirectUri: `${SITE_URL}/oauth/microsoft-teams/web-callback`,
   },
   'slack': {
     clientId: process.env.SLACK_CLIENT_ID || '',
