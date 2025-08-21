@@ -116,7 +116,9 @@ export async function POST(request: NextRequest) {
 
     // Trigger health data sync for health services
     if (serviceName === 'oura' || serviceName === 'fitbit') {
-      triggerHealthDataSync(user.id, serviceName);
+      // Use capitalized service names like React Native
+      const capitalizedServiceName = serviceName === 'oura' ? 'Oura' : 'Fitbit';
+      triggerHealthDataSync(user.id, capitalizedServiceName);
     }
 
     return NextResponse.json({

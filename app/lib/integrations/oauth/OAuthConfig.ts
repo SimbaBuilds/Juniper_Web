@@ -26,7 +26,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.OURA_CLIENT_SECRET || '',
     authorizationUrl: 'https://cloud.ouraring.com/oauth/authorize',
     tokenUrl: 'https://api.ouraring.com/oauth/token',
-    scopes: ['email', 'personal', 'daily'],
+    scopes: ['email', 'personal', 'daily', 'heartrate', 'workout', 'tag', 'session', 'spo2', 'stress'],
     redirectUri: `${SITE_URL}/oauth/oura/web-callback`,
     useBasicAuth: true,
   },
@@ -44,7 +44,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/calendar'],
+    scopes: ['https://www.googleapis.com/auth/calendar.events'],
     redirectUri: `${SITE_URL}/oauth/google-calendar/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -56,7 +56,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.readonly'],
+    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.modify'],
     redirectUri: `${SITE_URL}/oauth/gmail/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -92,7 +92,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
+    scopes: ['https://www.googleapis.com/auth/meetings', 'https://www.googleapis.com/auth/calendar.events'],
     redirectUri: `${SITE_URL}/oauth/google-meet/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -104,7 +104,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    scopes: ['https://graph.microsoft.com/Files.ReadWrite.All'],
+    scopes: ['https://graph.microsoft.com/Files.ReadWrite.All', 'https://graph.microsoft.com/Sites.ReadWrite.All', 'offline_access'],
     redirectUri: `${SITE_URL}/oauth/microsoft-excel/web-callback`,
   },
   'microsoft_word': {
@@ -112,7 +112,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    scopes: ['https://graph.microsoft.com/Files.ReadWrite.All'],
+    scopes: ['https://graph.microsoft.com/Files.ReadWrite.All', 'https://graph.microsoft.com/Sites.ReadWrite.All', 'offline_access'],
     redirectUri: `${SITE_URL}/oauth/microsoft-word/web-callback`,
   },
   'microsoft_outlook_calendar': {
@@ -120,7 +120,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    scopes: ['https://graph.microsoft.com/Calendars.ReadWrite'],
+    scopes: ['https://graph.microsoft.com/Calendars.ReadWrite', 'https://graph.microsoft.com/User.Read', 'offline_access'],
     redirectUri: `${SITE_URL}/oauth/outlook-calendar/web-callback`,
   },
   'microsoft_outlook_mail': {
@@ -128,7 +128,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    scopes: ['https://graph.microsoft.com/Mail.Send', 'https://graph.microsoft.com/Mail.Read'],
+    scopes: ['https://graph.microsoft.com/Mail.ReadWrite', 'https://graph.microsoft.com/Mail.Send', 'https://graph.microsoft.com/User.Read', 'offline_access'],
     redirectUri: `${SITE_URL}/oauth/outlook-mail/web-callback`,
   },
   'microsoft_teams': {
@@ -136,7 +136,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
     authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    scopes: ['https://graph.microsoft.com/TeamMember.Read.All', 'https://graph.microsoft.com/Chat.ReadWrite'],
+    scopes: ['https://graph.microsoft.com/Chat.ReadWrite', 'https://graph.microsoft.com/Team.ReadBasic.All', 'https://graph.microsoft.com/Channel.ReadBasic.All', 'https://graph.microsoft.com/TeamMember.Read.All', 'https://graph.microsoft.com/User.Read', 'offline_access'],
     redirectUri: `${SITE_URL}/oauth/microsoft-teams/web-callback`,
   },
   'slack': {
@@ -144,7 +144,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.SLACK_CLIENT_SECRET || '',
     authorizationUrl: 'https://slack.com/oauth/v2/authorize',
     tokenUrl: 'https://slack.com/api/oauth.v2.access',
-    scopes: ['channels:read', 'chat:write', 'users:read', 'files:write', 'commands'],
+    scopes: ['assistant:write', 'channels:history', 'channels:read', 'chat:write', 'chat:write.public', 'files:read', 'files:write', 'groups:history', 'groups:read', 'groups:write', 'im:history', 'im:read', 'im:write', 'mpim:history', 'mpim:read', 'mpim:write', 'team:read', 'users:read', 'users:read.email', 'reactions:read', 'reactions:write', 'channels:join', 'channels:manage', 'channels:write.topic', 'groups:write.topic'],
     redirectUri: `${SITE_URL}/oauth/slack/web-callback`,
   },
   'notion': {

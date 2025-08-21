@@ -584,7 +584,9 @@ export class IntegrationService {
 
       // Trigger health data sync for health services
       if (serviceName === 'oura' || serviceName === 'fitbit') {
-        this.triggerHealthDataSync(user.id, serviceName);
+        // Use capitalized service names like React Native
+        const capitalizedServiceName = serviceName === 'oura' ? 'Oura' : 'Fitbit';
+        this.triggerHealthDataSync(user.id, capitalizedServiceName);
       }
 
       return { success: true, integration: integrationResult.integration };
