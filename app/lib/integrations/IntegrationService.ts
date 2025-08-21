@@ -295,13 +295,64 @@ export class IntegrationService {
 
   async initiateOAuth(serviceName: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const oauthService = this.getOAuthService(serviceName);
-      if (!oauthService) {
-        return { success: false, error: 'OAuth service not configured for this service' };
+      // Call server-side API to get OAuth URL
+      const response = await fetch('/api/oauth/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ serviceName }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Failed to initiate OAuth' };
       }
 
-      const result = await oauthService.initiateAuth();
-      return result;
+      const { authUrl, state, codeVerifier, usePKCE } = await response.json();
+
+      // Store state and code verifier for later validation
+      localStorage.setItem(`oauth_${serviceName}_state`, state);
+      if (usePKCE && codeVerifier) {
+        localStorage.setItem(`oauth_${serviceName}_code_verifier`, codeVerifier);
+      }
+
+      // Open OAuth window
+      const authWindow = window.open(
+        authUrl,
+        'oauth_window',
+        'width=600,height=700,scrollbars=yes,resizable=yes'
+      );
+
+      if (!authWindow) {
+        return { success: false, error: 'Failed to open OAuth window. Please check your popup blocker settings.' };
+      }
+
+      // Return a promise that resolves when the OAuth flow completes
+      return new Promise((resolve) => {
+        const checkClosed = setInterval(() => {
+          if (authWindow.closed) {
+            clearInterval(checkClosed);
+            
+            // Check if we received tokens (stored by callback)
+            const tokens = this.getStoredTokens(serviceName);
+            if (tokens) {
+              resolve({ success: true });
+            } else {
+              resolve({ success: false, error: 'OAuth flow was cancelled or failed' });
+            }
+          }
+        }, 1000);
+
+        // Timeout after 10 minutes
+        setTimeout(() => {
+          clearInterval(checkClosed);
+          if (!authWindow.closed) {
+            authWindow.close();
+          }
+          resolve({ success: false, error: 'OAuth flow timed out' });
+        }, 600000);
+      });
 
     } catch (error) {
       console.error('Error initiating OAuth:', error);
@@ -318,40 +369,22 @@ export class IntegrationService {
     state?: string
   ): Promise<IntegrationResult> {
     try {
-      const oauthService = this.getOAuthService(serviceName);
-      if (!oauthService) {
-        return { success: false, error: 'OAuth service not configured' };
+      // Call server-side API to exchange code for tokens and create integration
+      const response = await fetch('/api/oauth/exchange', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ serviceName, code, state }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Token exchange failed' };
       }
 
-      // Exchange code for tokens
-      const tokenResult = await oauthService.exchangeCodeForTokens(code, state);
-      if (!tokenResult.success || !tokenResult.tokens) {
-        return { success: false, error: tokenResult.error || 'Token exchange failed' };
-      }
-
-      // Get current user
-      const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'User not authenticated' };
-      }
-
-      // Create/update integration in database
-      const integrationResult = await this.createOrUpdateIntegration(
-        user.id,
-        serviceName,
-        tokenResult.tokens
-      );
-
-      if (!integrationResult.success) {
-        return integrationResult;
-      }
-
-      // Trigger health data sync for health services
-      if (serviceName === 'oura' || serviceName === 'fitbit') {
-        this.triggerHealthDataSync(user.id, serviceName);
-      }
-
-      return integrationResult;
+      const result = await response.json();
+      return { success: true, integration: result.integration };
 
     } catch (error) {
       console.error('Error handling OAuth callback:', error);
@@ -434,5 +467,15 @@ export class IntegrationService {
 
   getServiceDisplayInfo(serviceName: string) {
     return getServiceDescriptor(serviceName);
+  }
+
+  getStoredTokens(serviceName: string): TokenData | null {
+    try {
+      const stored = localStorage.getItem(`oauth_tokens_${serviceName}`);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error(`Failed to retrieve tokens for ${serviceName}:`, error);
+      return null;
+    }
   }
 }
