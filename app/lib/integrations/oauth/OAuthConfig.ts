@@ -37,7 +37,6 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     tokenUrl: 'https://api.fitbit.com/oauth2/token',
     scopes: ['activity', 'heartrate', 'location', 'nutrition', 'profile', 'settings', 'sleep', 'social', 'weight'],
     redirectUri: `${SITE_URL}/oauth/fitbit/web-callback`,
-    usePKCE: true,
     useBasicAuth: true,
   },
   'google_calendar': {

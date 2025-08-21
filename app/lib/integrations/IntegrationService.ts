@@ -89,7 +89,8 @@ export class IntegrationService {
     userId: string,
     serviceName: string,
     tokens: TokenData,
-    configuration?: Record<string, any>
+    configuration?: Record<string, any>,
+    additionalFields?: Record<string, any>
   ): Promise<IntegrationResult> {
     try {
       const now = new Date().toISOString();
@@ -111,9 +112,12 @@ export class IntegrationService {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token || null,
         expires_at: expiresAt,
+        scope: tokens.scope || null, // Store OAuth scopes like React Native
         configuration: configuration || {},
         last_used: now,
         updated_at: now,
+        // Add service-specific fields if provided (like React Native)
+        ...(additionalFields || {})
       };
 
       // Upsert the integration
@@ -351,12 +355,23 @@ export class IntegrationService {
         return false;
       }
 
-      // Update integration with new tokens
+      // Preserve existing service-specific fields during token refresh (like React Native)
+      const existingAdditionalFields: Record<string, any> = {};
+      const serviceSpecificFields = ['bot_id', 'workspace_name', 'workspace_id', 'workspace_icon'];
+      
+      serviceSpecificFields.forEach(field => {
+        if (integration[field as keyof typeof integration]) {
+          existingAdditionalFields[field] = integration[field as keyof typeof integration];
+        }
+      });
+
+      // Update integration with new tokens while preserving configuration and service-specific fields
       const updateResult = await this.createOrUpdateIntegration(
         userId,
         serviceName,
         refreshResult.tokens,
-        integration.configuration
+        integration.configuration,
+        existingAdditionalFields
       );
 
       return updateResult.success;
@@ -551,11 +566,16 @@ export class IntegrationService {
         tokens.expires_at = Date.now() / 1000 + tokens.expires_in;
       }
 
-      // Create/update integration in database
+      // Generate service-specific configuration and additional fields like React Native
+      const serviceSpecificData = this.generateServiceSpecificData(serviceName, tokens, config);
+
+      // Create/update integration in database with service-specific data
       const integrationResult = await this.createOrUpdateIntegration(
         user.id,
         serviceName,
-        tokens
+        tokens,
+        serviceSpecificData.configuration,
+        serviceSpecificData.additionalFields
       );
 
       if (!integrationResult.success) {
@@ -575,6 +595,87 @@ export class IntegrationService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
+    }
+  }
+
+  private generateServiceSpecificData(
+    serviceName: string, 
+    tokens: any, 
+    config: any
+  ): { configuration: Record<string, any>; additionalFields: Record<string, any> } {
+    const baseConfiguration = {
+      scopes: config.scopes || []
+    };
+    
+    let additionalFields: Record<string, any> = {};
+    
+    switch (serviceName.toLowerCase()) {
+      case 'notion':
+        return {
+          configuration: {
+            ...baseConfiguration,
+            owner: tokens.owner,
+            duplicated_template_id: tokens.duplicated_template_id,
+          },
+          additionalFields: {
+            bot_id: tokens.bot_id,
+            workspace_name: tokens.workspace_name,
+            workspace_id: tokens.workspace_id,
+            workspace_icon: tokens.workspace_icon
+          }
+        };
+        
+      case 'slack':
+        return {
+          configuration: {
+            ...baseConfiguration,
+            appId: tokens.app_id,
+            authedUser: tokens.authed_user,
+            tokenType: tokens.token_type,
+            isEnterpriseInstall: tokens.is_enterprise_install,
+            enterprise: tokens.enterprise
+          },
+          additionalFields: {
+            bot_id: tokens.bot_user_id,
+            workspace_name: tokens.team_name,
+            workspace_id: tokens.team_id
+          }
+        };
+        
+      case 'fitbit':
+        return {
+          configuration: {
+            ...baseConfiguration,
+            user_id: tokens.user_id,
+            webhook_subscriptions: [] // Will be populated when webhooks are set up
+          },
+          additionalFields: {}
+        };
+        
+      case 'oura':
+        return {
+          configuration: {
+            ...baseConfiguration,
+            user_id: tokens.user_id
+          },
+          additionalFields: {}
+        };
+        
+      case 'textbelt':
+        // API key service, no OAuth tokens but has configuration
+        return {
+          configuration: {
+            phone_number: tokens.phone_number // For API key services, "tokens" contains credentials
+          },
+          additionalFields: {}
+        };
+        
+      default:
+        // For other services (Google, Microsoft, etc.), just store scopes
+        return {
+          configuration: baseConfiguration,
+          additionalFields: {}
+        };
     }
   }
 
