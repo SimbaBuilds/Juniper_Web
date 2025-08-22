@@ -150,10 +150,19 @@ function organizeServicesByCategory(services: ServiceWithStatus[]) {
   const categories: { name: string; services: ServiceWithStatus[] }[] = [];
   categoryOrder.forEach(categoryName => {
     if (categoryMap[categoryName] && categoryMap[categoryName].length > 0) {
-      // Sort services within each category alphabetically
-      const sortedServices = categoryMap[categoryName].sort((a, b) => 
-        a.service_name.localeCompare(b.service_name)
-      );
+      // Sort services within each category
+      let sortedServices;
+      if (categoryName === 'Health and Wellness') {
+        // Reverse alphabetical for Health and Wellness (Oura before Fitbit)
+        sortedServices = categoryMap[categoryName].sort((a, b) => 
+          b.service_name.localeCompare(a.service_name)
+        );
+      } else {
+        // Regular alphabetical for other categories
+        sortedServices = categoryMap[categoryName].sort((a, b) => 
+          a.service_name.localeCompare(b.service_name)
+        );
+      }
       categories.push({
         name: categoryName,
         services: sortedServices
