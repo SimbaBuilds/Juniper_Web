@@ -1,5 +1,14 @@
-For the integrations connection flow, there are two flows:
-New Connection: User authenticates, a health data sync is run for certain integrations, user is routed to chat page, and a "let's complete the integration for < service_name> message is sent with an integration_in_progress flag
-Reconnection: User authenticates and returns to integrations screen.
+We are implementing a basic onboarding message for new users.
 
-Currently, the reconnection flow is going through the full new connection flow.  Please fix.
+Message:  
+Welcome to Juniper! 🎉
+Hi there! I'm Juniper, your AI wellness and productivity companion. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice, to creating smart automations that keep everything running smoothly.
+What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can accomplish together.
+
+
+Logic:
+- Local storage "has_conversation_history" boolean: if true, display the message
+- If no local storage, fallback to db logic: if no conversation records with user_id, display the message
+
+Display: Message should be displayed in the chat component as a normal assistant message.
+

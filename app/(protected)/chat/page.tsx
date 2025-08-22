@@ -30,6 +30,8 @@ export default function ChatPage() {
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null)
   const [requestStatus, setRequestStatus] = useState<string | null>(null)
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+  const [showOnboardingMessage, setShowOnboardingMessage] = useState(false)
+  const [hasCheckedForNewUser, setHasCheckedForNewUser] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -107,6 +109,46 @@ export default function ChatPage() {
     }
   }, [isLoading, isRequestInProgress, currentRequestId, requestStatus])
 
+  // Function to check if user is new (no conversation history)
+  const checkForNewUser = async (userId: string) => {
+    if (hasCheckedForNewUser) return
+    
+    try {
+      // First check localStorage
+      const hasHistory = localStorage.getItem('has_conversation_history')
+      if (hasHistory === 'true') {
+        setHasCheckedForNewUser(true)
+        return
+      }
+      
+      // If no localStorage flag, check database
+      const supabase = createClient()
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+      
+      if (error) {
+        console.error('Error checking conversation history:', error)
+        return
+      }
+      
+      // If no conversations found, show onboarding message
+      if (!conversations || conversations.length === 0) {
+        setShowOnboardingMessage(true)
+      } else {
+        // User has conversations, set localStorage flag
+        localStorage.setItem('has_conversation_history', 'true')
+      }
+      
+      setHasCheckedForNewUser(true)
+    } catch (error) {
+      console.error('Error in checkForNewUser:', error)
+      setHasCheckedForNewUser(true)
+    }
+  }
+
   // Get current user on mount
   useEffect(() => {
     async function getUser() {
@@ -114,6 +156,7 @@ export default function ChatPage() {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (user) {
         setUser(user)
+        checkForNewUser(user.id)
       }
     }
     getUser()
@@ -344,6 +387,11 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
     setSelectedImageUrl(null) // Clear selected image
+    
+    // Mark that user has conversation history and hide onboarding message
+    localStorage.setItem('has_conversation_history', 'true')
+    setShowOnboardingMessage(false)
+    
     setIsLoading(true)
     setIsRequestInProgress(true)
     setRequestStatus('pending') // Set initial status
@@ -456,6 +504,11 @@ export default function ChatPage() {
     // Clear messages
     setMessages([])
     
+    // Mark that user has conversation history (since we just saved one)
+    if (messages.length > 0) {
+      localStorage.setItem('has_conversation_history', 'true')
+    }
+    
     if (!isAutoRefresh) {
       toast.success('Chat cleared. Your conversation has been saved.')
     }
@@ -518,6 +571,30 @@ export default function ChatPage() {
           <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pb-8 min-h-0 bg-background">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground mt-8">
+                {showOnboardingMessage && (
+                  <div className="max-w-2xl mx-auto text-left">
+                    <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-sm">🤖</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="prose prose-sm max-w-none">
+                            <p className="mb-3">
+                              <strong>Welcome to Juniper! 🎉</strong>
+                            </p>
+                            <p className="mb-3">
+                            Hi there! I'm Juniper. We're honored to be part of your journey toward greater wellbeing and productivity. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice, to creating smart automations that keep everything running smoothly.
+                            </p>
+                            <p className="mb-0">
+                              What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can accomplish together.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
