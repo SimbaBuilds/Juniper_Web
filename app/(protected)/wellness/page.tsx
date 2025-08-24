@@ -1027,19 +1027,20 @@ export default function WellnessPage() {
         </div>
       )}
 
-      {/* Tip Banner */}
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-medium">Tip:</span> Add tag “Health and Wellness” to a resource for it to appear below.
+      {/* No Data Message - Show when no health data */}
+      {healthData.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <h3 className="text-lg font-medium text-foreground mb-2">Connect a service to see health metrics</h3>
+            <p className="text-muted-foreground mb-4">
+              Connect your wearable devices to start tracking your wellness metrics.
             </p>
-          </div>
-        </div>
-      </div>
+            <Button asChild>
+              <a href="/integrations">Connect Devices</a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Resources Section */}
       {filterPrefs.showResources && (
@@ -1088,28 +1089,13 @@ export default function WellnessPage() {
                     </div>
                     <div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <span className="font-medium">Tip:</span> Add tag "Health and Wellness" to a resource for it to appear on this screen.
+                        <span className="font-medium"></span> Add tag "Health and Wellness" to a resource for it to appear here.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-
-      {healthData.length === 0 && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <h3 className="text-lg font-medium text-foreground mb-2">No health data found</h3>
-            <p className="text-muted-foreground mb-4">
-              Connect your wearable devices to start tracking your wellness metrics.
-            </p>
-            <Button asChild>
-              <a href="/integrations">Connect Devices</a>
-            </Button>
           </CardContent>
         </Card>
       )}
