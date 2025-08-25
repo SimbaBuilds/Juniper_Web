@@ -838,76 +838,82 @@ export default function WellnessPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      {filterPrefs.showSleepTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="sleep_score" 
-                          stroke={isDarkMode ? "#60a5fa" : "#1e40af"} 
-                          strokeWidth={2} 
-                          name="Sleep" 
-                        />
-                      )}
-                      {filterPrefs.showActivityTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="activity_score" 
-                          stroke={isDarkMode ? "#bbf7d0" : "#166534"} 
-                          strokeWidth={2} 
-                          name="Activity Score" 
-                        />
-                      )}
-                      {filterPrefs.showReadinessTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="readiness_score" 
-                          stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
-                          strokeWidth={2} 
-                          name="Avg Readiness" 
-                        />
-                      )}
-                      {filterPrefs.showStressTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="stress_level" 
-                          stroke={isDarkMode ? "#f87171" : "#ef4444"} 
-                          strokeWidth={2} 
-                          name="Stress Level" 
-                        />
-                      )}
-                      {filterPrefs.showHeartRateTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="resting_hr" 
-                          stroke={isDarkMode ? "#a78bfa" : "#8b5cf6"} 
-                          strokeWidth={2} 
-                          name="Resting HR" 
-                        />
-                      )}
-                      {filterPrefs.showHrvTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="hrv_avg" 
-                          stroke={isDarkMode ? "#fb7185" : "#ec4899"} 
-                          strokeWidth={2} 
-                          name="HRV" 
-                        />
-                      )}
-                      {filterPrefs.showResilienceTrend && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="resilience_score" 
-                          stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
-                          strokeWidth={2} 
-                          name="Resilience Score" 
-                        />
-                      )}
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        {filterPrefs.showSleepTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="sleep_score" 
+                            stroke={isDarkMode ? "#60a5fa" : "#1e40af"} 
+                            strokeWidth={2} 
+                            name="Sleep" 
+                          />
+                        )}
+                        {filterPrefs.showActivityTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="activity_score" 
+                            stroke={isDarkMode ? "#bbf7d0" : "#166534"} 
+                            strokeWidth={2} 
+                            name="Activity Score" 
+                          />
+                        )}
+                        {filterPrefs.showReadinessTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="readiness_score" 
+                            stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
+                            strokeWidth={2} 
+                            name="Avg Readiness" 
+                          />
+                        )}
+                        {filterPrefs.showStressTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="stress_level" 
+                            stroke={isDarkMode ? "#f87171" : "#ef4444"} 
+                            strokeWidth={2} 
+                            name="Stress Level" 
+                          />
+                        )}
+                        {filterPrefs.showHeartRateTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="resting_hr" 
+                            stroke={isDarkMode ? "#a78bfa" : "#8b5cf6"} 
+                            strokeWidth={2} 
+                            name="Resting HR" 
+                          />
+                        )}
+                        {filterPrefs.showHrvTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="hrv_avg" 
+                            stroke={isDarkMode ? "#fb7185" : "#ec4899"} 
+                            strokeWidth={2} 
+                            name="HRV" 
+                          />
+                        )}
+                        {filterPrefs.showResilienceTrend && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="resilience_score" 
+                            stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
+                            strokeWidth={2} 
+                            name="Resilience Score" 
+                          />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No data available for this metric.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -925,46 +931,52 @@ export default function WellnessPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 90, left: 90, bottom: 20 }}>
-                      <Pie
-                        data={activityDistribution}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={140}
-                        fill="#8884d8"
-                        dataKey="value"
-                        labelLine={false}
-                        label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent, value, index }) => {
-                          const RADIAN = Math.PI / 180
-                          const radius = outerRadius + 35
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN)
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN)
-                          
-                          const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
-                          return (
-                            <text 
-                              x={x} 
-                              y={y} 
-                              fill={colorPalette[index % colorPalette.length]}
-                              textAnchor={x > cx ? 'start' : 'end'}
-                              dominantBaseline="central"
-                              className="text-xs font-medium"
-                            >
-                              <tspan x={x} dy="0">{name}</tspan>
-                              <tspan x={x} dy="16">{`${(percent * 100).toFixed(0)}% (${value}/${healthData.length} days)`}</tspan>
-                            </text>
-                          )
-                        }}
-                      >
-                        {activityDistribution.map((entry, index) => {
-                          const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
-                          return <Cell key={`cell-${index}`} fill={colorPalette[index % colorPalette.length]} />
-                        })}
-                      </Pie>
-                      <RechartsTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {activityDistribution.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart margin={{ top: 20, right: 90, left: 90, bottom: 20 }}>
+                        <Pie
+                          data={activityDistribution}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={140}
+                          fill="#8884d8"
+                          dataKey="value"
+                          labelLine={false}
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent, value, index }) => {
+                            const RADIAN = Math.PI / 180
+                            const radius = outerRadius + 35
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                            
+                            const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
+                            return (
+                              <text 
+                                x={x} 
+                                y={y} 
+                                fill={colorPalette[index % colorPalette.length]}
+                                textAnchor={x > cx ? 'start' : 'end'}
+                                dominantBaseline="central"
+                                className="text-xs font-medium"
+                              >
+                                <tspan x={x} dy="0">{name}</tspan>
+                                <tspan x={x} dy="16">{`${(percent * 100).toFixed(0)}% (${value}/${healthData.length} days)`}</tspan>
+                              </text>
+                            )
+                          }}
+                        >
+                          {activityDistribution.map((entry, index) => {
+                            const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
+                            return <Cell key={`cell-${index}`} fill={colorPalette[index % colorPalette.length]} />
+                          })}
+                        </Pie>
+                        <RechartsTooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No data available for this metric.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -979,19 +991,25 @@ export default function WellnessPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      <Bar 
-                        dataKey="steps" 
-                        fill={isDarkMode ? "#60a5fa" : "#1e40af"} 
-                        name="Steps"
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {chartData.some(d => d.steps > 0) ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Bar 
+                          dataKey="steps" 
+                          fill={isDarkMode ? "#60a5fa" : "#1e40af"} 
+                          name="Steps"
+                          radius={[8, 8, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No data available for this metric.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1006,19 +1024,25 @@ export default function WellnessPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      <Bar 
-                        dataKey="calories" 
-                        fill={isDarkMode ? "#bbf7d0" : "#166534"} 
-                        name="Calories"
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {chartData.some(d => d.calories > 0) ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Bar 
+                          dataKey="calories" 
+                          fill={isDarkMode ? "#bbf7d0" : "#166534"} 
+                          name="Calories"
+                          radius={[8, 8, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No data available for this metric.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { ContactForm } from '@/app/components/contact-form'
 import { 
   Brain, 
   ArrowLeft, 
@@ -58,42 +59,42 @@ const faqs = [
 const troubleshootingSteps = [
   {
     icon: Wifi,
-    title: "Connection Issues",
+    title: "Juniper Sync Issues",
     steps: [
-      "Check your internet connection",
-      "Ensure the app has network permissions",
-      "Try switching between WiFi and mobile data",
-      "Restart the app if problems persist"
+      "Check internet connection for real-time data sync",
+      "Verify Juniper has network permissions on mobile",
+      "Try refreshing integrations from settings",
+      "Log out and back in to refresh authentication tokens"
     ]
   },
   {
     icon: Mic,
-    title: "Voice Recognition Problems",
+    title: "Voice Assistant Problems",
     steps: [
-      "Speak clearly and at a normal volume",
-      "Check microphone permissions in device settings",
-      "Ensure you're in a quiet environment",
-      "Try using chat mode as an alternative"
+      "Hold the voice button and speak your command clearly",
+      "Grant microphone permissions to Juniper in device settings",
+      "Ensure you're using supported voice commands (try 'help me with...')",
+      "Switch to text chat if voice recognition fails"
     ]
   },
   {
     icon: Zap,
-    title: "Integration Troubleshooting",
+    title: "Integration Connection Issues",
     steps: [
-      "Verify your account credentials",
-      "Check if the service is experiencing downtime",
-      "Disconnect and reconnect the integration",
-      "Ensure you have the latest app version"
+      "Go to Integrations page and check connection status",
+      "Re-authenticate failed integrations (look for red warning icons)",
+      "Ensure third-party service (Gmail, Oura, etc.) is working normally",
+      "Check if integration requires specific permissions or 2FA setup"
     ]
   },
   {
     icon: Smartphone,
-    title: "App Performance Issues",
+    title: "Juniper App Performance",
     steps: [
-      "Close and restart the app",
-      "Clear app cache and data",
-      "Update to the latest version",
-      "Restart your device if needed"
+      "Force close Juniper and reopen to refresh memory state",
+      "Clear conversation history if chat responses are slow",
+      "Update Juniper to the latest version from app store",
+      "Check available storage - Juniper needs space for data caching"
     ]
   }
 ]
@@ -101,27 +102,27 @@ const troubleshootingSteps = [
 const commonIssues = [
   {
     icon: Phone,
-    title: "Mobile App Issues",
-    description: "Problems with iOS or Android app functionality, crashes, or performance issues.",
-    solutions: ["Update to latest version", "Clear app cache", "Reinstall if necessary"]
+    title: "Juniper Mobile App Issues",
+    description: "App crashes, slow loading, or features not working on iOS/Android.",
+    solutions: ["Update Juniper from App Store/Google Play", "Force close and restart app", "Free up device storage space"]
   },
   {
     icon: Mail,
-    title: "Email Integration Problems",
-    description: "Issues with Gmail, Outlook, or other email service connections.",
-    solutions: ["Verify account permissions", "Check 2FA settings", "Re-authenticate connection"]
+    title: "Gmail & Email Integration Issues",
+    description: "Problems connecting Gmail, Outlook, or email drafting not working properly.",
+    solutions: ["Re-authenticate email account in Integrations", "Check if 2FA is blocking access", "Verify email permissions in Google/Microsoft settings"]
   },
   {
     icon: Calendar,
-    title: "Calendar Sync Issues",
-    description: "Problems with calendar integration and appointment management.",
-    solutions: ["Check calendar permissions", "Verify timezone settings", "Sync calendar manually"]
+    title: "Calendar & Scheduling Problems",
+    description: "Juniper can't access calendar events or create appointments.",
+    solutions: ["Grant calendar permissions to Juniper", "Check timezone matches your location", "Re-connect calendar integration"]
   },
   {
     icon: Activity,
-    title: "Health Data Integration",
-    description: "Issues with Oura, Apple Health, or other health platform connections.",
-    solutions: ["Ensure health app permissions", "Check data sharing settings", "Verify account linking"]
+    title: "Health & Fitness Data Sync",
+    description: "Oura Ring, Apple Health, or fitness data not syncing with Juniper.",
+    solutions: ["Check Oura/Apple Health app permissions", "Verify data sharing is enabled", "Re-link health integration in Juniper settings"]
   }
 ]
 
@@ -272,25 +273,12 @@ export default function SupportPage() {
           </section>
 
           {/* Contact Support Section */}
-          {/* <section className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Still Need Help?</h2>
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Still Need Help?</h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Our support team is here to help you get the most out of Juniper. 
-                Contact us for personalized assistance.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="text-lg px-8 py-3">
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Contact Support
-                </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                  <Mail className="h-5 w-5 mr-2" />
-                  Send Email
-                </Button>
-              </div>
+              <ContactForm />
             </div>
-          </section> */}
+          </section>
 
           {/* Additional Resources */}
           <section className="mt-16">

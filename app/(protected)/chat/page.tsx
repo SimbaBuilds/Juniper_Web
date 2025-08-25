@@ -586,7 +586,7 @@ export default function ChatPage() {
                               <strong>Welcome to Juniper! 🎉</strong>
                             </p>
                             <p className="mb-3">
-                            Hi there! I'm Juniper. We're honored to be part of your journey toward greater wellbeing and productivity. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice, to creating smart automations that keep everything running smoothly.
+                            Hi there! I'm Juniper. We're honored to be part of your journey toward greater wellbeing and productivity. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice.
                             </p>
                             <p className="mb-0">
                               What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can accomplish together.
