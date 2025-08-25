@@ -44,7 +44,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/calendar.events'],
+    scopes: ['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: `${SITE_URL}/oauth/google-calendar/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -56,7 +56,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.modify'],
+    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: `${SITE_URL}/oauth/gmail/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -68,7 +68,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/documents'],
+    scopes: ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: `${SITE_URL}/oauth/google-docs/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -80,7 +80,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: `${SITE_URL}/oauth/google-sheets/web-callback`,
     additionalParams: {
       access_type: 'offline',
@@ -92,7 +92,7 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: ['https://www.googleapis.com/auth/meetings', 'https://www.googleapis.com/auth/calendar.events'],
+    scopes: ['https://www.googleapis.com/auth/meetings', 'https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: `${SITE_URL}/oauth/google-meet/web-callback`,
     additionalParams: {
       access_type: 'offline',

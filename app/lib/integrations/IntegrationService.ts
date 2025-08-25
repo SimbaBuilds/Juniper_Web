@@ -670,6 +670,15 @@ export class IntegrationService {
         tokens.expires_at = Date.now() / 1000 + tokens.expires_in;
       }
 
+      // Fetch email address for email services
+      let emailAddress: string | undefined;
+      try {
+        emailAddress = await this.fetchEmailAddress(serviceName, tokens.access_token);
+      } catch (error) {
+        console.error(`Failed to fetch email address for ${serviceName}:`, error);
+        // Don't fail the integration, just log the error
+      }
+
       // Generate service-specific configuration and additional fields like React Native
       const serviceSpecificData = this.generateServiceSpecificData(serviceName, tokens, config);
 
@@ -679,7 +688,10 @@ export class IntegrationService {
         serviceName,
         tokens,
         serviceSpecificData.configuration,
-        serviceSpecificData.additionalFields
+        {
+          ...serviceSpecificData.additionalFields,
+          ...(emailAddress && { email_address: emailAddress })
+        }
       );
 
       if (!integrationResult.success) {
@@ -714,6 +726,60 @@ export class IntegrationService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
+    }
+  }
+
+  private async fetchEmailAddress(serviceName: string, accessToken: string): Promise<string | undefined> {
+    const service = serviceName.toLowerCase();
+    
+    switch (service) {
+      case 'gmail':
+      case 'google_calendar':
+      case 'google_docs':
+      case 'google_sheets':
+      case 'google_meet': {
+        // Use Google's userinfo endpoint to get email
+        const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch Google user info: ${response.status}`);
+        }
+        
+        const userInfo = await response.json();
+        return userInfo.email;
+      }
+      
+      case 'microsoft_outlook_mail':
+      case 'outlook-mail':
+      case 'microsoft_outlook_calendar':
+      case 'outlook-calendar':
+      case 'microsoft_teams':
+      case 'microsoft_excel':
+      case 'microsoft_word': {
+        // Use Microsoft Graph's /me endpoint to get email
+        const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch Microsoft user info: ${response.status}`);
+        }
+        
+        const userInfo = await response.json();
+        return userInfo.mail || userInfo.userPrincipalName;
+      }
+      
+      default:
+        // For services that don't need email capture, return undefined
+        return undefined;
     }
   }
 
