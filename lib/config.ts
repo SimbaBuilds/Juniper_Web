@@ -37,7 +37,7 @@ export const APP_CONFIG = {
   FEATURES: {
     VOICE_CONTROL: "Hands-free Voice to Voice Chat",
     CROSS_PLATFORM: "iOS and Android Support",
-    WAKE_WORD: "Always-on Wake Word Detection (Android)",
+    WAKE_WORD: "Always-on Wake Phrase Detection (Android)",
     MEMORY_MANAGEMENT: "Smart or Manual Memory Management",
     INTEGRATIONS: "12+ Service Integrations"
   },

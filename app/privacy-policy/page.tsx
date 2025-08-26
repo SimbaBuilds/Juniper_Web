@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
                   </p>
                   <ul className="list-disc pl-6 text-gray-600 mb-6 space-y-1">
                     <li>Voice recordings for transcription and AI processing</li>
-                    <li>Wake word detection data (Android devices)</li>
+                    <li>Wake phrase detection data (Android devices)</li>
                     <li>Voice preference settings and selected voices</li>
                     <li>Transcription confidence scores and metadata</li>
                   </ul>

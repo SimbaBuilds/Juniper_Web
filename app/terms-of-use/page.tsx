@@ -103,7 +103,7 @@ export default function TermsOfUsePage() {
                     <li>Integration with 12+ third-party services and applications</li>
                     <li>Smart memory management and habit learning</li>
                     <li>Cross-platform mobile applications (iOS and Android)</li>
-                    <li>Always-on wake word detection (Android devices)</li>
+                    <li>Always-on wake phrase detection (Android devices)</li>
                     <li>Automation and task management capabilities</li>
                   </ul>
                   <p className="text-gray-600 mb-4">
