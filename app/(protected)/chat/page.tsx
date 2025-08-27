@@ -4,13 +4,14 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Send, Plus, Copy, Loader2, X, Smartphone, ImageIcon } from 'lucide-react'
+import { Send, Plus, Copy, Loader2, X, Smartphone, ImageIcon, Menu } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
 import { ImageUpload } from './components/ImageUpload'
 import { createClient } from '@/lib/utils/supabase/client'
 import { useRequestStatusPolling } from '@/hooks/useRequestStatusPolling'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -526,21 +527,48 @@ export default function ChatPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex h-[calc(100vh-13rem)] overflow-hidden bg-background border rounded-lg">
-        <ConversationHistory onContinueChat={handleContinueChat} />
+      <div className="flex h-[calc(100vh-13rem)] md:h-[calc(100vh-13rem)] overflow-hidden bg-background border rounded-lg">
+        {/* Conversation History - Hidden on mobile */}
+        <div className="hidden lg:block">
+          <ConversationHistory onContinueChat={handleContinueChat} />
+        </div>
         
-        <div className="flex-1 flex flex-col min-h-0 border-l">
-          <div className="flex justify-between items-center p-4 border-b flex-shrink-0 bg-background">
-            <h1 className="text-2xl font-bold">Chat with Juniper</h1>
-            <div className="flex gap-2">
+        <div className="flex-1 flex flex-col min-h-0 lg:border-l">
+          <div className="flex justify-between items-center p-3 md:p-4 border-b flex-shrink-0 bg-background">
+            <div className="flex items-center gap-2">
+              {/* Mobile conversation history trigger */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="lg:hidden"
+                    title="Conversation history"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 p-0">
+                  <SheetHeader className="p-4">
+                    <SheetTitle>Chat History</SheetTitle>
+                  </SheetHeader>
+                  <div className="h-full">
+                    <ConversationHistory onContinueChat={handleContinueChat} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <h1 className="text-xl md:text-2xl font-bold">Chat with Juniper</h1>
+            </div>
+            <div className="flex gap-1 md:gap-2">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleCopyChat}
                 disabled={messages.length === 0}
                 title="Copy chat"
+                className="h-8 w-8 md:h-10 md:w-10"
               >
-                <Copy className="h-4 w-4" />
+                <Copy className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -548,18 +576,19 @@ export default function ChatPage() {
                 onClick={() => handleClearChat(false)}
                 disabled={messages.length === 0}
                 title="New chat"
+                className="h-8 w-8 md:h-10 md:w-10"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
             </div>
           </div>
 
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pb-8 min-h-0 bg-background">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-2 md:p-4 pb-8 min-h-0 bg-background">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground mt-8">
                 {showOnboardingMessage && (
-                  <div className="max-w-2xl mx-auto text-left">
-                    <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                  <div className="max-w-2xl mx-auto text-left px-2">
+                    <div className="bg-muted/50 rounded-lg p-3 md:p-4 mb-4">
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
                           <span className="text-sm">🤖</span>
@@ -608,7 +637,7 @@ export default function ChatPage() {
             )}
           </ScrollArea>
 
-          <div className="p-4 border-t flex-shrink-0 bg-background">
+          <div className="p-2 md:p-4 border-t flex-shrink-0 bg-background">
             {/* Selected Image Preview */}
             {selectedImageUrl && (
               <div className="relative inline-block mb-2">
@@ -632,7 +661,7 @@ export default function ChatPage() {
                 e.preventDefault()
                 handleSendMessage()
               }}
-              className="flex gap-2"
+              className="flex gap-1 md:gap-2"
             >
               {/* Image Upload Button - now inline */}
               {user && (
@@ -657,8 +686,9 @@ export default function ChatPage() {
                 type="submit"
                 disabled={(!inputValue.trim() && !selectedImageUrl) || isLoading}
                 size="icon"
+                className="h-9 w-9 md:h-10 md:w-10"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
             </form>
             <div className="flex justify-between items-center mt-1">
@@ -674,13 +704,13 @@ export default function ChatPage() {
       </div>
 
       {/* Tip Banner */}
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-start space-x-3">
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 md:p-4">
+        <div className="flex items-start space-x-2 md:space-x-3">
           <div className="flex-shrink-0">
-            <Smartphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <Smartphone className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+            <p className="text-xs md:text-sm text-blue-800 dark:text-blue-200">
               <span className="font-medium">Tip:</span> Our mobile apps include voice options with Android featuring always-on wake phrase detection.
             </p>
           </div>

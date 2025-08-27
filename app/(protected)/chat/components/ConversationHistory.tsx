@@ -174,8 +174,8 @@ export function ConversationHistory({ onContinueChat }: ConversationHistoryProps
   }
 
   return (
-    <div className="w-80 bg-muted/30 border-r flex flex-col h-full border rounded-l-lg">
-      <div className="p-4 border-b">
+    <div className="w-full lg:w-80 bg-muted/30 border-r flex flex-col h-full border lg:rounded-l-lg">
+      <div className="p-3 lg:p-4 border-b">
         <h2 className="font-semibold text-lg">Chat History</h2>
         <p className="text-sm text-muted-foreground">Past month conversations</p>
       </div>
@@ -193,7 +193,7 @@ export function ConversationHistory({ onContinueChat }: ConversationHistoryProps
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <div className="p-2 pb-6">
+          <div className="p-2 lg:p-2 pb-6">
             {conversations.map((conversation) => (
               <div key={conversation.id} className="mb-2 p-3 rounded-lg hover:bg-muted/50 border">
                 <div className="flex items-start justify-between mb-2">
