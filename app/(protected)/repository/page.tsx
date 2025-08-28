@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { RESOURCE_TYPES } from '@/app/lib/repository/types'
-import { Resource, Tag } from '@/lib/utils/supabase/tables'
+import { Resource, Tag } from '@/lib/tables'
 import { ResourceModal } from '@/app/components/repository/resource-modal'
 import { AddResourceSection } from '@/app/components/repository/add-resource-section'
 import { Pencil, Trash2, Tags } from 'lucide-react'
