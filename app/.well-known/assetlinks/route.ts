@@ -81,7 +81,7 @@ export async function GET(request: Request) {
           <ol>
             <li>Navigate to the app settings</li>
             <li>Go to "Open by Default"</li>
-            <li>Select the juniper URL</li>
+            <li>Select the Juniper URL</li>
           </ol>
           <p style="margin-top: 15px; font-style: italic;">You can also ask your assistant to complete the integration for this service since it was interrupted.</p>
         </div>
