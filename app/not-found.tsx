@@ -46,14 +46,14 @@ export default function NotFound() {
 
           {/* Instructions */}
           <div className="bg-blue-50 p-6 rounded-lg text-left space-y-4">
-            <h3 className="font-semibold text-blue-900">To avoid this issue in the future:</h3>
+            <h3 className="font-semibold text-blue-900">To avoid this page in the future:</h3>
             <ol className="list-decimal list-inside space-y-2 text-blue-800">
               <li>Navigate to the app settings</li>
               <li>Go to "Open by Default"</li>
-              <li>Select the juniper URL</li>
+              <li>Select the Juniper URL</li>
             </ol>
-            <p className="text-sm italic text-blue-700 mt-4">
-              You can also ask your assistant to complete the integration for this service since it was interrupted.
+            <p className="text-sm text-blue-700 mt-4">
+              We recommend asking your assistant to complete the integration for this service since it was interrupted.
             </p>
           </div>
 
