@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/utils/supabase/client'
 import Link from 'next/link'
 
@@ -10,14 +11,48 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [verifyingAccount, setVerifyingAccount] = useState(false)
+  // Honeypot fields - invisible to users but detectable by bots
+  const [website, setWebsite] = useState('')
+  const [company, setCompany] = useState('')
+  const router = useRouter()
   const supabase = createClient()
+
+  // Function to verify account is ready with retries
+  const verifyAccountReady = async (maxRetries = 10, delay = 1000): Promise<boolean> => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (user && !error) {
+          return true
+        }
+        
+        // Wait before next attempt
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      } catch (err) {
+        console.log(`Account verification attempt ${attempt + 1} failed:`, err)
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    return false
+  }
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    setMessage(null)
+
+    // Honeypot detection - if any honeypot field is filled, it's likely a bot
+    if (website || company) {
+      // Silently reject the submission to avoid revealing the honeypot
+      setLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -31,22 +66,43 @@ export function SignupForm() {
       return
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      // Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // If signup was successful, start account verification process
       setLoading(false)
-      return
-    }
+      setVerifyingAccount(true)
 
-    setMessage('Check your email to confirm your account!')
-    setLoading(false)
+      // Wait for account to be ready
+      const accountReady = await verifyAccountReady()
+      
+      if (accountReady) {
+        // Account is ready, redirect to dashboard
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        // Fallback if account verification fails
+        setError('Account created but verification failed. Please try logging in.')
+        setVerifyingAccount(false)
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+      setVerifyingAccount(false)
+    }
   }
 
   const handleGoogleSignup = async () => {
@@ -114,20 +170,50 @@ export function SignupForm() {
           />
         </div>
 
+        {/* Honeypot fields - hidden from users but visible to bots */}
+        <div style={{ display: 'none' }}>
+          <label htmlFor="website">Website (leave blank)</label>
+          <input
+            id="website"
+            name="website"
+            type="text"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
+        
+        <div style={{ display: 'none' }}>
+          <label htmlFor="company">Company (leave blank)</label>
+          <input
+            id="company"
+            name="company"
+            type="text"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
+
         {error && (
           <div className="text-red-600 text-sm">{error}</div>
         )}
 
-        {message && (
-          <div className="text-green-600 text-sm">{message}</div>
+        {verifyingAccount && (
+          <div className="text-blue-600 text-sm flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span>Verifying account and preparing dashboard...</span>
+          </div>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || verifyingAccount}
           className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Creating account...' : 'Sign up'}
+          {loading ? 'Creating account...' : verifyingAccount ? 'Preparing dashboard...' : 'Sign up'}
         </button>
       </form>
 
