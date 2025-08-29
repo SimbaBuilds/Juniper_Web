@@ -77,13 +77,13 @@ export async function GET(request: Request) {
         <p>You can return to the app.</p>
         
         <div class="instructions">
-          <div class="steps">To avoid this issue in the future:</div>
+          <div class="steps">To avoid this page in the future:</div>
           <ol>
             <li>Navigate to the app settings</li>
             <li>Go to "Open by Default"</li>
             <li>Select the Juniper URL</li>
           </ol>
-          <p style="margin-top: 15px; font-style: italic;">You can also ask your assistant to complete the integration for this service since it was interrupted.</p>
+          <p style="margin-top: 15px;">We recommend asking your assistant to complete the integration for this service since it was interrupted.</p>
         </div>
       </div>
     </body>
