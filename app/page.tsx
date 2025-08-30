@@ -24,7 +24,7 @@ const features = [
   {
     icon: Mic,
     title: "Chat Focused Processing",
-    description: "Control Juniper's behavior, complete integrations, and manage automations all through text and voice chat"
+    description: "Control Juniper's behavior, complete integrations, and delegate tasks all through text and voice chat"
   },
   {
     icon: Smartphone,
