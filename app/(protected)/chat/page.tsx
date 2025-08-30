@@ -517,7 +517,7 @@ export default function ChatPage() {
     }).join('\n\n')
 
     navigator.clipboard.writeText(chatText)
-    toast.success('Chat conversation copied to clipboard.')
+    toast.success('Copied to Clipboard')
   }
 
   const handleContinueChat = (loadedMessages: Message[]) => {

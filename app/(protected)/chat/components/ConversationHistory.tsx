@@ -124,7 +124,7 @@ export function ConversationHistory({ onContinueChat }: ConversationHistoryProps
       }).join('\n\n') || ''
 
       await navigator.clipboard.writeText(conversationText)
-      toast.success('Conversation copied to clipboard!')
+      toast.success('Copied to Clipboard')
     } catch (error) {
       console.error('Error copying conversation:', error)
       toast.error('Failed to copy conversation')
