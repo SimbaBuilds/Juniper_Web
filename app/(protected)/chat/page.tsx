@@ -679,7 +679,7 @@ export default function ChatPage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type a message..."
                 maxLength={2000}
-                disabled={isLoading}
+                disabled={false}
                 className="flex-1"
               />
               <Button
