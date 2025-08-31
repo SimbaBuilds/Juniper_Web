@@ -33,9 +33,9 @@ const demoVideos = [
     thumbnail: "https://img.youtube.com/vi/3n_l7NohHrk/maxresdefault.jpg"
   },
   {
-    id: "qTb7BkwE-zE",
+    id: "vfv6uGq42DY",
     title: "Oura Integration + Wellness Dashboard", 
-    thumbnail: "https://youtu.be/vfv6uGq42DY/maxresdefault.jpg"
+    thumbnail: "https://img.youtube.com/vi/vfv6uGq42DY/maxresdefault.jpg"
   },
   {
     id: "quMsf4s5LFQ",
