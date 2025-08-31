@@ -8,17 +8,41 @@ import {
   Mic, 
   Brain, 
   Zap,
-  Smartphone
+  Smartphone,
+  Play
 } from 'lucide-react'
 import { useAuth } from './providers/auth-provider'
 import { ThemeToggle } from './components/theme-toggle'
 import { PublicMobileMenu } from './components/public-mobile-menu'
 import { getPublicServices } from './lib/integrations/constants'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/utils/supabase/client'
 
 const publicServicesCount = getPublicServices().length;
+
+const demoVideos = [
+  {
+    id: "FmxwgpCW_7A",
+    title: "Oura Stress Zones Research Email",
+    thumbnail: "https://img.youtube.com/vi/FmxwgpCW_7A/maxresdefault.jpg"
+  },
+  {
+    id: "3n_l7NohHrk", 
+    title: "Email Integration Flow",
+    thumbnail: "https://img.youtube.com/vi/3n_l7NohHrk/maxresdefault.jpg"
+  },
+  {
+    id: "qTb7BkwE-zE",
+    title: "Oura Integration + Wellness Dashboard", 
+    thumbnail: "https://img.youtube.com/vi/qTb7BkwE-zE/maxresdefault.jpg"
+  },
+  {
+    id: "quMsf4s5LFQ",
+    title: "Juniper Asked About A Run",
+    thumbnail: "https://img.youtube.com/vi/quMsf4s5LFQ/maxresdefault.jpg"
+  }
+]
 
 const features = [
   {
@@ -47,6 +71,7 @@ export default function HomePage() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const supabase = createClient()
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
 
   useEffect(() => {
     // Check if there's a hash in the URL (mobile app callback)
@@ -186,6 +211,53 @@ export default function HomePage() {
                 <p className="text-muted-foreground">{feature.description}</p>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Demos Section */}
+      <section className="container mx-auto px-4 py-16 bg-muted/30">
+        <div className="text-center mb-12">
+          <h3 className="text-3xl font-bold text-foreground mb-4">Demos</h3>
+          <p className="text-lg text-muted-foreground">See Juniper in action</p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {demoVideos.map((video) => (
+            <div key={video.id} className="relative group">
+              {playingVideo === video.id ? (
+                <div className="relative overflow-hidden rounded-lg">
+                  <iframe
+                    width="100%"
+                    height="250"
+                    src={`https://www.youtube.com/embed/${video.id}?autoplay=1`}
+                    title={video.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-64 rounded-lg"
+                  ></iframe>
+                </div>
+              ) : (
+                <div 
+                  className="relative cursor-pointer overflow-hidden rounded-lg group"
+                  onClick={() => setPlayingVideo(video.id)}
+                >
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-64 object-cover rounded-lg transition-transform duration-200 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors rounded-lg"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-white/90 hover:bg-white rounded-full p-4 transition-all duration-200 group-hover:scale-110">
+                      <Play className="w-6 h-6 text-gray-700 ml-1" fill="currentColor" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <h4 className="text-lg font-semibold text-foreground mt-4 text-center">{video.title}</h4>
+            </div>
           ))}
         </div>
       </section>
