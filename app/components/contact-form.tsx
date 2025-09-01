@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Send, Shield } from 'lucide-react'
 import Link from 'next/link'
+import Script from 'next/script'
+
+declare global {
+  interface Window {
+    grecaptcha: any
+  }
+}
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -17,32 +24,73 @@ export function ContactForm() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+    if (name === 'message' && value.length > 1000) return
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setErrorMessage('')
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      let recaptchaToken = null
+      
+      if (recaptchaLoaded && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+        try {
+          recaptchaToken = await window.grecaptcha.execute(
+            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            { action: 'contact_form' }
+          )
+        } catch (recaptchaError) {
+          console.warn('reCAPTCHA failed, proceeding without it:', recaptchaError)
+        }
+      }
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to send message')
+      }
+
       setSubmitStatus('success')
       setFormData({ name: '', email: '', subject: '', message: '' })
     } catch (error) {
       setSubmitStatus('error')
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to send message. Please try again.')
     } finally {
       setIsSubmitting(false)
-      // Reset status after 3 seconds
-      setTimeout(() => setSubmitStatus('idle'), 3000)
+      setTimeout(() => {
+        setSubmitStatus('idle')
+        setErrorMessage('')
+      }, 5000)
     }
   }
 
   return (
-    <Card className="border-0 shadow-lg">
+    <>
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+          onLoad={() => setRecaptchaLoaded(true)}
+        />
+      )}
+      <Card className="border-0 shadow-lg">
       <CardHeader>
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -104,7 +152,7 @@ export function ContactForm() {
 
           <div>
             <label htmlFor="message" className="block text-sm font-medium text-foreground mb-1">
-              Message *
+              Message * <span className="text-xs text-gray-500">({formData.message.length}/1000)</span>
             </label>
             <Textarea
               id="message"
@@ -114,6 +162,7 @@ export function ContactForm() {
               required
               placeholder="Please provide detailed information about your issue or question..."
               className="min-h-32"
+              maxLength={1000}
             />
           </div>
 
@@ -125,7 +174,7 @@ export function ContactForm() {
 
           {submitStatus === 'error' && (
             <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-              ✗ There was an error sending your message. Please try again.
+              ✗ {errorMessage || 'There was an error sending your message. Please try again.'}
             </div>
           )}
 
@@ -164,5 +213,6 @@ export function ContactForm() {
         </form>
       </CardContent>
     </Card>
+    </>
   )
 }

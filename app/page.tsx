@@ -18,6 +18,7 @@ import { getPublicServices } from './lib/integrations/constants'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/utils/supabase/client'
+import { ContactForm } from './components/contact-form'
 
 const publicServicesCount = getPublicServices().length;
 
@@ -297,6 +298,22 @@ export default function HomePage() {
               </Button>
             </Link>
           )}
+        </div>
+      </section>
+
+      {/* Business Contact Section */}
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center mb-8">
+            <h3 className="text-3xl font-bold mb-4">Want Something Like Juniper for Your Business?</h3>
+            <p className="text-lg text-muted-foreground">
+              We can help you build custom AI-powered solutions tailored to your specific needs. 
+              Get in touch to discuss how we can transform your business with intelligent automation.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <ContactForm />
+          </div>
         </div>
       </section>
 
