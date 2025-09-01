@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/utils/supabase/client';
+import { createSupabaseAppServerClient } from '@/lib/utils/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = await createSupabaseAppServerClient();
     
     // Fetch services
     const { data: services, error: servicesError } = await supabase

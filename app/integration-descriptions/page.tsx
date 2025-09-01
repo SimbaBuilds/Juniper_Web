@@ -312,7 +312,7 @@ export default function IntegrationDescriptions() {
 
         <div className="mt-16 text-center">
           <p className="text-muted-foreground mb-6">
-            Ready to connect your services and unlock AI-powered insights?
+            Ready to experience Juniper?
           </p>
           <Button asChild size="lg">
             <a href="/signin">

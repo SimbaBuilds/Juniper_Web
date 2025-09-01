@@ -283,7 +283,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
           <p className="text-xl mb-8 text-primary-foreground/80">
-            {user ? 'Access your dashboard and manage your automations' : 'Create your account and start using Juniper today'}
+            {user ? 'Chat with Juniper or manage integrations and repository' : 'Create your account and start using Juniper today'}
           </p>
           {user ? (
             <Link href="/dashboard">
@@ -302,17 +302,17 @@ export default function HomePage() {
       </section>
 
       {/* Business Contact Section */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-8">
             <h3 className="text-3xl font-bold mb-4">Want Something Like Juniper for Your Business?</h3>
             <p className="text-lg text-muted-foreground">
-              We can help you build custom AI-powered solutions tailored to your specific needs. 
-              Get in touch to discuss how we can transform your business with intelligent automation.
+              We can help you build custom AI-powered systems tailored to your specific needs. 
+              Get in touch to discuss how we can transform your business with intelligent and reliable systems.
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
-            <ContactForm />
+            <ContactForm variant="business" />
           </div>
         </div>
       </section>
@@ -327,7 +327,7 @@ export default function HomePage() {
                 <span className="text-xl font-bold text-foreground">Juniper</span>
               </div>
               <p className="text-muted-foreground">
-                Your intelligent mobile assistant for seamless app integration and voice-controlled productivity.
+                Your intelligent mobile assistant for Wellness and Productivity.
               </p>
             </div>
             <div>

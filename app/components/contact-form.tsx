@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Send, Shield } from 'lucide-react'
+import { Mail, Send, Shield, Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import Script from 'next/script'
 
@@ -15,7 +15,12 @@ declare global {
   }
 }
 
-export function ContactForm() {
+interface ContactFormProps {
+  variant?: 'support' | 'business'
+  className?: string
+}
+
+export function ContactForm({ variant = 'support', className = '' }: ContactFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -82,6 +87,13 @@ export function ContactForm() {
     }
   }
 
+  const isBusinessVariant = variant === 'business'
+  const icon = isBusinessVariant ? Briefcase : Mail
+  const title = isBusinessVariant ? 'Get in Touch' : 'Contact Support'
+  const description = isBusinessVariant 
+    ? "Let's discuss how we can build custom AI solutions for your business needs."
+    : "Get personalized support for Juniper from the HightowerAI team. We'll get back to you as soon as possible."
+
   return (
     <>
       {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
@@ -90,16 +102,16 @@ export function ContactForm() {
           onLoad={() => setRecaptchaLoaded(true)}
         />
       )}
-      <Card className="border-0 shadow-lg">
+      <Card className={`border-0 shadow-lg bg-background ${className}`}>
       <CardHeader>
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Mail className="h-5 w-5 text-blue-600" />
+            {icon && <icon className="h-5 w-5 text-blue-600" />}
           </div>
-          <CardTitle className="text-2xl">Contact Support</CardTitle>
+          <CardTitle className="text-2xl">{title}</CardTitle>
         </div>
-        <p className="text-gray-600">
-          Get personalized support for Juniper from the HightowerAI team. We'll get back to you as soon as possible.
+        <p className="text-gray-600 dark:text-gray-400">
+          {description}
         </p>
       </CardHeader>
       <CardContent>
@@ -146,7 +158,7 @@ export function ContactForm() {
               value={formData.subject}
               onChange={handleChange}
               required
-              placeholder="Brief description of your issue"
+              placeholder={isBusinessVariant ? "What can we help you build?" : "Brief description of your issue"}
             />
           </div>
 
@@ -160,7 +172,9 @@ export function ContactForm() {
               value={formData.message}
               onChange={handleChange}
               required
-              placeholder="Please provide detailed information about your issue or question..."
+              placeholder={isBusinessVariant 
+                ? "Tell us about your project, goals, and how we can help transform your business with AI..."
+                : "Please provide detailed information about your issue or question..."}
               className="min-h-32"
               maxLength={1000}
             />
