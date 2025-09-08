@@ -11,6 +11,8 @@ import { Calendar, User, ArrowLeft, Brain, Loader2, MessageCircle } from 'lucide
 import { ThemeToggle } from '../../components/theme-toggle';
 import { PublicMobileMenu } from '../../components/public-mobile-menu';
 import { useAuth } from '../../providers/auth-provider';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { BlogPost, BlogComment } from '@/lib/tables';
 
 interface BlogPostWithFormattedDate extends Omit<BlogPost, 'published_at' | 'created_at' | 'updated_at'> {
@@ -233,10 +235,10 @@ export default function BlogPostPage() {
             </div>
           </div>
 
-          <div className="prose prose-lg dark:prose-invert max-w-none">
-            <div className="text-foreground leading-relaxed whitespace-pre-wrap">
+          <div className="prose prose-lg dark:prose-invert max-w-none [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:display-list-item [&_p]:mb-4 [&_h1]:mb-4 [&_h1]:mt-8 [&_h2]:mb-4 [&_h2]:mt-6 [&_h3]:mb-3 [&_h3]:mt-5 [&_ul]:mb-4 [&_ol]:mb-4 [&_li]:mb-2 [&_blockquote]:my-6">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {post.content}
-            </div>
+            </ReactMarkdown>
           </div>
         </div>
       </article>
