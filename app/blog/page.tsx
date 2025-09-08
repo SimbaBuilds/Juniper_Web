@@ -172,7 +172,7 @@ export default function BlogPage() {
       {/* Footer */}
       <footer className="container mx-auto px-4 py-16 text-center">
         <div className="text-muted-foreground">
-          <p>&copy; 2024 Juniper. All rights reserved.</p>
+          <p>&copy; 2025 Juniper. All rights reserved.</p>
         </div>
       </footer>
     </div>

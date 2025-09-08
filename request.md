@@ -1,33 +1,7 @@
-# Welcome to the official Juniper blog!
+Large language model outputs are inherently probabilistic; this is great for simulating human or super human like intelligence, but it causes problems when you need a system to behave predicatably and reliably.  Many AI engineers have run in to the Problem of Determinism.  
 
-We're *thrilled* to launch our new blog where we'll be sharing insights, updates, and stories about the future of **AI-powered personal assistance**. This is a space where we'll explore the intersection of artificial intelligence, personal wellness, and productivity tools to help you live your best life.
+Apart from wearables and health data integration, Juniper also integrates with productivity services like Gmail and Slack.  When I was testing Juniper, I asked it to draft an email to my friend - it proceeded to send the actual email.  Luckily, no harm was done apart from some embarrassment, but I had to decide what to do.  I realized the agent sending the email had 3 or so mentions of sending an email in its system prompt so, probabilistically, the LLM decided the user wanted to “send” not “draft” the email.  I went ahead and varied the system prompt, but I needed something more robust for something as important as sending emails.  I decided to add a hardcoded check: if the actual word “send” was not in the user’s most recent chat message, the agent could not send an email, Slack message, etc…  This would just be a heuristic the user will need to be notified of and reminded about.
 
-## What you can expect
+Similar to LLM outputs, semantic search is also probabalistic.  For added determinism,  I added a robust tagging system to complement semantic search; user resources can be typed as “Memories”, “Reference”, “Notes”, and “Files”, and be tagged with 100+ unique tags.  This ensures that agents completing certain workflows always see certain resources rather than probably see them.
 
-In this blog, we'll be sharing:
-
-- **Product updates** and new features
-- *Tips* for maximizing your productivity with AI
-- Insights into wellness technology trends
-- Community spotlights and success stories
-- Behind-the-scenes development insights
-
-## Our Mission
-
-At Juniper, we believe that AI should enhance your daily life seamlessly. We're building the bridge between all your favorite apps and intelligent assistance.
-
-Whether you're looking to:
-
-1. Track your wellness metrics with devices like Oura
-2. Manage your calendar and emails efficiently
-3. Stay connected with team communication tools
-
-We've got you covered. The key is making technology work for you, not the other way around. Our platform adapts to your needs, learns from your patterns, and helps you achieve your goals without the complexity.
-
-> "The future of productivity isn't about replacing human intelligence—it's about augmenting it." - Juniper Team
-
----
-
-Stay tuned for regular updates as we continue to build the future of AI-powered personal assistance. We're excited to have you on this journey with us!
-
-[Learn more about our integrations](/integration-descriptions)
+How has the problem of determinism manifested in your AI workflows?  Let us know.  
