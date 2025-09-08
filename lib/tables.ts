@@ -774,3 +774,39 @@ export type UserProfile = {
   ] as const;
   export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
 
+  // Blog Schema Tables
+
+  export type BlogPost = {
+    id: string;
+    slug: string;
+    title: string;
+    excerpt: string;
+    content: string;
+    author_name: string;
+    published: boolean;
+    published_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const blogPostFields = [
+    'id', 'slug', 'title', 'excerpt', 'content', 'author_name',
+    'published', 'published_at', 'created_at', 'updated_at'
+  ] as const;
+  export type BlogPostField = (typeof blogPostFields)[number];
+
+  export type BlogComment = {
+    id: string;
+    post_id: string;
+    author_name: string;
+    author_email?: string;
+    content: string;
+    approved: boolean;
+    created_at: Date;
+  };
+
+  export const blogCommentFields = [
+    'id', 'post_id', 'author_name', 'author_email', 'content', 'approved', 'created_at'
+  ] as const;
+  export type BlogCommentField = (typeof blogCommentFields)[number];
+

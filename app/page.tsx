@@ -123,6 +123,14 @@ export default function HomePage() {
             <Brain className="h-8 w-8" style={{color: 'var(--muted-blue)'}} />
             <Link href="/" className="text-2xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer">Juniper</Link>
           </div>
+          <div className="hidden md:flex items-center space-x-6">
+            <Link href="/integration-descriptions" className="text-foreground hover:text-primary transition-colors">
+              Integrations
+            </Link>
+            <Link href="/blog" className="text-foreground hover:text-primary transition-colors">
+              Blog
+            </Link>
+          </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             <div className="hidden md:flex items-center space-x-4">
