@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Send, Shield, Briefcase } from 'lucide-react'
+import { Send, Shield } from 'lucide-react'
 import Link from 'next/link'
 import Script from 'next/script'
 
@@ -88,7 +88,6 @@ export function ContactForm({ variant = 'support', className = '' }: ContactForm
   }
 
   const isBusinessVariant = variant === 'business'
-  const icon = isBusinessVariant ? Briefcase : Mail
   const title = isBusinessVariant ? 'Get in Touch' : 'Contact Support'
   const description = isBusinessVariant 
     ? "Let's discuss how we can build custom AI solutions for your business needs."
@@ -104,12 +103,7 @@ export function ContactForm({ variant = 'support', className = '' }: ContactForm
       )}
       <Card className={`border-0 shadow-lg bg-background ${className}`}>
       <CardHeader>
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            {icon && <icon className="h-5 w-5 text-blue-600" />}
-          </div>
-          <CardTitle className="text-2xl">{title}</CardTitle>
-        </div>
+        <CardTitle className="text-2xl">{title}</CardTitle>
         <p className="text-gray-600 dark:text-gray-400">
           {description}
         </p>

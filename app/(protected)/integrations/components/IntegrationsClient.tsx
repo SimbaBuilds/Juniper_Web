@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, ExternalLink, Unplug, Settings, Phone } from 'lucide-react';
+import { Loader2, ExternalLink, Unplug, Settings, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { IntegrationService } from '@/app/lib/integrations/IntegrationService';
 // Remove server-side import and use direct API calls
@@ -583,7 +583,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
           disabled={true}
           className="w-full flex items-center gap-2 cursor-not-allowed opacity-60"
         >
-          <Phone className="h-4 w-4" />
+          <Smartphone className="h-4 w-4" />
           Connect in mobile app only
         </Button>
       );
@@ -721,7 +721,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                   {service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 mb-3">
-                        <Phone className="h-4 w-4 text-blue-600" />
+                        <Smartphone className="h-4 w-4 text-blue-600" />
                         <h4 className="font-medium text-blue-900">SMS Setup</h4>
                       </div>
                       <p className="text-sm text-blue-700 mb-4">
@@ -781,7 +781,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                       {['Apple Health', 'Google Fit'].includes(service.service_name) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-blue-600">
-                            <Phone className="w-3 h-3" />
+                            <Smartphone className="w-3 h-3" />
                             <span>Mobile App Only</span>
                           </div>
                           <Button
@@ -790,7 +790,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                             disabled={true}
                             className="w-full flex items-center gap-2 cursor-not-allowed opacity-60"
                           >
-                            <Phone className="h-4 w-4" />
+                            <Smartphone className="h-4 w-4" />
                             Connect in mobile app only
                           </Button>
                         </div>
