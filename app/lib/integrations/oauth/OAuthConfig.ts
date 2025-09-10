@@ -164,49 +164,6 @@ export const OAUTH_CONFIG: Record<string, OAuthServiceConfig> = {
     scopes: ['data:read_write'],
     redirectUri: `${SITE_URL}/oauth/todoist/web-callback`,
   },
-  'mychart': {
-    clientId: process.env.MYCHART_CLIENT_ID || '',
-    clientSecret: process.env.MYCHART_CLIENT_SECRET || '',
-    authorizationUrl: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
-    tokenUrl: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
-    scopes: [
-      'patient/Patient.rs',
-      'patient/Observation.rs',
-      'patient/AllergyIntolerance.rs',
-      'patient/Condition.rs',
-      'patient/Immunization.rs',
-      'patient/DiagnosticReport.rs',
-      'patient/MedicationRequest.rs',
-      'patient/Procedure.rs',
-      'patient/AdverseEvent.rs',
-      'patient/Appointment.rs',
-      'patient/BodyStructure.rs',
-      'patient/CarePlan.rs',
-      'patient/CareTeam.rs',
-      'patient/Communication.rs',
-      'patient/Coverage.rs',
-      'patient/Device.rs',
-      'patient/DeviceRequest.rs',
-      'patient/EpisodeOfCare.rs',
-      'patient/ExplanationOfBenefit.rs',
-      'patient/FamilyMemberHistory.rs',
-      'patient/Flag.rs',
-      'patient/Goal.rs',
-      'patient/List.rs',
-      'patient/Medication.rs',
-      'patient/NutritionOrder.rs',
-      'patient/Questionnaire.rs',
-      'patient/QuestionnaireResponse.rs',
-      'openid',
-      'fhirUser',
-      'offline_access',
-      'launch'
-    ],
-    redirectUri: `${SITE_URL}/oauth/mychart/web-callback`,
-    additionalParams: {
-      aud: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/',
-    },
-  },
 };
 
 export const SERVICE_DESCRIPTORS: Record<string, ServiceDescriptor> = {
@@ -300,12 +257,6 @@ export const SERVICE_DESCRIPTORS: Record<string, ServiceDescriptor> = {
     category: 'Task Management',
     iconName: 'check-square',
   },
-  'mychart': {
-    displayName: 'MyChart',
-    description: 'Access your Epic MyChart health records and medical data',
-    category: 'Health and Wellness',
-    iconName: 'activity',
-  },
 };
 
 export function getOAuthConfig(serviceName: string): OAuthServiceConfig | null {
@@ -322,7 +273,6 @@ export function getOAuthConfig(serviceName: string): OAuthServiceConfig | null {
     'microsoft-outlook-mail': 'microsoft_outlook_mail',
     'outlook-mail': 'microsoft_outlook_mail',
     'microsoft-teams': 'microsoft_teams',
-    'my-chart': 'mychart',
   };
   
   const configKey = serviceNameMap[serviceName] || serviceName;
@@ -343,7 +293,6 @@ export function getServiceDescriptor(serviceName: string): ServiceDescriptor | n
     'microsoft-outlook-mail': 'microsoft_outlook_mail',
     'outlook-mail': 'microsoft_outlook_mail',
     'microsoft-teams': 'microsoft_teams',
-    'my-chart': 'mychart',
   };
   
   const configKey = serviceNameMap[serviceName] || serviceName;
