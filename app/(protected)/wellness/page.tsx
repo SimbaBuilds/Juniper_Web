@@ -412,15 +412,15 @@ export default function WellnessPage() {
   const chartData = React.useMemo(() => {
     const data = healthData.map(d => ({
       date: new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      sleep_score: d.sleep_score || 0,
-      activity_score: d.activity_score || 0,
-      readiness_score: d.readiness_score || 0,
-      stress_level: d.stress_level || 0,
-      resting_hr: d.resting_hr || 0,
-      hrv_avg: d.hrv_avg || 0,
-      resilience_score: d.resilience_score || 0,
-      steps: d.total_steps || 0,
-      calories: d.calories_burned || 0
+      sleep_score: (d.sleep_score && d.sleep_score > 0) ? d.sleep_score : null,
+      activity_score: (d.activity_score && d.activity_score > 0) ? d.activity_score : null,
+      readiness_score: (d.readiness_score && d.readiness_score > 0) ? d.readiness_score : null,
+      stress_level: (d.stress_level && d.stress_level > 0) ? d.stress_level : null,
+      resting_hr: (d.resting_hr && d.resting_hr > 0) ? d.resting_hr : null,
+      hrv_avg: (d.hrv_avg && d.hrv_avg > 0) ? d.hrv_avg : null,
+      resilience_score: (d.resilience_score && d.resilience_score > 0) ? d.resilience_score : null,
+      steps: (d.total_steps && d.total_steps > 0) ? d.total_steps : null,
+      calories: (d.calories_burned && d.calories_burned > 0) ? d.calories_burned : null
     }))
     
     console.log('Chart data prepared:', data.length, 'points for timeRange:', filterPrefs.timeRange)
@@ -1115,6 +1115,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#60a5fa" : "#1e40af"} 
                             strokeWidth={2} 
                             name="Sleep" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showActivityTrend && (
@@ -1124,6 +1125,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#bbf7d0" : "#166534"} 
                             strokeWidth={2} 
                             name="Activity Score" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showReadinessTrend && (
@@ -1133,6 +1135,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
                             strokeWidth={2} 
                             name="Avg Readiness" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showStressTrend && (
@@ -1142,6 +1145,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#f87171" : "#ef4444"} 
                             strokeWidth={2} 
                             name="Stress Level" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showHeartRateTrend && (
@@ -1151,6 +1155,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#a78bfa" : "#8b5cf6"} 
                             strokeWidth={2} 
                             name="Resting HR" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showHrvTrend && (
@@ -1160,6 +1165,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#fb7185" : "#ec4899"} 
                             strokeWidth={2} 
                             name="HRV" 
+                            connectNulls={false}
                           />
                         )}
                         {filterPrefs.showResilienceTrend && (
@@ -1169,6 +1175,7 @@ export default function WellnessPage() {
                             stroke={isDarkMode ? "#fbbf24" : "#f59e0b"} 
                             strokeWidth={2} 
                             name="Resilience Score" 
+                            connectNulls={false}
                           />
                         )}
                       </LineChart>
