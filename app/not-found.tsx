@@ -57,7 +57,7 @@ export default function NotFound() {
             </p>
           </div>
 
-          {/* Actions */}
+          {/* Actions
           <div className="flex flex-col gap-4 justify-center">
             <Link href="/integrations">
               <Button className="flex items-center space-x-2 w-full">
@@ -71,7 +71,7 @@ export default function NotFound() {
                 <span>Go to Chat</span>
               </Button>
             </Link>
-          </div>
+          </div> */}
 
           {/* Brand */}
           <div className="pt-8 border-t border-gray-200">
