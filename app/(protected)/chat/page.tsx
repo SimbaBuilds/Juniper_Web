@@ -42,7 +42,7 @@ export default function ChatPage() {
   
   // Define all active states where cancel button should be shown
   const activeStates = ['pending', 'thinking', 'searching', 'processing', 'configuring', 
-                        'retrieving', 'storing', 'integrating', 'pinging', 'automating'];
+                        'retrieving', 'storing', 'integrating', 'pinging', 'automating', 'caring'];
 
   // Helper function to get status message
   const getStatusMessage = (status: string | null): string => {
@@ -71,6 +71,8 @@ export default function ChatPage() {
         return 'Request failed';
       case 'cancelled':
         return 'Request cancelled';
+      case 'caring':
+        return 'Caring... This can take a few moments.';
       default:
         return 'Processing...';
     }
