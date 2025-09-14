@@ -342,6 +342,9 @@ export default function HomePage() {
                 <Link href="/integration-descriptions" className="block text-muted-foreground hover:text-foreground">
                   Integrations
                 </Link>
+                <Link href="/support" className="block text-muted-foreground hover:text-foreground">
+                  Contact Support
+                </Link>
                 <Link href="/privacy-policy" className="block text-muted-foreground hover:text-foreground">
                   Privacy Policy
                 </Link>
