@@ -1,1 +1,1 @@
-Please add a “Contact Support” link to https://juniperassistant.com/support at the footer
+Please find and remove the logic that removes the current day from display on the wellness page.

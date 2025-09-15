@@ -184,23 +184,23 @@ export default function WellnessPage() {
         
         setUser(user)
 
-        // Fetch health metrics data (excluding current day to avoid showing zeros)
+        // Fetch health metrics data (including current day)
         const daysBack = parseInt(filterPrefs.timeRange)
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        const startDate = new Date(Date.now() - (daysBack + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        
+        const today = new Date().toISOString().split('T')[0]
+        const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
         console.log('Date debugging:')
         console.log('Current time:', new Date().toISOString())
-        console.log('Yesterday (upper bound):', yesterday)
+        console.log('Today (upper bound):', today)
         console.log('Start date (lower bound):', startDate)
         console.log('Days back:', daysBack)
-        
+
         const { data: metricsData, error: metricsError } = await supabase
           .from('health_metrics_daily')
           .select('*')
           .eq('user_id', user.id)
           .gte('date', startDate)
-          .lte('date', yesterday)
+          .lte('date', today)
           .order('date', { ascending: true })
         
         if (metricsError) {
