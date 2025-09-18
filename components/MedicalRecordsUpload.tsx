@@ -377,8 +377,8 @@ export function MedicalRecordsUpload() {
                 <p className="font-medium">{processingResult.message}</p>
                 {processingResult.success && (
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    <p>✅ Processed {processingResult.total_files} files with {processingResult.total_pages} total pages</p>
-                    <p>⏱️ Processing time: {processingResult.processing_time.toFixed(1)}s</p>
+                    {/* <p>✅ Processed {processingResult.total_files} files with {processingResult.total_pages} total pages</p>
+                    <p>⏱️ Processing time: {processingResult.processing_time.toFixed(1)}s</p> */}
                   </div>
                 )}
                 {processingResult.failed_records && processingResult.failed_records.length > 0 && (
