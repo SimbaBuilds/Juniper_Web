@@ -71,7 +71,7 @@ export class MedicalRecordsStorageService {
       console.log('✅ MedicalRecordsStorageService: User authenticated', { userId: user.id });
 
       const finalFileName = fileName || `${Date.now()}_${file.name}`;
-      const filePath = `${userId}/medical-records/${finalFileName}`;
+      const filePath = `${userId}/${finalFileName}`;
       console.log('🔄 MedicalRecordsStorageService: Uploading to path', { filePath });
 
       const { data, error } = await this.supabase.storage
