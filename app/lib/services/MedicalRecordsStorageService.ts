@@ -43,7 +43,7 @@ export class MedicalRecordsStorageService {
       }
 
       if (!this.isSupportedFileType(file.type)) {
-        const error = 'Only PDF, PNG, JPEG, and CSV files are allowed';
+        const error = 'Only PDF, PNG, JPEG, CSV, TXT, RTF, DOCX, DOC, and MD files are allowed';
         console.error('❌ MedicalRecordsStorageService:', error);
         return { success: false, error };
       }
@@ -206,7 +206,14 @@ export class MedicalRecordsStorageService {
       'image/jpg',
       'image/png',
       'text/csv',
-      'application/csv'
+      'application/csv',
+      'text/plain',
+      'application/rtf',
+      'text/rtf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'text/markdown',
+      'text/x-markdown'
     ];
     return supportedTypes.includes(mimeType.toLowerCase());
   }
@@ -218,12 +225,19 @@ export class MedicalRecordsStorageService {
       'image/jpg': 'jpg',
       'image/png': 'png',
       'text/csv': 'csv',
-      'application/csv': 'csv'
+      'application/csv': 'csv',
+      'text/plain': 'txt',
+      'application/rtf': 'rtf',
+      'text/rtf': 'rtf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/msword': 'doc',
+      'text/markdown': 'md',
+      'text/x-markdown': 'md'
     };
     return mimeToExt[mimeType.toLowerCase()] || 'unknown';
   }
 
   static getSupportedFileTypesText(): string {
-    return 'PDF, PNG, JPEG, CSV';
+    return 'PDF, PNG, JPEG, CSV, TXT, RTF, DOCX, DOC, MD';
   }
 }

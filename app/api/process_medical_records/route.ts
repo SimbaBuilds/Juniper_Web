@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const supportedTypes = ['pdf', 'jpeg', 'jpg', 'png', 'csv']
+      const supportedTypes = ['pdf', 'jpeg', 'jpg', 'png', 'csv', 'txt', 'rtf', 'docx', 'doc', 'md']
       if (!supportedTypes.includes(file.file_type.toLowerCase())) {
         return NextResponse.json(
           { error: `Unsupported file type: ${file.file_type}. Supported types: ${supportedTypes.join(', ')}` },

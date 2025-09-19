@@ -254,6 +254,10 @@ export function MedicalRecordsUpload() {
           Maximum 8 files per upload, 50MB each.
         </div>
 
+        <div className="text-sm font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          🔒 We do not share your records with any third parties.
+        </div>
+
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
