@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/utils/supabase/client'
-import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2 } from 'lucide-react'
+import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2, FileText } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -17,6 +17,8 @@ import { Calendar } from '@/components/ui/calendar'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Badge } from '@/components/ui/badge'
 import { MedicalRecordsUpload } from '@/components/MedicalRecordsUpload'
+import { MedicalRecordsList } from '@/components/MedicalRecordsList'
+import { cn } from '@/lib/utils'
 
 interface HealthMetric {
   id: string
@@ -69,14 +71,7 @@ interface FilterPrefs {
   showResources: boolean
   sortBy: string
   showSummaryStats: boolean
-  showSleepCard: boolean
-  showActivityCard: boolean
-  showStepsCard: boolean
-  showReadinessCard: boolean
-  showAvgStepsCard: boolean
-  showAvgStressCard: boolean
-  showAvgHeartRateCard: boolean
-  showAvgHrvCard: boolean
+  selectedSummaryCards: string[]
   // New trend chart instances
   trendCharts: ChartInstance[]
 }
@@ -219,12 +214,6 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
     color: { light: '#854d0e', dark: '#eab308' }
   },
   {
-    key: 'lbm',
-    label: 'Lean Body Mass',
-    group: 'Body Composition',
-    color: { light: '#166534', dark: '#22c55e' }
-  },
-  {
     key: 'body_fat_percentage',
     label: 'Body Fat Percentage',
     group: 'Body Composition',
@@ -238,7 +227,7 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
   },
   {
     key: 'lean_body_mass',
-    label: 'Lean Body Mass (Alt)',
+    label: 'Lean Body Mass',
     group: 'Body Composition',
     color: { light: '#065f46', dark: '#10b981' }
   },
@@ -318,6 +307,7 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
   }
 ]
 
+
 // Metric presets for quick selection
 const METRIC_PRESETS = {
   vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'oxygen_saturation'],
@@ -325,31 +315,30 @@ const METRIC_PRESETS = {
   recovery: ['sleep_score', 'readiness_score', 'recovery_score'],
   wellness: ['stress_level', 'resilience_score'],
   sleep: ['time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
-  body: ['weight', 'body_fat_percentage', 'lbm', 'basal_metabolic_rate'],
+  body: ['weight', 'body_fat_percentage', 'lean_body_mass', 'basal_metabolic_rate'],
   blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 
-
-// MetricSelector Component
-interface MetricSelectorProps {
+// Unified MetricsSelector Component
+interface MetricsSelectorProps {
   selectedMetrics: string[]
   onSelectionChange: (metrics: string[]) => void
-  isDarkMode: boolean
+  isDarkMode?: boolean
+  mode: 'manual-entry' | 'summary-cards' | 'trends'
+  className?: string
 }
 
-function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: MetricSelectorProps) {
+function MetricsSelector({ selectedMetrics, onSelectionChange, isDarkMode, mode, className }: MetricsSelectorProps) {
   const [open, setOpen] = useState(false)
+  const metrics = selectedMetrics || []
 
   const toggleMetric = (metricKey: string) => {
-    console.log('toggleMetric called with:', metricKey)
-    console.log('selectedMetrics before toggle:', selectedMetrics)
-    const newSelection = selectedMetrics.includes(metricKey)
-      ? selectedMetrics.filter(m => m !== metricKey)
-      : [...selectedMetrics, metricKey]
-    console.log('newSelection:', newSelection)
+    const newSelection = metrics.includes(metricKey)
+      ? metrics.filter(m => m !== metricKey)
+      : [...metrics, metricKey]
     onSelectionChange(newSelection)
   }
 
@@ -363,14 +352,54 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
     return acc
   }, {} as Record<string, MetricDefinition[]>)
 
+  // Get appropriate data source and labels based on mode
+  const getDisplayText = () => {
+    switch (mode) {
+      case 'manual-entry':
+        return {
+          infoText: 'Select which metrics to manually enter',
+          placeholder: 'Select metrics...',
+          searchPlaceholder: 'Search metrics...',
+          emptyText: 'No metrics found.',
+          buttonText: `${metrics.length} metric${metrics.length !== 1 ? 's' : ''} selected`
+        }
+      case 'summary-cards':
+        return {
+          infoText: 'Select which summary cards to display',
+          placeholder: 'Select cards...',
+          searchPlaceholder: 'Search cards...',
+          emptyText: 'No cards found.',
+          buttonText: `${metrics.length} card${metrics.length !== 1 ? 's' : ''} selected`
+        }
+      case 'trends':
+        return {
+          infoText: 'Some metrics may not have data depending on your connected integrations',
+          placeholder: 'Select metrics...',
+          searchPlaceholder: 'Search metrics...',
+          emptyText: 'No metrics found.',
+          buttonText: `${metrics.length} metric${metrics.length !== 1 ? 's' : ''} selected`
+        }
+      default:
+        return {
+          infoText: 'Select metrics',
+          placeholder: 'Select metrics...',
+          searchPlaceholder: 'Search metrics...',
+          emptyText: 'No metrics found.',
+          buttonText: `${metrics.length} selected`
+        }
+    }
+  }
+
+  const displayText = getDisplayText()
+
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-3", className)}>
       {/* Info text */}
       <p className="text-xs text-muted-foreground italic">
-        Some metrics may not have data depending on your connected integrations
+        {displayText.infoText}
       </p>
 
-      {/* Preset Buttons */}
+      {/* Preset Buttons - show for all modes */}
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
@@ -472,9 +501,9 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
             className="w-full justify-between"
           >
             <span className="truncate">
-              {selectedMetrics.length === 0
-                ? "Select metrics..."
-                : `${selectedMetrics.length} metric${selectedMetrics.length !== 1 ? 's' : ''} selected`
+              {metrics.length === 0
+                ? displayText.placeholder
+                : displayText.buttonText
               }
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -482,12 +511,12 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
           <Command>
-            <CommandInput placeholder="Search metrics..." />
-            <CommandEmpty>No metrics found.</CommandEmpty>
+            <CommandInput placeholder={displayText.searchPlaceholder} />
+            <CommandEmpty>{displayText.emptyText}</CommandEmpty>
             <CommandList>
-              {Object.entries(groupedMetrics).map(([group, metrics]) => (
+              {Object.entries(groupedMetrics).map(([group, groupMetrics]) => (
                 <CommandGroup key={group} heading={group}>
-                  {metrics.map((metric) => (
+                  {groupMetrics.map((metric) => (
                     <CommandItem
                       key={metric.key}
                       onSelect={() => toggleMetric(metric.key)}
@@ -495,14 +524,16 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
                     >
                       <div className="flex items-center space-x-2 w-full">
                         <div className="flex items-center space-x-2 flex-1">
-                          <div
-                            className="w-3 h-3 rounded-sm"
-                            style={{ backgroundColor: isDarkMode ? metric.color.dark : metric.color.light }}
-                          />
+                          {isDarkMode !== undefined && (
+                            <div
+                              className="w-3 h-3 rounded-sm"
+                              style={{ backgroundColor: isDarkMode ? metric.color.dark : metric.color.light }}
+                            />
+                          )}
                           <span>{metric.label}</span>
                         </div>
                         <Check
-                          className={`h-4 w-4 ${selectedMetrics.includes(metric.key) ? "opacity-100" : "opacity-0"}`}
+                          className={`h-4 w-4 ${metrics.includes(metric.key) ? "opacity-100" : "opacity-0"}`}
                         />
                       </div>
                     </CommandItem>
@@ -514,10 +545,10 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
         </PopoverContent>
       </Popover>
 
-      {/* Selected Metrics Display */}
-      {selectedMetrics.length > 0 && (
+      {/* Selected Metrics Display - for trends mode */}
+      {mode === 'trends' && metrics.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {selectedMetrics.map(metricKey => {
+          {metrics.map(metricKey => {
             const metric = AVAILABLE_METRICS.find(m => m.key === metricKey)
             if (!metric) return null
             return (
@@ -526,22 +557,18 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
                 variant="secondary"
                 className="text-xs flex items-center gap-1"
               >
-                <div
-                  className="w-2 h-2 rounded-sm"
-                  style={{ backgroundColor: isDarkMode ? metric.color.dark : metric.color.light }}
-                />
+                {isDarkMode !== undefined && (
+                  <div
+                    className="w-2 h-2 rounded-sm"
+                    style={{ backgroundColor: isDarkMode ? metric.color.dark : metric.color.light }}
+                  />
+                )}
                 {metric.label}
                 <button
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    console.log('X button clicked for metric:', metricKey)
-                    console.log('Current selectedMetrics:', selectedMetrics)
-                    toggleMetric(metricKey)
-                  }}
+                  onClick={() => toggleMetric(metricKey)}
+                  className="ml-1 hover:bg-secondary-foreground/20 rounded-sm p-0.5"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2 w-2" />
                 </button>
               </Badge>
             )
@@ -549,6 +576,24 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
         </div>
       )}
     </div>
+  )
+}
+
+// Legacy alias for backward compatibility
+interface MetricSelectorProps {
+  selectedMetrics: string[]
+  onSelectionChange: (metrics: string[]) => void
+  isDarkMode: boolean
+}
+
+function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: MetricSelectorProps) {
+  return (
+    <MetricsSelector
+      selectedMetrics={selectedMetrics}
+      onSelectionChange={onSelectionChange}
+      isDarkMode={isDarkMode}
+      mode="trends"
+    />
   )
 }
 
@@ -740,21 +785,16 @@ export default function WellnessPage() {
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
   const [manualEntryDate, setManualEntryDate] = useState<Date>()
   const [manualEntryValues, setManualEntryValues] = useState<Record<string, string>>({})
+  const [selectedManualMetrics, setSelectedManualMetrics] = useState<string[]>(['sleep_score', 'activity_score', 'readiness_score', 'stress_level', 'recovery_score'])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [medicalRecordsRefresh, setMedicalRecordsRefresh] = useState(0)
   const [filterPrefs, setFilterPrefs] = useState<FilterPrefs>({
     timeRange: '30',
     showResources: true,
     sortBy: 'date',
     showSummaryStats: true,
-    showSleepCard: true,
-    showActivityCard: true,
-    showStepsCard: true,
-    showReadinessCard: true,
-    showAvgStepsCard: true,
-    showAvgStressCard: true,
-    showAvgHeartRateCard: true,
-    showAvgHrvCard: true,
+    selectedSummaryCards: ['sleep_score', 'activity_score', 'resilience_score', 'total_steps'],
     // Default trend chart instance
     trendCharts: [{
       id: '1',
@@ -795,6 +835,10 @@ export default function WellnessPage() {
             selectedMetrics: ['sleep_score', 'activity_score', 'readiness_score', 'stress_level'],
             isExpanded: true
           }]
+        }
+        // Ensure selectedSummaryCards exists for backward compatibility
+        if (!parsedPrefs.selectedSummaryCards) {
+          parsedPrefs.selectedSummaryCards = ['sleep_score', 'activity_score', 'resilience_score', 'total_steps']
         }
         setFilterPrefs(parsedPrefs)
       } catch (e) {
@@ -952,19 +996,11 @@ export default function WellnessPage() {
     return metric ? (isDark ? metric.color.dark : metric.color.light) : '#999'
   }
 
-  // Available metrics for manual entry
-  const availableMetrics = [
-    { value: 'sleep_score', label: 'Sleep Score (0-100)' },
-    { value: 'activity_score', label: 'Activity Score (0-100)' },
-    { value: 'readiness_score', label: 'Readiness Score (0-100)' },
-    { value: 'stress_level', label: 'Stress Level (0-100)' },
-    { value: 'recovery_score', label: 'Recovery Score (0-100)' },
-    { value: 'total_steps', label: 'Total Steps' },
-    { value: 'calories_burned', label: 'Calories Burned' },
-    { value: 'resting_hr', label: 'Resting Heart Rate (bpm)' },
-    { value: 'hrv_avg', label: 'HRV Average (ms)' },
-    { value: 'resilience_score', label: 'Resilience Score (0-100)' }
-  ]
+  // Get selected metrics for manual entry from AVAILABLE_METRICS
+  const selectedManualMetricsData = selectedManualMetrics.map(key => {
+    const metric = AVAILABLE_METRICS.find(m => m.key === key)
+    return metric ? { value: metric.key, label: metric.label } : null
+  }).filter(Boolean) as { value: string; label: string }[]
 
   const handleManualEntry = async () => {
     if (!user || !manualEntryDate) {
@@ -985,7 +1021,7 @@ export default function WellnessPage() {
     for (const [metric, value] of validEntries) {
       const numValue = parseFloat(value)
       if (isNaN(numValue)) {
-        alert(`Please enter a valid number for ${availableMetrics.find(m => m.value === metric)?.label}`)
+        alert(`Please enter a valid number for ${selectedManualMetricsData.find(m => m.value === metric)?.label}`)
         return
       }
       parsedEntries[metric] = numValue
@@ -1051,16 +1087,65 @@ export default function WellnessPage() {
   }
 
 
-  // Calculate summary stats
+  // Calculate summary stats for all available metrics
+  const calculateAverage = (key: string) => {
+    const validData = healthData.filter(d => d[key] && d[key] > 0)
+    if (validData.length === 0) return null
+    return Math.round(validData.reduce((sum, d) => sum + d[key], 0) / validData.length)
+  }
+
   const summaryStats = healthData.length > 0 ? {
-    avgSleepScore: Math.round(healthData.reduce((sum, d) => sum + (d.sleep_score || 0), 0) / healthData.length),
-    avgActivityScore: Math.round(healthData.reduce((sum, d) => sum + (d.activity_score || 0), 0) / healthData.length),
-    avgResilienceScore: Math.round(healthData.reduce((sum, d) => sum + (d.resilience_score || 0), 0) / Math.max(healthData.filter(d => d.resilience_score && d.resilience_score > 0).length, 1)),
-    avgReadiness: Math.round(healthData.reduce((sum, d) => sum + (d.readiness_score || 0), 0) / Math.max(healthData.filter(d => d.readiness_score && d.readiness_score > 0).length, 1)),
-    avgSteps: Math.round(healthData.reduce((sum, d) => sum + (d.total_steps || 0), 0) / Math.max(healthData.filter(d => d.total_steps && d.total_steps > 0).length, 1)),
-    avgStressLevel: Math.round(healthData.reduce((sum, d) => sum + (d.stress_level || 0), 0) / Math.max(healthData.filter(d => d.stress_level && d.stress_level > 0).length, 1)),
-    avgRestingHr: Math.round(healthData.reduce((sum, d) => sum + (d.resting_hr || 0), 0) / Math.max(healthData.filter(d => d.resting_hr && d.resting_hr > 0).length, 1)),
-    avgHrv: Math.round(healthData.reduce((sum, d) => sum + (d.hrv_avg || 0), 0) / Math.max(healthData.filter(d => d.hrv_avg && d.hrv_avg > 0).length, 1))
+    // Recovery & Sleep
+    sleep_score: calculateAverage('sleep_score'),
+    readiness_score: calculateAverage('readiness_score'),
+    recovery_score: calculateAverage('recovery_score'),
+
+    // Activity & Exercise
+    activity_score: calculateAverage('activity_score'),
+    total_steps: calculateAverage('total_steps'),
+    calories_burned: calculateAverage('calories_burned'),
+    exercise_minutes: calculateAverage('exercise_minutes'),
+    active_energy: calculateAverage('active_energy'),
+    distance: calculateAverage('distance'),
+
+    // Vitals & Health Metrics
+    resting_hr: calculateAverage('resting_hr'),
+    hrv_avg: calculateAverage('hrv_avg'),
+    body_temperature: calculateAverage('body_temperature'),
+    blood_pressure_systolic: calculateAverage('blood_pressure_systolic'),
+    blood_pressure_diastolic: calculateAverage('blood_pressure_diastolic'),
+    oxygen_saturation: calculateAverage('oxygen_saturation'),
+
+    // Wellness & Mental Health
+    stress_level: calculateAverage('stress_level'),
+    resilience_score: calculateAverage('resilience_score'),
+
+    // Body Composition
+    weight: calculateAverage('weight'),
+    body_fat_percentage: calculateAverage('body_fat_percentage'),
+    lean_body_mass: calculateAverage('lean_body_mass'),
+    basal_metabolic_rate: calculateAverage('basal_metabolic_rate'),
+
+    // Sleep Details
+    time_in_bed: calculateAverage('time_in_bed'),
+    time_asleep: calculateAverage('time_asleep'),
+    light_sleep: calculateAverage('light_sleep'),
+    deep_sleep: calculateAverage('deep_sleep'),
+    rem_sleep: calculateAverage('rem_sleep'),
+
+    // Blood Metrics
+    blood_glucose: calculateAverage('blood_glucose'),
+
+    // Fitness & Performance
+    vo2_max: calculateAverage('vo2_max'),
+    time_in_daylight: calculateAverage('time_in_daylight'),
+
+    // Nutrition
+    hydration: calculateAverage('hydration'),
+    nutrition_calories: calculateAverage('nutrition_calories'),
+
+    // Women's Health
+    menstruation_flow: calculateAverage('menstruation_flow')
   } : null
 
   // Prepare chart data - ensure it updates when healthData changes
@@ -1097,7 +1182,6 @@ export default function WellnessPage() {
       // Body composition
       weight: (d.weight && d.weight > 0) ? d.weight : null,
       height: (d.height && d.height > 0) ? d.height : null,
-      lbm: (d.lbm && d.lbm > 0) ? d.lbm : null,
       body_fat_percentage: (d.body_fat_percentage && d.body_fat_percentage > 0) ? d.body_fat_percentage : null,
       basal_metabolic_rate: (d.basal_metabolic_rate && d.basal_metabolic_rate > 0) ? d.basal_metabolic_rate : null,
       lean_body_mass: (d.lean_body_mass && d.lean_body_mass > 0) ? d.lean_body_mass : null,
@@ -1278,25 +1362,37 @@ export default function WellnessPage() {
                       </Popover>
                     </div>
 
-                    {/* Metrics Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {availableMetrics.map((metric) => (
-                        <div key={metric.value} className="space-y-2">
-                          <Label className="text-xs">{metric.label}</Label>
-                          <Input
-                            type="number"
-                            placeholder="Enter value"
-                            value={manualEntryValues[metric.value] || ''}
-                            onChange={(e) => setManualEntryValues(prev => ({
-                              ...prev,
-                              [metric.value]: e.target.value
-                            }))}
-                            className="h-8"
-                            step="0.01"
-                          />
-                        </div>
-                      ))}
+                    {/* Metrics Selector */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Metrics to Enter</Label>
+                      <MetricsSelector
+                        selectedMetrics={selectedManualMetrics}
+                        onSelectionChange={setSelectedManualMetrics}
+                        mode="manual-entry"
+                      />
                     </div>
+
+                    {/* Metrics Grid - only show selected metrics */}
+                    {selectedManualMetrics.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {selectedManualMetricsData.map((metric) => (
+                          <div key={metric.value} className="space-y-2">
+                            <Label className="text-xs">{metric.label}</Label>
+                            <Input
+                              type="number"
+                              placeholder="Enter value"
+                              value={manualEntryValues[metric.value] || ''}
+                              onChange={(e) => setManualEntryValues(prev => ({
+                                ...prev,
+                                [metric.value]: e.target.value
+                              }))}
+                              className="h-8"
+                              step="0.01"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Save Button */}
                     <div className="flex justify-end">
@@ -1319,104 +1415,21 @@ export default function WellnessPage() {
               )}
             </div>
 
-            {/* Medical Records Upload */}
-            <div className="bg-muted/30 rounded-lg p-4">
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Medical Records
-                </h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload medical documents for Juniper to analyze and reference in health conversations
-                </p>
-              </div>
-              <MedicalRecordsUpload />
-            </div>
 
 
-            {/* Summary Card Toggles */}
+
+            {/* Section Toggles */}
             <div>
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Summary Cards</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Sections</h4>
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="show-summary-stats"
                     checked={filterPrefs.showSummaryStats}
                     onCheckedChange={(checked) => updateFilterPref('showSummaryStats', checked)}
                   />
-                  <Label htmlFor="show-summary-stats" className="text-xs">All Summary</Label>
+                  <Label htmlFor="show-summary-stats" className="text-xs">Summary Cards</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-sleep-card"
-                    checked={filterPrefs.showSleepCard}
-                    onCheckedChange={(checked) => updateFilterPref('showSleepCard', checked)}
-                  />
-                  <Label htmlFor="show-sleep-card" className="text-xs">Sleep Card</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-activity-card"
-                    checked={filterPrefs.showActivityCard}
-                    onCheckedChange={(checked) => updateFilterPref('showActivityCard', checked)}
-                  />
-                  <Label htmlFor="show-activity-card" className="text-xs">Activity Card</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-steps-card"
-                    checked={filterPrefs.showStepsCard}
-                    onCheckedChange={(checked) => updateFilterPref('showStepsCard', checked)}
-                  />
-                  <Label htmlFor="show-steps-card" className="text-xs">Steps Card</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-readiness-card"
-                    checked={filterPrefs.showReadinessCard}
-                    onCheckedChange={(checked) => updateFilterPref('showReadinessCard', checked)}
-                  />
-                  <Label htmlFor="show-readiness-card" className="text-xs">Readiness Card</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-avg-steps-card"
-                    checked={filterPrefs.showAvgStepsCard}
-                    onCheckedChange={(checked) => updateFilterPref('showAvgStepsCard', checked)}
-                  />
-                  <Label htmlFor="show-avg-steps-card" className="text-xs">Steps</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-avg-stress-card"
-                    checked={filterPrefs.showAvgStressCard}
-                    onCheckedChange={(checked) => updateFilterPref('showAvgStressCard', checked)}
-                  />
-                  <Label htmlFor="show-avg-stress-card" className="text-xs">Stress</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-avg-hr-card"
-                    checked={filterPrefs.showAvgHeartRateCard}
-                    onCheckedChange={(checked) => updateFilterPref('showAvgHeartRateCard', checked)}
-                  />
-                  <Label htmlFor="show-avg-hr-card" className="text-xs">Avg HR</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-avg-hrv-card"
-                    checked={filterPrefs.showAvgHrvCard}
-                    onCheckedChange={(checked) => updateFilterPref('showAvgHrvCard', checked)}
-                  />
-                  <Label htmlFor="show-avg-hrv-card" className="text-xs">Avg HRV</Label>
-                </div>
-              </div>
-            </div>
-
-            {/* Section Toggles */}
-            <div>
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Sections</h4>
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="show-resources"
@@ -1432,203 +1445,121 @@ export default function WellnessPage() {
       </div>
 
 
-      {/* Summary Stats */}
+      {/* Summary Cards Section */}
       {summaryStats && filterPrefs.showSummaryStats && (
-        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                      {filterPrefs.showSleepCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Sleep
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your sleep quality score based on duration, efficiency, and sleep stages. Higher scores indicate better sleep quality and recovery.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <Moon className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">{summaryStats.avgSleepScore}</div>
-                  <p className="text-xs text-muted-foreground">/100</p>
-                </CardContent>
-              </Card>
-            )}
-                      {filterPrefs.showActivityCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Activity Score
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your daily activity level based on movement, exercise intensity, and calories burned. Higher scores indicate more active days.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <Activity className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">{summaryStats.avgActivityScore}</div>
-                  <p className="text-xs text-muted-foreground">/100</p>
-                </CardContent>
-              </Card>
-            )}
-                      {filterPrefs.showStepsCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Resilience
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your body's ability to handle stress and recover from challenges. Higher scores indicate better stress management and adaptability.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <TrendingUp className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.resilience_score && d.resilience_score > 0) ? summaryStats.avgResilienceScore : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">/100</p>
-                </CardContent>
-              </Card>
-            )}
-                      {/* {filterPrefs.showReadinessCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium">Avg Readiness</CardTitle>
-                  <Heart className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.readiness_score && d.readiness_score > 0) ? summaryStats.avgReadiness : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">score</p>
-                </CardContent>
-              </Card>
-            )} */}
-                      {filterPrefs.showAvgStepsCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Steps
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your average daily step count from your wearable device. Most health guidelines recommend 8,000-10,000 steps per day.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <TrendingUp className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.total_steps && d.total_steps > 0) ? summaryStats.avgSteps.toLocaleString() : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">per day</p>
-                </CardContent>
-              </Card>
-            )}
-                      {filterPrefs.showAvgStressCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Stress
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your stress level based on heart rate variability and other physiological markers. Lower values indicate less stress.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <Activity className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.stress_level && d.stress_level > 0) ? summaryStats.avgStressLevel : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">level</p>
-                </CardContent>
-              </Card>
-            )}
-                      {filterPrefs.showAvgHeartRateCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    Resting HR
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Your resting heart rate measured during sleep or rest periods. Lower values typically indicate better cardiovascular fitness.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <Heart className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.resting_hr && d.resting_hr > 0) ? summaryStats.avgRestingHr : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">bpm</p>
-                </CardContent>
-              </Card>
-            )}
-                      {filterPrefs.showAvgHrvCard && (
-              <Card className="p-3">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
-                  <CardTitle className="text-xs font-medium flex items-center gap-1">
-                    HRV
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">
-                          Heart Rate Variability measures the variation in time between heartbeats. Higher values typically indicate better recovery and stress resilience.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardTitle>
-                  <Activity className="h-3 w-3 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <div className="text-lg font-bold">
-                    {healthData.some(d => d.hrv_avg && d.hrv_avg > 0) ? summaryStats.avgHrv : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">ms</p>
-                </CardContent>
-              </Card>
-            )}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Summary Cards</h2>
+            <div className="flex items-center gap-2">
+              <MetricsSelector
+                selectedMetrics={filterPrefs.selectedSummaryCards || []}
+                onSelectionChange={(cards) => updateFilterPref('selectedSummaryCards', cards)}
+                mode="summary-cards"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+            {(filterPrefs.selectedSummaryCards || []).map((cardKey) => {
+              const cardConfig = AVAILABLE_METRICS.find(m => m.key === cardKey)
+              if (!cardConfig) return null
+
+              const value = summaryStats[cardKey]
+              const hasData = value !== null && value !== undefined
+
+              // Determine icon based on metric group
+              const IconComponent = cardConfig.group === 'Sleep' || cardKey.includes('sleep') ? Moon :
+                                   cardConfig.group === 'Activity' || cardKey.includes('steps') || cardKey.includes('calories') || cardKey.includes('exercise') ? Activity :
+                                   cardConfig.group === 'Vitals' || cardKey.includes('hr') || cardKey.includes('blood') || cardKey.includes('oxygen') ? Heart :
+                                   cardConfig.group === 'Recovery' || cardKey.includes('score') ? TrendingUp : Activity
+
+              // Determine unit
+              const unit = cardKey === 'total_steps' ? 'per day' :
+                          cardKey === 'resting_hr' ? 'bpm' :
+                          cardKey === 'hrv_avg' ? 'ms' :
+                          cardKey === 'calories_burned' || cardKey === 'active_energy' || cardKey === 'nutrition_calories' ? 'kcal' :
+                          cardKey === 'exercise_minutes' ? 'min' :
+                          cardKey === 'distance' ? 'km' :
+                          cardKey === 'body_temperature' ? '°F' :
+                          cardKey === 'blood_pressure_systolic' || cardKey === 'blood_pressure_diastolic' ? 'mmHg' :
+                          cardKey === 'oxygen_saturation' ? '%' :
+                          cardKey === 'weight' ? 'lbs' :
+                          cardKey === 'body_fat_percentage' ? '%' :
+                          cardKey === 'lean_body_mass' ? 'lbs' :
+                          cardKey === 'basal_metabolic_rate' ? 'kcal/day' :
+                          cardKey === 'time_in_bed' || cardKey === 'time_asleep' || cardKey === 'light_sleep' || cardKey === 'deep_sleep' || cardKey === 'rem_sleep' ? 'hours' :
+                          cardKey === 'blood_glucose' ? 'mg/dL' :
+                          cardKey === 'vo2_max' ? 'ml/kg/min' :
+                          cardKey === 'time_in_daylight' ? 'hours' :
+                          cardKey === 'hydration' ? 'ml' :
+                          cardKey === 'menstruation_flow' ? 'level' :
+                          cardKey.includes('score') ? '/100' : ''
+
+              // Determine tooltip
+              const tooltip = cardKey === 'sleep_score' ? 'Your sleep quality score based on duration, efficiency, and sleep stages.' :
+                             cardKey === 'activity_score' ? 'Your daily activity level based on movement and exercise.' :
+                             cardKey === 'resilience_score' ? 'Your body\'s ability to handle stress and recover.' :
+                             cardKey === 'readiness_score' ? 'Your readiness for physical and mental challenges.' :
+                             cardKey === 'recovery_score' ? 'Your recovery status from previous activities.' :
+                             cardKey === 'total_steps' ? 'Your average daily step count.' :
+                             cardKey === 'calories_burned' ? 'Average calories burned per day.' :
+                             cardKey === 'exercise_minutes' ? 'Average exercise minutes per day.' :
+                             cardKey === 'active_energy' ? 'Average active energy expenditure per day.' :
+                             cardKey === 'distance' ? 'Average distance covered per day.' :
+                             cardKey === 'resting_hr' ? 'Your resting heart rate during sleep or rest.' :
+                             cardKey === 'hrv_avg' ? 'Heart Rate Variability - higher is typically better.' :
+                             cardKey === 'body_temperature' ? 'Your average body temperature.' :
+                             cardKey === 'blood_pressure_systolic' ? 'Systolic blood pressure (pressure when heart beats).' :
+                             cardKey === 'blood_pressure_diastolic' ? 'Diastolic blood pressure (pressure when heart rests).' :
+                             cardKey === 'oxygen_saturation' ? 'Blood oxygen saturation level.' :
+                             cardKey === 'stress_level' ? 'Your stress level based on physiological markers.' :
+                             cardKey === 'weight' ? 'Your average body weight.' :
+                             cardKey === 'body_fat_percentage' ? 'Your body fat percentage.' :
+                             cardKey === 'lean_body_mass' ? 'Your lean body mass (muscle, bones, organs).' :
+                             cardKey === 'basal_metabolic_rate' ? 'Calories burned at rest per day.' :
+                             cardKey === 'time_in_bed' ? 'Average time spent in bed per night.' :
+                             cardKey === 'time_asleep' ? 'Average actual sleep time per night.' :
+                             cardKey === 'light_sleep' ? 'Average light sleep duration per night.' :
+                             cardKey === 'deep_sleep' ? 'Average deep sleep duration per night.' :
+                             cardKey === 'rem_sleep' ? 'Average REM sleep duration per night.' :
+                             cardKey === 'blood_glucose' ? 'Average blood glucose level.' :
+                             cardKey === 'vo2_max' ? 'Maximum oxygen consumption during exercise.' :
+                             cardKey === 'time_in_daylight' ? 'Average time spent in daylight per day.' :
+                             cardKey === 'hydration' ? 'Average daily water intake.' :
+                             cardKey === 'nutrition_calories' ? 'Average calories consumed per day.' :
+                             cardKey === 'menstruation_flow' ? 'Menstruation flow intensity level.' :
+                             'Health metric average for selected period.'
+
+              return (
+                <Card key={cardKey} className="p-3">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0 pt-0">
+                    <CardTitle className="text-xs font-medium flex items-center gap-1">
+                      {cardConfig.label}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs text-xs">
+                            {tooltip}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </CardTitle>
+                    <IconComponent className="h-3 w-3 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent className="px-0 pb-0">
+                    <div className="text-lg font-bold">
+                      {hasData ? (cardKey === 'total_steps' ? value.toLocaleString() : value) : 'N/A'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{hasData ? unit : 'No data'}</p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </div>
       )}
+
 
       {/* Charts */}
       {/* Trend Charts Section */}
@@ -1678,6 +1609,37 @@ export default function WellnessPage() {
         </Card>
       )}
 
+      {/* Medical Records Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Medical Records
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-muted-foreground text-sm">
+                Provide medical records to Juniper so it can provide valuable insights and conversation around your health data
+              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">
+                    Upload medical records to Juniper: if you have MyChart, look for a section like "Sharing Hub" or "Download All". Download on mobile or desktop and upload directly in Juniper's wellness page/screen.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+        </div>
+
+        <MedicalRecordsUpload onUploadComplete={() => setMedicalRecordsRefresh(prev => prev + 1)} />
+
+        <MedicalRecordsList refreshTrigger={medicalRecordsRefresh} />
+      </div>
+
       {/* Resources Section */}
       {filterPrefs.showResources && (
         <Card>
@@ -1697,7 +1659,7 @@ export default function WellnessPage() {
                   <div key={resource.id} className="bg-accent/50 p-4 rounded-lg">
                     <h3 className="font-semibold text-foreground mb-2">{resource.title}</h3>
                     <p className="text-sm text-muted-foreground mb-3">
-                      {resource.content.length > 200 
+                      {resource.content.length > 200
                         ? `${resource.content.substring(0, 200)}...`
                         : resource.content
                       }

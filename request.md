@@ -1,40 +1,28 @@
-Full list of available metrics:  Please update UI.
+1. Please create add a Medical Records Section to the bottom of the wellness page.
 
-AVAILABLE_HEALTH_METRICS = [
-  "sleep_score",
-  "activity_score",
-  "readiness_score",
-  "stress_level",
-  "recovery_score",
-  "total_steps",
-  "calories_burned",
-  "resting_hr",
-  "hrv_avg",
-  "resilience_score",
-  "weight",
-  "height",
-  "lbm",
-  "body_fat_percentage",
-  "basal_metabolic_rate",
-  "body_temperature",
-  "blood_glucose",
-  "blood_pressure_systolic",
-  "blood_pressure_diastolic",
-  "oxygen_saturation",
-  "respiratory_rate"    ,
-  "time_in_daylight",
-  "vo2_max",
-  "menstruation_flow",
-  "hydration",
-  "nutrition_calories",
-  "exercise_minutes",
-  "active_energy",
-  "distance",
-  "time_in_bed",
-  "time_asleep",
-  "awake_in_bed",
-  "light_sleep",
-  "deep_sleep",
-  "rem_sleep",
-  "lean_body_mass"
-]
+2. Move the Upload Medical Records components and logic out of "Advanced" and into this section.
+
+3.  Add an area to display uploaded medical records.  It should display user record medatata from table below.  
+
+    create table public.medical_records (
+    id uuid not null default gen_random_uuid (),
+    user_id uuid not null,
+    title text not null,
+    original_file_type text not null,
+    original_filename text null,
+    file_size_bytes integer null,
+    num_pages integer not null,
+    status text not null default 'processing'::text,
+    upload_url text null,
+    summary text null,
+    metadata jsonb null default '{}'::jsonb,
+    created_at timestamp with time zone null default now(),
+    updated_at timestamp with time zone null default now(),
+
+
+
+4. Add messaging: “Provide medical records to Juniper so it can provide valuable insights and conversation around your health data”
+
+5. Add tooltip: “Upload medical records to Juniper: if you have MyChart, look for a section like “Sharing Hub” or “Download All”. Download on mobile or desktop and upload directly in Juniper’s wellness page/screen.
+
+

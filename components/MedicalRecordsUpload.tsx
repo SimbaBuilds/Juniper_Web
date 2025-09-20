@@ -29,7 +29,11 @@ interface ProcessingResult {
   request_id: string
 }
 
-export function MedicalRecordsUpload() {
+interface MedicalRecordsUploadProps {
+  onUploadComplete?: () => void
+}
+
+export function MedicalRecordsUpload({ onUploadComplete }: MedicalRecordsUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -198,6 +202,10 @@ export function MedicalRecordsUpload() {
 
       if (result.success) {
         setFiles(prev => prev.map(f => ({ ...f, status: 'completed' as const })))
+        // Trigger refresh of medical records list
+        if (onUploadComplete) {
+          onUploadComplete()
+        }
       } else {
         setFiles(prev => prev.map(f => ({ ...f, status: 'failed' as const })))
       }
