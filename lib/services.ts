@@ -93,7 +93,6 @@ export async function fetchAutomations(userId?: string): Promise<Automation[]> {
   const { data: automations, error } = await query
   
   if (error) {
-    console.error('Error fetching automations:', error)
     return []
   }
   

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/utils/supabase/client'
 import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2 } from 'lucide-react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
@@ -68,9 +68,6 @@ interface FilterPrefs {
   timeRange: string
   showResources: boolean
   sortBy: string
-  showActivityDistribution: boolean
-  showDailySteps: boolean
-  showDailyCalories: boolean
   showSummaryStats: boolean
   showSleepCard: boolean
   showActivityCard: boolean
@@ -86,17 +83,12 @@ interface FilterPrefs {
 
 // Define all available metrics with their configuration
 const AVAILABLE_METRICS: MetricDefinition[] = [
+  // Recovery & Sleep
   {
     key: 'sleep_score',
     label: 'Sleep Score',
     group: 'Recovery',
     color: { light: '#1e40af', dark: '#60a5fa' }
-  },
-  {
-    key: 'activity_score',
-    label: 'Activity Score',
-    group: 'Activity',
-    color: { light: '#166534', dark: '#bbf7d0' }
   },
   {
     key: 'readiness_score',
@@ -105,17 +97,51 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
     color: { light: '#f59e0b', dark: '#fbbf24' }
   },
   {
-    key: 'stress_level',
-    label: 'Stress Level',
-    group: 'Wellness',
-    color: { light: '#ef4444', dark: '#f87171' }
-  },
-  {
     key: 'recovery_score',
     label: 'Recovery Score',
     group: 'Recovery',
     color: { light: '#059669', dark: '#10b981' }
   },
+
+  // Activity & Exercise
+  {
+    key: 'activity_score',
+    label: 'Activity Score',
+    group: 'Activity',
+    color: { light: '#166534', dark: '#bbf7d0' }
+  },
+  {
+    key: 'total_steps',
+    label: 'Total Steps',
+    group: 'Activity',
+    color: { light: '#7c3aed', dark: '#8b5cf6' }
+  },
+  {
+    key: 'calories_burned',
+    label: 'Calories Burned',
+    group: 'Activity',
+    color: { light: '#dc2626', dark: '#ef4444' }
+  },
+  {
+    key: 'exercise_minutes',
+    label: 'Exercise Minutes',
+    group: 'Activity',
+    color: { light: '#16a34a', dark: '#4ade80' }
+  },
+  {
+    key: 'active_energy',
+    label: 'Active Energy',
+    group: 'Activity',
+    color: { light: '#ea580c', dark: '#fb923c' }
+  },
+  {
+    key: 'distance',
+    label: 'Distance',
+    group: 'Activity',
+    color: { light: '#9333ea', dark: '#c084fc' }
+  },
+
+  // Vitals & Health Metrics
   {
     key: 'resting_hr',
     label: 'Resting Heart Rate',
@@ -129,39 +155,183 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
     color: { light: '#ec4899', dark: '#fb7185' }
   },
   {
+    key: 'body_temperature',
+    label: 'Body Temperature',
+    group: 'Vitals',
+    color: { light: '#dc2626', dark: '#f87171' }
+  },
+  {
+    key: 'blood_glucose',
+    label: 'Blood Glucose',
+    group: 'Vitals',
+    color: { light: '#c2410c', dark: '#fb923c' }
+  },
+  {
+    key: 'blood_pressure_systolic',
+    label: 'Blood Pressure (Systolic)',
+    group: 'Vitals',
+    color: { light: '#b91c1c', dark: '#ef4444' }
+  },
+  {
+    key: 'blood_pressure_diastolic',
+    label: 'Blood Pressure (Diastolic)',
+    group: 'Vitals',
+    color: { light: '#991b1b', dark: '#dc2626' }
+  },
+  {
+    key: 'oxygen_saturation',
+    label: 'Oxygen Saturation',
+    group: 'Vitals',
+    color: { light: '#0ea5e9', dark: '#38bdf8' }
+  },
+  {
+    key: 'respiratory_rate',
+    label: 'Respiratory Rate',
+    group: 'Vitals',
+    color: { light: '#0284c7', dark: '#0ea5e9' }
+  },
+
+  // Wellness & Mental Health
+  {
+    key: 'stress_level',
+    label: 'Stress Level',
+    group: 'Wellness',
+    color: { light: '#ef4444', dark: '#f87171' }
+  },
+  {
     key: 'resilience_score',
     label: 'Resilience Score',
     group: 'Wellness',
     color: { light: '#0891b2', dark: '#0ea5e9' }
   },
+
+  // Body Composition
   {
-    key: 'total_steps',
-    label: 'Total Steps',
-    group: 'Activity',
-    color: { light: '#7c3aed', dark: '#8b5cf6' }
+    key: 'weight',
+    label: 'Weight',
+    group: 'Body Composition',
+    color: { light: '#7c2d12', dark: '#f97316' }
   },
   {
-    key: 'calories_burned',
-    label: 'Calories Burned',
-    group: 'Activity',
-    color: { light: '#dc2626', dark: '#ef4444' }
+    key: 'height',
+    label: 'Height',
+    group: 'Body Composition',
+    color: { light: '#854d0e', dark: '#eab308' }
+  },
+  {
+    key: 'lbm',
+    label: 'Lean Body Mass',
+    group: 'Body Composition',
+    color: { light: '#166534', dark: '#22c55e' }
+  },
+  {
+    key: 'body_fat_percentage',
+    label: 'Body Fat Percentage',
+    group: 'Body Composition',
+    color: { light: '#a16207', dark: '#fbbf24' }
+  },
+  {
+    key: 'basal_metabolic_rate',
+    label: 'Basal Metabolic Rate',
+    group: 'Body Composition',
+    color: { light: '#92400e', dark: '#f59e0b' }
+  },
+  {
+    key: 'lean_body_mass',
+    label: 'Lean Body Mass (Alt)',
+    group: 'Body Composition',
+    color: { light: '#065f46', dark: '#10b981' }
+  },
+
+  // Sleep Details
+  {
+    key: 'time_in_bed',
+    label: 'Time in Bed',
+    group: 'Sleep',
+    color: { light: '#1e3a8a', dark: '#3b82f6' }
+  },
+  {
+    key: 'time_asleep',
+    label: 'Time Asleep',
+    group: 'Sleep',
+    color: { light: '#1e40af', dark: '#60a5fa' }
+  },
+  {
+    key: 'awake_in_bed',
+    label: 'Awake in Bed',
+    group: 'Sleep',
+    color: { light: '#1d4ed8', dark: '#6366f1' }
+  },
+  {
+    key: 'light_sleep',
+    label: 'Light Sleep',
+    group: 'Sleep',
+    color: { light: '#2563eb', dark: '#8b5cf6' }
+  },
+  {
+    key: 'deep_sleep',
+    label: 'Deep Sleep',
+    group: 'Sleep',
+    color: { light: '#3730a3', dark: '#7c3aed' }
+  },
+  {
+    key: 'rem_sleep',
+    label: 'REM Sleep',
+    group: 'Sleep',
+    color: { light: '#581c87', dark: '#a855f7' }
+  },
+
+  // Fitness & Performance
+  {
+    key: 'vo2_max',
+    label: 'VO2 Max',
+    group: 'Fitness',
+    color: { light: '#be123c', dark: '#f43f5e' }
+  },
+  {
+    key: 'time_in_daylight',
+    label: 'Time in Daylight',
+    group: 'Fitness',
+    color: { light: '#ca8a04', dark: '#facc15' }
+  },
+
+  // Nutrition & Hydration
+  {
+    key: 'hydration',
+    label: 'Hydration',
+    group: 'Nutrition',
+    color: { light: '#0369a1', dark: '#0ea5e9' }
+  },
+  {
+    key: 'nutrition_calories',
+    label: 'Nutrition Calories',
+    group: 'Nutrition',
+    color: { light: '#c2410c', dark: '#f97316' }
+  },
+
+  // Women's Health
+  {
+    key: 'menstruation_flow',
+    label: 'Menstruation Flow',
+    group: 'Women\'s Health',
+    color: { light: '#be185d', dark: '#ec4899' }
   }
 ]
 
 // Metric presets for quick selection
 const METRIC_PRESETS = {
-  vitals: ['resting_hr', 'hrv_avg'],
-  activity: ['activity_score', 'total_steps', 'calories_burned'],
+  vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'oxygen_saturation'],
+  activity: ['activity_score', 'total_steps', 'calories_burned', 'exercise_minutes', 'active_energy', 'distance'],
   recovery: ['sleep_score', 'readiness_score', 'recovery_score'],
   wellness: ['stress_level', 'resilience_score'],
+  sleep: ['time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
+  body: ['weight', 'body_fat_percentage', 'lbm', 'basal_metabolic_rate'],
+  blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
+  fitness: ['vo2_max', 'time_in_daylight'],
+  nutrition: ['hydration', 'nutrition_calories'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 
-// Use theme-aware colors that match repository screen
-const COLORS = {
-  light: ['#1e40af', '#166534', '#f59e0b', '#ef4444', '#8b5cf6'], // blue-800, green-800, amber-500, red-500, violet-500
-  dark: ['#60a5fa', '#bbf7d0', '#fbbf24', '#f87171', '#a78bfa']   // blue-400, green-200, amber-400, red-400, violet-400
-}
 
 // MetricSelector Component
 interface MetricSelectorProps {
@@ -225,6 +395,46 @@ function MetricSelector({ selectedMetrics, onSelectionChange, isDarkMode }: Metr
           className="h-7 px-2 text-xs"
         >
           Wellness
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('sleep')}
+          className="h-7 px-2 text-xs"
+        >
+          Sleep
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('body')}
+          className="h-7 px-2 text-xs"
+        >
+          Body
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('blood')}
+          className="h-7 px-2 text-xs"
+        >
+          Blood
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('fitness')}
+          className="h-7 px-2 text-xs"
+        >
+          Fitness
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('nutrition')}
+          className="h-7 px-2 text-xs"
+        >
+          Nutrition
         </Button>
         <Button
           variant="outline"
@@ -520,9 +730,6 @@ export default function WellnessPage() {
     timeRange: '30',
     showResources: true,
     sortBy: 'date',
-    showActivityDistribution: true,
-    showDailySteps: true,
-    showDailyCalories: true,
     showSummaryStats: true,
     showSleepCard: true,
     showActivityCard: true,
@@ -839,34 +1046,68 @@ export default function WellnessPage() {
   const chartData = React.useMemo(() => {
     const data = healthData.map(d => ({
       date: new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      // Recovery & Sleep scores
       sleep_score: (d.sleep_score && d.sleep_score > 0) ? d.sleep_score : null,
-      activity_score: (d.activity_score && d.activity_score > 0) ? d.activity_score : null,
       readiness_score: (d.readiness_score && d.readiness_score > 0) ? d.readiness_score : null,
-      stress_level: (d.stress_level && d.stress_level > 0) ? d.stress_level : null,
+      recovery_score: (d.recovery_score && d.recovery_score > 0) ? d.recovery_score : null,
+
+      // Activity metrics
+      activity_score: (d.activity_score && d.activity_score > 0) ? d.activity_score : null,
+      total_steps: (d.total_steps && d.total_steps > 0) ? d.total_steps : null,
+      calories_burned: (d.calories_burned && d.calories_burned > 0) ? d.calories_burned : null,
+      exercise_minutes: (d.exercise_minutes && d.exercise_minutes > 0) ? d.exercise_minutes : null,
+      active_energy: (d.active_energy && d.active_energy > 0) ? d.active_energy : null,
+      distance: (d.distance && d.distance > 0) ? d.distance : null,
+
+      // Vitals
       resting_hr: (d.resting_hr && d.resting_hr > 0) ? d.resting_hr : null,
       hrv_avg: (d.hrv_avg && d.hrv_avg > 0) ? d.hrv_avg : null,
+      body_temperature: (d.body_temperature && d.body_temperature > 0) ? d.body_temperature : null,
+      blood_glucose: (d.blood_glucose && d.blood_glucose > 0) ? d.blood_glucose : null,
+      blood_pressure_systolic: (d.blood_pressure_systolic && d.blood_pressure_systolic > 0) ? d.blood_pressure_systolic : null,
+      blood_pressure_diastolic: (d.blood_pressure_diastolic && d.blood_pressure_diastolic > 0) ? d.blood_pressure_diastolic : null,
+      oxygen_saturation: (d.oxygen_saturation && d.oxygen_saturation > 0) ? d.oxygen_saturation : null,
+      respiratory_rate: (d.respiratory_rate && d.respiratory_rate > 0) ? d.respiratory_rate : null,
+
+      // Wellness
+      stress_level: (d.stress_level && d.stress_level > 0) ? d.stress_level : null,
       resilience_score: (d.resilience_score && d.resilience_score > 0) ? d.resilience_score : null,
-      steps: (d.total_steps && d.total_steps > 0) ? d.total_steps : null,
-      calories: (d.calories_burned && d.calories_burned > 0) ? d.calories_burned : null
+
+      // Body composition
+      weight: (d.weight && d.weight > 0) ? d.weight : null,
+      height: (d.height && d.height > 0) ? d.height : null,
+      lbm: (d.lbm && d.lbm > 0) ? d.lbm : null,
+      body_fat_percentage: (d.body_fat_percentage && d.body_fat_percentage > 0) ? d.body_fat_percentage : null,
+      basal_metabolic_rate: (d.basal_metabolic_rate && d.basal_metabolic_rate > 0) ? d.basal_metabolic_rate : null,
+      lean_body_mass: (d.lean_body_mass && d.lean_body_mass > 0) ? d.lean_body_mass : null,
+
+      // Sleep details
+      time_in_bed: (d.time_in_bed && d.time_in_bed > 0) ? d.time_in_bed : null,
+      time_asleep: (d.time_asleep && d.time_asleep > 0) ? d.time_asleep : null,
+      awake_in_bed: (d.awake_in_bed && d.awake_in_bed > 0) ? d.awake_in_bed : null,
+      light_sleep: (d.light_sleep && d.light_sleep > 0) ? d.light_sleep : null,
+      deep_sleep: (d.deep_sleep && d.deep_sleep > 0) ? d.deep_sleep : null,
+      rem_sleep: (d.rem_sleep && d.rem_sleep > 0) ? d.rem_sleep : null,
+
+      // Fitness
+      vo2_max: (d.vo2_max && d.vo2_max > 0) ? d.vo2_max : null,
+      time_in_daylight: (d.time_in_daylight && d.time_in_daylight > 0) ? d.time_in_daylight : null,
+
+      // Nutrition
+      hydration: (d.hydration && d.hydration > 0) ? d.hydration : null,
+      nutrition_calories: (d.nutrition_calories && d.nutrition_calories > 0) ? d.nutrition_calories : null,
+
+      // Women's health
+      menstruation_flow: (d.menstruation_flow && d.menstruation_flow > 0) ? d.menstruation_flow : null
     }))
-    
+
     console.log('Chart data prepared:', data.length, 'points for timeRange:', filterPrefs.timeRange)
     console.log('Chart dates:', data.map(d => d.date))
     console.log('Health data dates:', healthData.map(d => d.date))
-    
+
     return data
   }, [healthData, filterPrefs.timeRange])
 
-  // Activity distribution for pie chart - memoized to update with data changes
-  const activityDistribution = React.useMemo(() => {
-    if (healthData.length === 0) return []
-    
-    return [
-      { name: 'High Activity', value: healthData.filter(d => (d.activity_score || 0) >= 80).length },
-      { name: 'Medium Activity', value: healthData.filter(d => (d.activity_score || 0) >= 50 && (d.activity_score || 0) < 80).length },
-      { name: 'Low Activity', value: healthData.filter(d => (d.activity_score || 0) < 50).length }
-    ].filter(item => item.value > 0)
-  }, [healthData])
 
   if (loading) {
     return (
@@ -1071,36 +1312,6 @@ export default function WellnessPage() {
               <MedicalRecordsUpload />
             </div>
 
-            {/* Chart Toggles */}
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Other Charts</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-activity-dist"
-                    checked={filterPrefs.showActivityDistribution}
-                    onCheckedChange={(checked) => updateFilterPref('showActivityDistribution', checked)}
-                  />
-                  <Label htmlFor="show-activity-dist" className="text-xs">Activity Chart</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-steps"
-                    checked={filterPrefs.showDailySteps}
-                    onCheckedChange={(checked) => updateFilterPref('showDailySteps', checked)}
-                  />
-                  <Label htmlFor="show-steps" className="text-xs">Steps Chart</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-calories"
-                    checked={filterPrefs.showDailyCalories}
-                    onCheckedChange={(checked) => updateFilterPref('showDailyCalories', checked)}
-                  />
-                  <Label htmlFor="show-calories" className="text-xs">Calories Chart</Label>
-                </div>
-              </div>
-            </div>
 
             {/* Summary Card Toggles */}
             <div>
@@ -1430,151 +1641,6 @@ export default function WellnessPage() {
         ))}
       </div>
 
-      {chartData.length > 0 && (
-        <div className="space-y-4">
-
-          {/* Other Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-          {/* Activity Distribution */}
-          {filterPrefs.showActivityDistribution && (
-            <Card className="pb-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Activity Distribution</CardTitle>
-                <CardDescription className="text-sm">Distribution of activity levels</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="h-[400px] w-full">
-                  {activityDistribution.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart 
-                        key={`activity-dist-${filterPrefs.timeRange}`}
-                        margin={{ top: 20, right: 90, left: 90, bottom: 20 }}
-                      >
-                        <Pie
-                          data={activityDistribution}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={140}
-                          fill="#8884d8"
-                          dataKey="value"
-                          labelLine={false}
-                          label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent, value, index }) => {
-                            const RADIAN = Math.PI / 180
-                            const radius = outerRadius + 35
-                            const x = cx + radius * Math.cos(-midAngle * RADIAN)
-                            const y = cy + radius * Math.sin(-midAngle * RADIAN)
-                            
-                            const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
-                            return (
-                              <text 
-                                x={x} 
-                                y={y} 
-                                fill={colorPalette[index % colorPalette.length]}
-                                textAnchor={x > cx ? 'start' : 'end'}
-                                dominantBaseline="central"
-                                className="text-xs font-medium"
-                              >
-                                <tspan x={x} dy="0">{name}</tspan>
-                                <tspan x={x} dy="16">{`${(percent * 100).toFixed(0)}% (${value}/${healthData.length} days)`}</tspan>
-                              </text>
-                            )
-                          }}
-                        >
-                          {activityDistribution.map((entry, index) => {
-                            const colorPalette = isDarkMode ? COLORS.dark : COLORS.light
-                            return <Cell key={`cell-${index}`} fill={colorPalette[index % colorPalette.length]} />
-                          })}
-                        </Pie>
-                        <RechartsTooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-muted-foreground">No data available for this metric.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Daily Steps */}
-          {filterPrefs.showDailySteps && (
-            <Card className="pb-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Daily Steps</CardTitle>
-                <CardDescription className="text-sm">Steps taken each day</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="h-[400px] w-full">
-                  {chartData.some(d => d.steps && d.steps > 0) ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        key={`steps-${filterPrefs.timeRange}`}
-                        data={chartData} 
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                      >
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Bar 
-                          dataKey="steps" 
-                          fill={isDarkMode ? "#60a5fa" : "#1e40af"} 
-                          name="Steps"
-                          radius={[8, 8, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-muted-foreground">No data available for this metric.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Daily Calories */}
-          {filterPrefs.showDailyCalories && (
-            <Card className="pb-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Daily Calories</CardTitle>
-                <CardDescription className="text-sm">Calories burned each day</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="h-[400px] w-full">
-                  {chartData.some(d => d.calories && d.calories > 0) ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        key={`calories-${filterPrefs.timeRange}`}
-                        data={chartData} 
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                      >
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Bar 
-                          dataKey="calories" 
-                          fill={isDarkMode ? "#bbf7d0" : "#166534"} 
-                          name="Calories"
-                          radius={[8, 8, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-muted-foreground">No data available for this metric.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          </div>
-        </div>
-      )}
 
       {/* No Data Message - Show when no health data */}
       {healthData.length === 0 && (
