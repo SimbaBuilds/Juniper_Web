@@ -1,0 +1,1 @@
+Please move the manual data entry and export data expandable sections outside of the options banner as there own separate expandable sections.  Keep the same format except I want them right justified and only taking up about 1/4 of the horizontal width of the screen instead of full width.
