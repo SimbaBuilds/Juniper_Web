@@ -1141,6 +1141,7 @@ export default function WellnessPage() {
   const [loading, setLoading] = useState(true)
   const [settingsExpanded, setSettingsExpanded] = useState(false)
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
+  const [resourcesExpanded, setResourcesExpanded] = useState(true)
   const [manualEntryDate, setManualEntryDate] = useState<Date>()
   const [manualEntryValues, setManualEntryValues] = useState<Record<string, string>>({})
   const [selectedManualMetrics, setSelectedManualMetrics] = useState<string[]>(['sleep_score', 'activity_score', 'readiness_score', 'stress_level', 'recovery_score'])
@@ -1721,6 +1722,7 @@ export default function WellnessPage() {
             <div className="bg-muted/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
                   Manual Data Entry
                 </h4>
                 <Button
@@ -2034,57 +2036,75 @@ export default function WellnessPage() {
       {filterPrefs.showResources && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tags className="h-5 w-5" />
-              Health & Wellness Resources
-            </CardTitle>
-            <CardDescription>
-              Resources tagged with "Health and Wellness"
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {resources.length > 0 ? (
-              <div className="space-y-4">
-                {resources.map((resource) => (
-                  <div key={resource.id} className="bg-accent/50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-foreground mb-2">{resource.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {resource.content.length > 200
-                        ? `${resource.content.substring(0, 200)}...`
-                        : resource.content
-                      }
-                    </p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {resource.tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Tags className="h-5 w-5" />
+                  Health & Wellness Resources
+                </CardTitle>
+                <CardDescription>
+                  Resources tagged with "Health and Wellness"
+                </CardDescription>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No health and wellness resources found.</p>
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <Tags className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <span className="font-medium"></span> Add tag "Health and Wellness" to a resource for it to appear here.
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setResourcesExpanded(!resourcesExpanded)}
+                className="h-8 px-2"
+              >
+                {resourcesExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+          {resourcesExpanded && (
+            <CardContent>
+              {resources.length > 0 ? (
+                <div className="space-y-4">
+                  {resources.map((resource) => (
+                    <div key={resource.id} className="bg-accent/50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-foreground mb-2">{resource.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {resource.content.length > 200
+                          ? `${resource.content.substring(0, 200)}...`
+                          : resource.content
+                        }
                       </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {resource.tags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No health and wellness resources found.</p>
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <Tags className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          <span className="font-medium"></span> Add tag "Health and Wellness" to a resource for it to appear here.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
+              )}
+            </CardContent>
+          )}
         </Card>
       )}
 

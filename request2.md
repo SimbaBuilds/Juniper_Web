@@ -1,4 +1,1 @@
-Please move the medical records upload UI and messaging to the bottom of the repository page.  
-
-To the bottom of the wellness page, please add an “upload medical records” link that navigates to bottom of repository page where the new medical records upload UI is.
-
+Please move the manual data entry and export data expandable sections outside of the options banner as there own separate expandable sections.  Keep the same format except I want them right justified and only taking up about 1/4 of the horizontal width of the screen instead of full width.

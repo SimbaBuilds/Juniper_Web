@@ -229,7 +229,7 @@ export function WellnessDataExport({
                     onCheckedChange={setIncludeTrendCharts}
                   />
                   <Label htmlFor="include-trends" className="text-xs font-medium">
-                    Include Trend Charts
+                    Include Trend Chart(s)
                   </Label>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export function WellnessDataExport({
               {includeTrendCharts && (
                 <div className="ml-6 space-y-3">
                   <p className="text-xs text-muted-foreground">
-                    Charts will maintain current metric selection and normalization state
+                    Charts will maintain your current metric selection and normalization state
                   </p>
 
                   <div className="flex items-center space-x-2">
@@ -247,7 +247,7 @@ export function WellnessDataExport({
                       onCheckedChange={setIncludeChartValues}
                     />
                     <Label htmlFor="include-chart-values" className="text-xs font-medium">
-                      Include chart values (CSV format)
+                      Include chart values as CSV
                     </Label>
                   </div>
                 </div>
