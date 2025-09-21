@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/utils/supabase/client'
-import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2, FileText, Percent } from 'lucide-react'
+import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2, FileText, Minimize2 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -982,21 +982,6 @@ function TrendChart({
           </div>
 
           <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={chart.isNormalized ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => onUpdateChart(chart.id, { isNormalized: !chart.isNormalized })}
-                  className="h-8 w-8 p-0"
-                >
-                  <Percent className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{chart.isNormalized ? 'Show original values' : 'Normalize to 0-100 scale for comparison'}</p>
-              </TooltipContent>
-            </Tooltip>
             <Button
               variant="ghost"
               size="sm"
@@ -1061,6 +1046,26 @@ function TrendChart({
               isDarkMode={isDarkMode}
               onShowIntegrationSupport={onShowIntegrationSupport}
             />
+
+            {/* Normalize button - positioned prominently below metrics */}
+            <div className="flex justify-end">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={chart.isNormalized ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => onUpdateChart(chart.id, { isNormalized: !chart.isNormalized })}
+                    className="h-8 px-3"
+                  >
+                    <Minimize2 className="h-4 w-4 mr-2" />
+                    {chart.isNormalized ? 'Original Scale' : 'Normalize'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{chart.isNormalized ? 'Show original values' : 'Normalize all metrics to 0-100 scale for comparison'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         )}
       </CardHeader>
@@ -1667,7 +1672,7 @@ export default function WellnessPage() {
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Dashboard Settings
+            Options
           </h3>
           <Button
             variant="ghost"
@@ -1678,19 +1683,18 @@ export default function WellnessPage() {
             {settingsExpanded ? (
               <>
                 <ChevronUp className="h-4 w-4 mr-1" />
-                Hide Advanced
+                Hide
               </>
             ) : (
               <>
                 <ChevronDown className="h-4 w-4 mr-1" />
-                Show Advanced
               </>
             )}
           </Button>
         </div>
         
         {/* Always visible controls */}
-        <div className="flex gap-4">
+        {/* <div className="flex gap-4">
           <div className="space-y-2">
             <Label className="text-xs">Sort By</Label>
             <Select
@@ -1707,7 +1711,7 @@ export default function WellnessPage() {
               </SelectContent>
             </Select>
           </div>
-        </div>
+        </div> */}
 
         {/* Expandable toggle groups */}
         {settingsExpanded && (
