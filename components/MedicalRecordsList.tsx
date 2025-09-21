@@ -85,7 +85,7 @@ export function MedicalRecordsList({ refreshTrigger }: MedicalRecordsListProps) 
       case 'processing':
         return <Badge variant="secondary" className="text-yellow-700 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300">Processing</Badge>
       case 'completed':
-        return <Badge variant="secondary" className="text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300">Completed</Badge>
+        return null // Don't show badge for completed status
       case 'failed':
         return <Badge variant="destructive">Failed</Badge>
       default:
@@ -186,7 +186,6 @@ export function MedicalRecordsList({ refreshTrigger }: MedicalRecordsListProps) 
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-foreground truncate">{record.title}</h4>
                     {getStatusIcon(record.status)}
                   </div>
 
@@ -203,7 +202,6 @@ export function MedicalRecordsList({ refreshTrigger }: MedicalRecordsListProps) 
                     </span>
                     <span>{record.original_file_type.toUpperCase()}</span>
                     <span>{formatFileSize(record.file_size_bytes)}</span>
-                    <span>{record.num_pages} page{record.num_pages !== 1 ? 's' : ''}</span>
                   </div>
 
                   <div className="flex items-center gap-2">

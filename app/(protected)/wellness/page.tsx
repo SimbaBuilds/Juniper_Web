@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/utils/supabase/client'
-import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2, FileText } from 'lucide-react'
+import { Tags, Activity, Heart, Moon, TrendingUp, Filter, BarChart3, ChevronDown, ChevronUp, Info, CalendarIcon, Save, Plus, X, Check, ChevronsUpDown, Search, Edit2, FileText, Percent } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -54,6 +54,7 @@ interface ChartInstance {
   selectedMetrics: string[]
   isExpanded: boolean
   timeRange: string
+  isNormalized: boolean
 }
 
 interface MetricDefinition {
@@ -324,6 +325,30 @@ const METRIC_PRESETS = {
 
 // Integration support data
 const INTEGRATION_SUPPORT = {
+  'oura': {
+    name: 'Oura Ring',
+    metrics: {
+      // Metrics Supported by ALL Integrations
+      'sleep_score': { support: 'native', note: 'Overall sleep quality score (0-100)' },
+      'activity_score': { support: 'native', note: 'Daily activity performance score (0-100)' },
+      'readiness_score': { support: 'native', note: 'Body\'s readiness for physical activity (0-100)' },
+      'total_steps': { support: 'full', note: 'Total steps taken during the day' },
+      'calories_burned': { support: 'full', note: 'Total calories burned' },
+      'resting_hr': { support: 'full', note: 'Resting heart rate (bpm)' },
+
+      // Most Integrations
+      'hrv_avg': { support: 'full', note: 'Average heart rate variability (ms)' },
+      'stress_level': { support: 'native', note: 'Daytime stress feature (Gen 3+)' },
+
+      // Variable Support
+      'recovery_score': { support: 'native', note: 'Native Recovery Index as part of Readiness contributors' },
+      'resilience_score': { support: 'native', note: 'Resilience feature for long-term stress adaptation' },
+
+      // Not supported
+      'weight': { support: 'manual', note: 'Manual entry only - no automatic tracking' },
+      'height': { support: 'manual', note: 'Manual entry only - stored in profile' }
+    }
+  },
   'apple': {
     name: 'Apple Health | Apple Watch',
     metrics: {
@@ -366,30 +391,6 @@ const INTEGRATION_SUPPORT = {
       // Variable Support
       'recovery_score': { support: 'derived', note: 'Derived from recovery metrics' },
       'resilience_score': { support: 'derived', note: 'Derived from stress and recovery patterns' }
-    }
-  },
-  'oura': {
-    name: 'Oura Ring',
-    metrics: {
-      // Metrics Supported by ALL Integrations
-      'sleep_score': { support: 'native', note: 'Overall sleep quality score (0-100)' },
-      'activity_score': { support: 'native', note: 'Daily activity performance score (0-100)' },
-      'readiness_score': { support: 'native', note: 'Body\'s readiness for physical activity (0-100)' },
-      'total_steps': { support: 'full', note: 'Total steps taken during the day' },
-      'calories_burned': { support: 'full', note: 'Total calories burned' },
-      'resting_hr': { support: 'full', note: 'Resting heart rate (bpm)' },
-
-      // Most Integrations
-      'hrv_avg': { support: 'full', note: 'Average heart rate variability (ms)' },
-      'stress_level': { support: 'native', note: 'Daytime stress feature (Gen 3+)' },
-
-      // Variable Support
-      'recovery_score': { support: 'native', note: 'Native Recovery Index as part of Readiness contributors' },
-      'resilience_score': { support: 'native', note: 'Resilience feature for long-term stress adaptation' },
-
-      // Not supported
-      'weight': { support: 'manual', note: 'Manual entry only - no automatic tracking' },
-      'height': { support: 'manual', note: 'Manual entry only - stored in profile' }
     }
   },
   'fitbit': {
@@ -829,6 +830,74 @@ function IntegrationSupportModal({ isOpen, onClose }: IntegrationSupportModalPro
   )
 }
 
+// Normalization function for chart data
+const normalizeChartData = (data: any[], metrics: string[]) => {
+  if (data.length === 0 || metrics.length === 0) return { normalizedData: data, originalRanges: {} }
+
+  // Calculate min/max for each metric
+  const ranges = metrics.reduce((acc, metric) => {
+    const values = data.map(d => d[metric]).filter(v => v != null && !isNaN(v))
+    if (values.length > 0) {
+      acc[metric] = {
+        min: Math.min(...values),
+        max: Math.max(...values)
+      }
+    }
+    return acc
+  }, {} as Record<string, { min: number; max: number }>)
+
+  // Normalize data
+  const normalizedData = data.map(row => {
+    const normalized = { ...row }
+    metrics.forEach(metric => {
+      if (row[metric] != null && !isNaN(row[metric]) && ranges[metric]) {
+        const { min, max } = ranges[metric]
+        if (max !== min) {
+          normalized[metric] = ((row[metric] - min) / (max - min)) * 100
+        } else {
+          normalized[metric] = 50 // If all values are the same, normalize to middle
+        }
+      }
+    })
+    return normalized
+  })
+
+  return { normalizedData, originalRanges: ranges }
+}
+
+// Custom tooltip component for normalized charts
+const CustomTooltip = ({ active, payload, label, isNormalized, originalData }: any) => {
+  if (!active || !payload || !payload.length) {
+    return null
+  }
+
+  return (
+    <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+      <p className="font-medium mb-2">{label}</p>
+      {payload.map((entry: any, index: number) => {
+        const originalValue = isNormalized && originalData
+          ? originalData.find((d: any) => d.date === label)?.[entry.dataKey]
+          : entry.value
+
+        return (
+          <div key={index} className="flex items-center gap-2 text-sm">
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="font-medium">{entry.name}:</span>
+            {isNormalized && originalValue !== undefined ? (
+              <span>{originalValue} (normalized: {entry.value?.toFixed(1)}%)</span>
+            ) : (
+              <span>{entry.value}</span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // TrendChart Component
 interface TrendChartProps {
   chart: ChartInstance
@@ -913,6 +982,21 @@ function TrendChart({
           </div>
 
           <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={chart.isNormalized ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => onUpdateChart(chart.id, { isNormalized: !chart.isNormalized })}
+                  className="h-8 w-8 p-0"
+                >
+                  <Percent className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{chart.isNormalized ? 'Show original values' : 'Normalize to 0-100 scale for comparison'}</p>
+              </TooltipContent>
+            </Tooltip>
             <Button
               variant="ghost"
               size="sm"
@@ -984,15 +1068,28 @@ function TrendChart({
       {chart.isExpanded && (
         <CardContent className="pt-0">
           <div className="h-[400px] w-full">
-            {chartData.length > 0 && chart.selectedMetrics.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                >
+            {chartData.length > 0 && chart.selectedMetrics.length > 0 ? (() => {
+              const { normalizedData, originalRanges } = chart.isNormalized
+                ? normalizeChartData(chartData, chart.selectedMetrics)
+                : { normalizedData: chartData, originalRanges: {} }
+
+              return (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={normalizedData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  >
                   <XAxis dataKey="date" />
-                  <YAxis />
-                  <RechartsTooltip />
+                  <YAxis label={chart.isNormalized ? { value: 'Normalized (%)', angle: -90, position: 'insideLeft' } : undefined} />
+                  <RechartsTooltip
+                    content={(props) => (
+                      <CustomTooltip
+                        {...props}
+                        isNormalized={chart.isNormalized}
+                        originalData={chartData}
+                      />
+                    )}
+                  />
                   {chart.selectedMetrics.map((metricKey) => {
                     const metric = AVAILABLE_METRICS.find(m => m.key === metricKey)
                     if (!metric) return null
@@ -1011,7 +1108,8 @@ function TrendChart({
                   })}
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
+              )
+            })() : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-muted-foreground">
                   {chart.selectedMetrics.length === 0
@@ -1055,7 +1153,8 @@ export default function WellnessPage() {
       name: 'Overall Trends',
       selectedMetrics: ['sleep_score', 'activity_score', 'readiness_score', 'stress_level'],
       isExpanded: true,
-      timeRange: '30'
+      timeRange: '30',
+      isNormalized: false
     }]
   })
 
@@ -1089,7 +1188,8 @@ export default function WellnessPage() {
             name: 'Overall Trends',
             selectedMetrics: ['sleep_score', 'activity_score', 'readiness_score', 'stress_level'],
             isExpanded: true,
-            timeRange: '30'
+            timeRange: '30',
+            isNormalized: false
           }]
         }
         // Ensure selectedSummaryCards exists for backward compatibility
@@ -1100,11 +1200,12 @@ export default function WellnessPage() {
         if (!parsedPrefs.summaryTimeRange) {
           parsedPrefs.summaryTimeRange = '30'
         }
-        // Ensure each chart has timeRange for backward compatibility
+        // Ensure each chart has timeRange and isNormalized for backward compatibility
         if (parsedPrefs.trendCharts) {
           parsedPrefs.trendCharts = parsedPrefs.trendCharts.map(chart => ({
             ...chart,
-            timeRange: chart.timeRange || '30'
+            timeRange: chart.timeRange || '30',
+            isNormalized: chart.isNormalized ?? false
           }))
         }
         // Remove old timeRange property if it exists
@@ -1288,7 +1389,8 @@ export default function WellnessPage() {
       name: `Trend Chart ${filterPrefs.trendCharts.length + 1}`,
       selectedMetrics: ['sleep_score', 'activity_score'],
       isExpanded: true,
-      timeRange: '30'
+      timeRange: '30',
+      isNormalized: false
     }
     setFilterPrefs(prev => ({
       ...prev,
@@ -1614,7 +1716,6 @@ export default function WellnessPage() {
             <div className="bg-muted/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
                   Manual Data Entry
                 </h4>
                 <Button
@@ -1631,7 +1732,6 @@ export default function WellnessPage() {
                   ) : (
                     <>
                       <ChevronDown className="h-3 w-3 mr-1" />
-                      Advanced
                     </>
                   )}
                 </Button>
@@ -1729,7 +1829,7 @@ export default function WellnessPage() {
 
 
             {/* Section Toggles */}
-            <div>
+            {/* <div>
               <h4 className="text-sm font-medium mb-3 text-muted-foreground">Sections</h4>
               <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
@@ -1749,7 +1849,7 @@ export default function WellnessPage() {
                   <Label htmlFor="show-resources" className="text-xs">Resources</Label>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -1759,7 +1859,7 @@ export default function WellnessPage() {
       {summaryStats && filterPrefs.showSummaryStats && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Summary Cards</h2>
+            <h2 className="text-xl font-semibold">Summary</h2>
             <div className="flex items-center gap-2">
               <Select
                 value={filterPrefs.summaryTimeRange}
@@ -2005,14 +2105,8 @@ export default function WellnessPage() {
         <CardContent>
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload and manage your medical records in the Repository page
+              Upload and manage your medical records in your <Link href="/repository"><u>Repository</u></Link>.
             </p>
-            <Link href="/repository#medical-records">
-              <Button className="w-full">
-                <FileText className="h-4 w-4 mr-2" />
-                Upload Medical Records
-              </Button>
-            </Link>
           </div>
         </CardContent>
       </Card>

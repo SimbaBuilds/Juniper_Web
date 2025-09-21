@@ -258,8 +258,8 @@ export function MedicalRecordsUpload({ onUploadComplete }: MedicalRecordsUploadP
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Upload medical files for Juniper to analyze and use in wellness related conversations and tasks.
-          Maximum 8 files per upload, 50MB each.
+          Upload medical files for Juniper to analyze and use in wellness related conversations and tasks. <br />
+          Have a MyChart account?  Look for a "Sharing Hub" or "Download All" section to download your records.
         </div>
 
         <div className="text-sm font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
@@ -288,7 +288,7 @@ export function MedicalRecordsUpload({ onUploadComplete }: MedicalRecordsUploadP
             Drop files here or click to browse
           </p>
           <p className="text-sm text-gray-500 mb-4">
-            Supports PDF, PNG, JPEG, CSV, TXT, RTF, DOCX, DOC, and MD files up to 50MB each
+            Supports PDF, PNG, JPEG, CSV, TXT, RTF, DOCX, DOC, and MD files up to 50MB each. 8 files per upload.
           </p>
           <Button
             variant="outline"
