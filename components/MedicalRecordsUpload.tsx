@@ -258,7 +258,7 @@ export function MedicalRecordsUpload({ onUploadComplete }: MedicalRecordsUploadP
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Upload medical documents (PDF, PNG, JPEG, CSV) for Juniper to analyze and use in health-related conversations.
+          Upload medical files for Juniper to analyze and use in wellness related conversations and tasks.
           Maximum 8 files per upload, 50MB each.
         </div>
 
@@ -288,7 +288,7 @@ export function MedicalRecordsUpload({ onUploadComplete }: MedicalRecordsUploadP
             Drop files here or click to browse
           </p>
           <p className="text-sm text-gray-500 mb-4">
-            Supports PDF, PNG, JPEG, CSV files up to 50MB each
+            Supports PDF, PNG, JPEG, CSV, TXT, RTF, DOCX, DOC, and MD files up to 50MB each
           </p>
           <Button
             variant="outline"

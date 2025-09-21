@@ -5,7 +5,7 @@ import { RESOURCE_TYPES } from '@/app/lib/repository/types'
 import { Resource, Tag } from '@/lib/tables'
 import { AddResourceSection } from '@/app/components/repository/add-resource-section'
 import { EditResourceSection } from '@/app/components/repository/edit-resource-section'
-import { Pencil, Trash2, Tags, FileText, Info } from 'lucide-react'
+import { Pencil, Trash2, Tags, FileText, Info, ChevronDown, ChevronUp } from 'lucide-react'
 import { createClient } from '@/lib/utils/supabase/client'
 import { createResourceWithTags, updateResourceWithTags } from '@/lib/client-services'
 import { MedicalRecordsUpload } from '@/components/MedicalRecordsUpload'
@@ -37,6 +37,14 @@ export default function RepositoryPage() {
   const [loading, setLoading] = useState(true)
   const [editingResourceId, setEditingResourceId] = useState<string | null>(null)
   const [medicalRecordsRefresh, setMedicalRecordsRefresh] = useState(0)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
+
+  const toggleSection = (sectionType: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionType]: !prev[sectionType]
+    }))
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -358,13 +366,28 @@ export default function RepositoryPage() {
           const typeResources = resourcesByType[type.value] || []
           if (typeResources.length === 0) return null
 
+          const isCollapsed = collapsedSections[type.value]
+
           return (
-            <div key={type.value} className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {type.label} (<span className="text-number">{typeResources.length}</span>)
-              </h2>
-              
-              <div className="space-y-4">
+            <div key={type.value} className="bg-card rounded-lg border border-border">
+              <div
+                className="flex items-center justify-between cursor-pointer group px-6 py-4 hover:bg-accent/50 transition-colors"
+                onClick={() => toggleSection(type.value)}
+              >
+                <h2 className="text-2xl font-semibold text-foreground">
+                  {type.label} (<span className="text-number">{typeResources.length}</span>)
+                </h2>
+                <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+                  {isCollapsed ? (
+                    <ChevronDown className="h-5 w-5" />
+                  ) : (
+                    <ChevronUp className="h-5 w-5" />
+                  )}
+                </div>
+              </div>
+
+              {!isCollapsed && (
+                <div className="space-y-4 px-6 pb-6">
                 {typeResources.map((resource) => (
                   <div key={resource.id} className="space-y-4">
                     {editingResourceId === resource.id ? (
@@ -440,7 +463,8 @@ export default function RepositoryPage() {
                     )}
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           )
         })}

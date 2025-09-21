@@ -960,7 +960,7 @@ function TrendChart({
                   value={chart.timeRange}
                   onValueChange={(value) => onUpdateChart(chart.id, { timeRange: value })}
                 >
-                  <SelectTrigger className="h-8 w-24">
+                  <SelectTrigger className="h-8 w-36">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1765,7 +1765,7 @@ export default function WellnessPage() {
                 value={filterPrefs.summaryTimeRange}
                 onValueChange={(value) => updateFilterPref('summaryTimeRange', value)}
               >
-                <SelectTrigger className="h-8 w-24">
+                <SelectTrigger className="h-8 w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1933,32 +1933,6 @@ export default function WellnessPage() {
         </Card>
       )}
 
-      {/* Medical Records Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Medical Records
-          </CardTitle>
-          <CardDescription>
-            Provide medical records to Juniper so it can provide valuable insights and conversation around your health data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Upload and manage your medical records in the Repository page
-            </p>
-            <Link href="/repository#medical-records">
-              <Button className="w-full">
-                <FileText className="h-4 w-4 mr-2" />
-                Upload Medical Records
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Resources Section */}
       {filterPrefs.showResources && (
         <Card>
@@ -2016,6 +1990,32 @@ export default function WellnessPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Medical Records Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Medical Records
+          </CardTitle>
+          <CardDescription>
+            Provide medical records to Juniper so it can provide valuable insights and conversation around your health data.  We do not share your data with third parties.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Upload and manage your medical records in the Repository page
+            </p>
+            <Link href="/repository#medical-records">
+              <Button className="w-full">
+                <FileText className="h-4 w-4 mr-2" />
+                Upload Medical Records
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Integration Support Modal */}
       <IntegrationSupportModal

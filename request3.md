@@ -1,10 +1,9 @@
-Please replace the “some metrics are not supported based on your integration” message with "See supported metrics by integration" (on click show below).  Use the markdown for reference.
+More fixes:
 
-Apple Health | Apple Watch: [full list of supported health_metrics_daily metrics]
+1. repository#medical-records routes to the top of the repository page instead of the medical records section.  Please address.
 
-Google Health Connect | Pixel Watch: [full list of supported health_metrics_daily metrics]
 
-Oura Ring: [full list of supported health_metrics_daily metrics]
+2.  Please make the repository sections (Memories, References, etc...) collapsible
 
-Fitbit: [full list of supported health_metrics_daily metrics]
 
+3. Please move the Medical Records link section that is in the wellness page to the bottom, below the Health and Wellness Resources section
