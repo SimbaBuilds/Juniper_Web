@@ -50,18 +50,83 @@ interface MetricDefinition {
   label: string
   group: string
   unit?: string
+  color: {
+    light: string
+    dark: string
+  }
 }
 
 const AVAILABLE_METRICS: MetricDefinition[] = [
-  { key: 'sleep_score', label: 'Sleep Score', group: 'Recovery', unit: 'score' },
-  { key: 'readiness_score', label: 'Readiness Score', group: 'Recovery', unit: 'score' },
-  { key: 'recovery_score', label: 'Recovery Score', group: 'Recovery', unit: 'score' },
-  { key: 'activity_score', label: 'Activity Score', group: 'Activity', unit: 'score' },
-  { key: 'total_steps', label: 'Total Steps', group: 'Activity', unit: 'steps' },
-  { key: 'calories_burned', label: 'Calories Burned', group: 'Activity', unit: 'cal' },
-  { key: 'heart_rate_avg', label: 'Heart Rate Average', group: 'Vitals', unit: 'bpm' },
-  { key: 'hrv_avg', label: 'HRV Average', group: 'Vitals', unit: 'ms' },
-  { key: 'stress_level', label: 'Stress Level', group: 'Wellness', unit: 'level' }
+  // Recovery
+  {
+    key: 'sleep_score',
+    label: 'Sleep Score',
+    group: 'Recovery',
+    unit: 'score',
+    color: { light: '#1e40af', dark: '#60a5fa' }
+  },
+  {
+    key: 'readiness_score',
+    label: 'Readiness Score',
+    group: 'Recovery',
+    unit: 'score',
+    color: { light: '#f59e0b', dark: '#fbbf24' }
+  },
+  {
+    key: 'recovery_score',
+    label: 'Recovery Score',
+    group: 'Recovery',
+    unit: 'score',
+    color: { light: '#059669', dark: '#10b981' }
+  },
+
+  // Activity
+  {
+    key: 'activity_score',
+    label: 'Activity Score',
+    group: 'Activity',
+    unit: 'score',
+    color: { light: '#166534', dark: '#bbf7d0' }
+  },
+  {
+    key: 'total_steps',
+    label: 'Total Steps',
+    group: 'Activity',
+    unit: 'steps',
+    color: { light: '#7c3aed', dark: '#8b5cf6' }
+  },
+  {
+    key: 'calories_burned',
+    label: 'Calories Burned',
+    group: 'Activity',
+    unit: 'cal',
+    color: { light: '#dc2626', dark: '#ef4444' }
+  },
+
+  // Vitals
+  {
+    key: 'heart_rate_avg',
+    label: 'Resting Heart Rate',
+    group: 'Vitals',
+    unit: 'bpm',
+    color: { light: '#8b5cf6', dark: '#a78bfa' }
+  },
+  {
+    key: 'hrv_avg',
+    label: 'HRV Average',
+    group: 'Vitals',
+    unit: 'ms',
+    color: { light: '#ec4899', dark: '#fb7185' }
+  },
+
+  // Wellness
+  {
+    key: 'stress_level',
+    label: 'Stress Level',
+    group: 'Wellness',
+    unit: 'level',
+    color: { light: '#ef4444', dark: '#f87171' }
+  }
 ]
 
 export class WellnessExportService {
@@ -365,9 +430,10 @@ export class WellnessExportService {
 
     let yPosition = startY + 15
 
-    // Add chart visualization using PDF drawing primitives
-    const chartHeight = 40
+    // Add chart visualization with proper aspect ratio
+    // Original chart is ~1166x400, so maintain ~3:1 aspect ratio
     const chartWidth = 170
+    const chartHeight = 60 // Increased from 40 to better match aspect ratio
     const chartX = 20
     const chartY = yPosition
 
@@ -382,33 +448,40 @@ export class WellnessExportService {
     if (chartImage) {
       console.log(`🖼️ Adding captured chart image for "${chart.name}"`)
       try {
-        // Add the captured chart image
+        // Add the captured chart image with proper padding
         pdf.addImage(
           chartImage.image,
           'PNG',
-          chartX + 5,
-          chartY + 5,
-          chartWidth - 10,
-          chartHeight - 10,
+          chartX + 3,
+          chartY + 3,
+          chartWidth - 6,
+          chartHeight - 6,
           undefined,
           'FAST'
         )
         console.log(`✅ Chart image added successfully for "${chart.name}"`)
+
+        // Add legend for the chart
+        yPosition = this.addChartLegend(pdf, chart, chartX, chartY + chartHeight + 5)
+
+        console.log(`📊 Chart image workflow completed for "${chart.name}" - skipping data summary`)
       } catch (error) {
         console.error(`❌ Failed to add chart image for "${chart.name}":`, error)
-        // Fallback to data summary
+        // Only on error, fallback to data summary
         this.addChartDataSummary(pdf, filteredData, chart, chartX, chartY, chartWidth, chartHeight)
+        yPosition = chartY + chartHeight + 15 // Consistent positioning
       }
-    } else if (filteredData.length > 0 && chart.selectedMetrics.length > 0) {
-      console.log(`📊 No chart image found, adding data summary for "${chart.name}"`)
-      this.addChartDataSummary(pdf, filteredData, chart, chartX, chartY, chartWidth, chartHeight)
     } else {
-      pdf.setFontSize(10)
-      pdf.setTextColor(102, 102, 102)
-      pdf.text('No data available for chart', 25, yPosition + 22)
+      console.log(`📊 No chart image found for "${chart.name}", using data summary fallback`)
+      if (filteredData.length > 0 && chart.selectedMetrics.length > 0) {
+        this.addChartDataSummary(pdf, filteredData, chart, chartX, chartY, chartWidth, chartHeight)
+      } else {
+        pdf.setFontSize(10)
+        pdf.setTextColor(102, 102, 102)
+        pdf.text('No data available for chart', chartX + 5, chartY + 25)
+      }
+      yPosition = chartY + chartHeight + 15 // Consistent positioning
     }
-
-    yPosition += 50
 
     // Add chart values if requested
     if (includeValues && filteredData.length > 0) {
@@ -574,6 +647,65 @@ export class WellnessExportService {
 
     console.log('⚠️ No table data to display')
     return startY + 20
+  }
+
+  /**
+   * Add chart legend showing metrics and their actual colors from wellness page
+   */
+  private static addChartLegend(
+    pdf: jsPDF,
+    chart: ChartConfig,
+    startX: number,
+    startY: number
+  ): number {
+    console.log(`🎨 Adding legend for chart: ${chart.name}`)
+
+    // Helper function to convert hex color to RGB array
+    const hexToRgb = (hex: string): [number, number, number] => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+      return result
+        ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+        : [153, 153, 153] // Default gray
+    }
+
+    // Get metric color function (using light colors for PDF)
+    const getMetricColor = (metricKey: string): [number, number, number] => {
+      const metric = AVAILABLE_METRICS.find(m => m.key === metricKey)
+      return metric ? hexToRgb(metric.color.light) : [153, 153, 153]
+    }
+
+    pdf.setFontSize(8)
+    pdf.setTextColor(51, 51, 51)
+
+    let currentY = startY
+    let currentX = startX
+
+    chart.selectedMetrics.forEach((metricKey) => {
+      const metric = AVAILABLE_METRICS.find(m => m.key === metricKey)
+      const label = metric ? metric.label : metricKey
+      const color = getMetricColor(metricKey)
+
+      // Draw color indicator (small rectangle)
+      pdf.setFillColor(color[0], color[1], color[2])
+      pdf.rect(currentX, currentY - 2, 4, 3, 'F')
+
+      // Add metric label
+      pdf.setTextColor(51, 51, 51)
+      pdf.text(label, currentX + 6, currentY)
+
+      // Calculate next position (wrap to next line if needed)
+      const textWidth = pdf.getTextWidth(label) + 12 // 6 for box + 6 for spacing
+      currentX += textWidth
+
+      // If we exceed the chart width, move to next line
+      if (currentX > startX + 150) {
+        currentX = startX
+        currentY += 8
+      }
+    })
+
+    console.log(`✅ Legend added for ${chart.selectedMetrics.length} metrics`)
+    return currentY + 10 // Return position after legend
   }
 
   /**
