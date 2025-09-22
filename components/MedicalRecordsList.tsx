@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { FileText, Calendar, Download, Trash2, Eye, AlertCircle, CheckCircle, Clock, Loader2 } from 'lucide-react'
+import { FileText, Calendar, Download, Trash2, AlertCircle, CheckCircle, Clock, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -123,11 +123,6 @@ export function MedicalRecordsList({ refreshTrigger }: MedicalRecordsListProps) 
     }
   }
 
-  const handleView = (record: MedicalRecord) => {
-    if (record.upload_url) {
-      window.open(record.upload_url, '_blank')
-    }
-  }
 
   if (loading) {
     return (
@@ -226,22 +221,6 @@ export function MedicalRecordsList({ refreshTrigger }: MedicalRecordsListProps) 
               </div>
 
               <div className="flex items-center gap-1 ml-4">
-                {record.status === 'completed' && record.upload_url && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleView(record)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>View document</TooltipContent>
-                  </Tooltip>
-                )}
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button

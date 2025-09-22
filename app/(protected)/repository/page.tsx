@@ -518,16 +518,16 @@ export default function RepositoryPage() {
               <p className="text-muted-foreground text-sm">
                 Provide medical records to Juniper so it can provide valuable insights and conversation around your health data
               </p>
-              <Tooltip>
+              {/* <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    Upload medical records to Juniper: if you have MyChart, look for a section like "Sharing Hub" or "Download All". Download on mobile or desktop and upload directly in Juniper's repository page.
+                    Upload medical records to Juniper: if you have MyChart, look for a section like "Sharing Hub" or "Download All". Download on mobile or desktop and upload below.
                   </p>
                 </TooltipContent>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           </div>
           <div className="text-muted-foreground group-hover:text-foreground transition-colors">
