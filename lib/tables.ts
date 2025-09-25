@@ -317,11 +317,12 @@ export type UserProfile = {
     updated_at: Date;
     user_message?: string;
     total_turns?: number;
+    network_success?: boolean;
   };
 
   export const requestFields = [
     'id', 'user_id', 'request_id', 'request_type', 'status',
-    'metadata', 'image_url', 'created_at', 'updated_at'
+    'metadata', 'image_url', 'created_at', 'updated_at', 'network_success'
   ] as const;
   export type RequestField = (typeof requestFields)[number];
 

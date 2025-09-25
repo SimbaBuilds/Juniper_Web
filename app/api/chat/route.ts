@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
           integration_in_progress: integration_in_progress || false,
           service_name: service_name || null,
           timestamp: Date.now()
-        }
+        },
+        network_success: true
       })
     } catch (requestError) {
       console.error('Failed to create request record:', requestError)
@@ -190,7 +191,17 @@ export async function POST(request: NextRequest) {
     console.error('=== CHAT API REQUEST FAILED ===')
     console.error('Chat API error:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    
+
+    // Check if this is a network error
+    const isNetworkError = error instanceof Error && (
+      error.message.includes('fetch failed') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ETIMEDOUT') ||
+      error.message.includes('Network Error') ||
+      error.name === 'TypeError' && error.message.includes('fetch')
+    )
+
     // Update request status to failed if we have a requestId in scope
     if (typeof requestId !== 'undefined') {
       try {
@@ -198,11 +209,17 @@ export async function POST(request: NextRequest) {
           error: error instanceof Error ? error.message : 'Unknown error',
           error_timestamp: Date.now()
         })
+
+        // Set network_success to false only for actual network errors
+        if (isNetworkError) {
+          await serverRequestService.updateNetworkSuccess(requestId, false)
+          console.error('Network error detected - set network_success to false')
+        }
       } catch (updateError) {
         console.error('Failed to update request status to failed:', updateError)
       }
     }
-    
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

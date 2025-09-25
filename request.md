@@ -1,1 +1,1 @@
-The assistant response will often contain cited sources in the format "Sources: [url1, url2, etc…]”. Please create a plan for adding parsing and display logic that adds “Sources” to the end of the assistant message as an expandable dropdown with the links. There is already logic that makes https urls clickable.
+Please create a plan for updating the network_success attribute of back end API requests to true on request record creation and to false on "Network Error"

@@ -1,6 +1,6 @@
 import { createClient } from '../utils/supabase/client';
 import { createSupabaseAppServerClient } from '../utils/supabase/server';
-import { Request, CancellationRequest } from '../utils/supabase/tables';
+import { Request, CancellationRequest } from '../tables';
 
 export interface CreateRequestData {
   request_id: string;
@@ -8,6 +8,7 @@ export interface CreateRequestData {
   status: string;
   metadata?: Record<string, any>;
   image_url?: string;
+  network_success?: boolean;
 }
 
 export interface RequestService {
@@ -15,8 +16,9 @@ export interface RequestService {
   createRequest(userId: string, requestData: CreateRequestData): Promise<Request>;
   getRequestStatus(requestId: string): Promise<string | null>;
   updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>): Promise<Request>;
-  
-  // Cancellation management  
+  updateNetworkSuccess(requestId: string, networkSuccess: boolean): Promise<Request>;
+
+  // Cancellation management
   createCancellationRequest(userId: string, requestId: string): Promise<CancellationRequest>;
   isCancellationRequested(requestId: string): Promise<boolean>;
 }
@@ -36,6 +38,7 @@ class RequestServiceImpl implements RequestService {
       status: requestData.status,
       metadata: requestData.metadata || {},
       image_url: requestData.image_url,
+      network_success: requestData.network_success,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -113,6 +116,32 @@ class RequestServiceImpl implements RequestService {
   }
 
   /**
+   * Update the network_success field of a request
+   */
+  async updateNetworkSuccess(requestId: string, networkSuccess: boolean): Promise<Request> {
+    const supabase = createClient();
+
+    const updateData = {
+      network_success: networkSuccess,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('requests')
+      .update(updateData)
+      .eq('request_id', requestId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating network success:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
    * Create a cancellation request
    */
   async createCancellationRequest(userId: string, requestId: string): Promise<CancellationRequest> {
@@ -176,6 +205,7 @@ export class ServerRequestService implements RequestService {
       status: requestData.status,
       metadata: requestData.metadata || {},
       image_url: requestData.image_url,
+      network_success: requestData.network_success,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -239,6 +269,29 @@ export class ServerRequestService implements RequestService {
 
     if (error) {
       console.error('Error updating request status:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  async updateNetworkSuccess(requestId: string, networkSuccess: boolean): Promise<Request> {
+    const supabase = await createSupabaseAppServerClient();
+
+    const updateData = {
+      network_success: networkSuccess,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('requests')
+      .update(updateData)
+      .eq('request_id', requestId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating network success:', error);
       throw error;
     }
 
