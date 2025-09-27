@@ -5,6 +5,7 @@ export interface UseRequestStatusPollingOptions {
   requestId: string | null;
   intervalMs?: number;
   onStatusChange?: (status: string, requestId: string) => void;
+  abortSignal?: AbortSignal;
 }
 
 export interface UseRequestStatusPollingReturn {
@@ -18,7 +19,7 @@ export interface UseRequestStatusPollingReturn {
 export const useRequestStatusPolling = (
   options: UseRequestStatusPollingOptions
 ): UseRequestStatusPollingReturn => {
-  const { requestId, intervalMs = 5000, onStatusChange } = options;
+  const { requestId, intervalMs = 5000, onStatusChange, abortSignal } = options;
 
   const [status, setStatus] = useState<string | null>(null);
   const [userMessage, setUserMessage] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export const useRequestStatusPolling = (
   const finalStates = ['completed', 'failed', 'cancelled'];
 
   useEffect(() => {
-    
+
     if (!requestId) {
       setStatus(null);
       setUserMessage(null);
@@ -49,6 +50,15 @@ export const useRequestStatusPolling = (
       previousStatusRef.current = null;
       hasLoggedFinalStateRef.current = false;
       hasSeenNonFinalStatusRef.current = false;
+      return;
+    }
+
+    // Check if already aborted
+    if (abortSignal?.aborted) {
+      console.log('[POLLING_HOOK] Aborting polling - signal already aborted:', {
+        request_id: requestId,
+        timestamp: new Date().toISOString()
+      });
       return;
     }
 
@@ -68,6 +78,15 @@ export const useRequestStatusPolling = (
       await new Promise(resolve => setTimeout(resolve, 2000));
 
         const pollStatus = async () => {
+          // Check if aborted before each poll
+          if (abortSignal?.aborted) {
+            console.log('[POLLING_HOOK] Polling aborted by signal:', {
+              request_id: requestId,
+              timestamp: new Date().toISOString()
+            });
+            return;
+          }
+
           try {
             // Throttled logging for polling operations
             const now = Date.now();
@@ -193,6 +212,23 @@ export const useRequestStatusPolling = (
     // Start the polling process
     startPolling();
 
+    // Set up abort signal listener
+    const abortHandler = () => {
+      console.log('[POLLING_HOOK] Polling aborted via signal:', {
+        request_id: requestId,
+        timestamp: new Date().toISOString()
+      });
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setIsPolling(false);
+    };
+
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', abortHandler);
+    }
+
     // Cleanup on unmount or when requestId changes
     return () => {
       if (intervalRef.current) {
@@ -202,8 +238,12 @@ export const useRequestStatusPolling = (
       setIsPolling(false);
       hasLoggedFinalStateRef.current = false;
       hasSeenNonFinalStatusRef.current = false;
+
+      if (abortSignal) {
+        abortSignal.removeEventListener('abort', abortHandler);
+      }
     };
-  }, [requestId, intervalMs, onStatusChange]);
+  }, [requestId, intervalMs, onStatusChange, abortSignal]);
 
   return {
     status,

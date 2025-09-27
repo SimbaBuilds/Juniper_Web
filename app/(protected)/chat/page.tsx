@@ -21,6 +21,7 @@ interface Message {
 }
 
 const AUTO_CLEAR_DELAY = 10 * 60 * 1000 // 10 minutes
+const MINIMUM_LOADING_TIME = 2000 // 2 seconds minimum loading display
 
 export default function ChatPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
@@ -42,13 +43,113 @@ export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const loadingStartTimeRef = useRef<number | null>(null)
+  const minimumLoadingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const pollingAbortControllerRef = useRef<AbortController | null>(null)
 
   // Define final states that should stop polling and clear tracking
   const finalStates = ['completed', 'failed', 'cancelled'];
   
   // Define all active states where cancel button should be shown
-  const activeStates = ['pending', 'thinking', 'searching', 'processing', 'configuring', 
+  const activeStates = ['pending', 'thinking', 'searching', 'processing', 'configuring',
                         'retrieving', 'storing', 'integrating', 'pinging', 'automating', 'caring'];
+
+  // Function to clear UI state with minimum display time
+  const clearUIWithMinimumTime = () => {
+    const loadingStartTime = loadingStartTimeRef.current;
+    const currentTime = Date.now();
+
+    console.log('[CHAT] clearUIWithMinimumTime called:', {
+      loadingStartTime,
+      currentTime,
+      hasLoadingStartTime: !!loadingStartTime,
+      timestamp: new Date().toISOString()
+    });
+
+    // If no loading start time recorded, assume loading just started
+    // and enforce full minimum display time
+    if (!loadingStartTime) {
+      console.log('[CHAT] No loading start time recorded, enforcing full minimum display time:', {
+        minimumTime: MINIMUM_LOADING_TIME,
+        timestamp: new Date().toISOString()
+      });
+
+      // Clear any existing timer
+      if (minimumLoadingTimerRef.current) {
+        clearTimeout(minimumLoadingTimerRef.current);
+      }
+
+      minimumLoadingTimerRef.current = setTimeout(() => {
+        console.log('[CHAT] Minimum loading time timeout executed (no start time case):', {
+          delayUsed: MINIMUM_LOADING_TIME,
+          timestamp: new Date().toISOString()
+        });
+        setCurrentRequestId(null)
+        setIsLoading(false)
+        setIsRequestInProgress(false)
+        setRequestStatus(null)
+        abortControllerRef.current = null
+        previousRequestStatusRef.current = null
+        previousIsLoadingRef.current = false
+        previousRequestIdRef.current = null
+        // Clean up refs
+        loadingStartTimeRef.current = null
+        minimumLoadingTimerRef.current = null
+      }, MINIMUM_LOADING_TIME);
+      return;
+    }
+
+    const elapsedTime = currentTime - loadingStartTime;
+    const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+    if (remainingTime > 0) {
+      console.log('[CHAT] Delaying UI clear for minimum display time:', {
+        elapsedTime,
+        remainingTime,
+        timestamp: new Date().toISOString()
+      });
+
+      // Clear any existing timer
+      if (minimumLoadingTimerRef.current) {
+        clearTimeout(minimumLoadingTimerRef.current);
+      }
+
+      minimumLoadingTimerRef.current = setTimeout(() => {
+        console.log('[CHAT] Minimum loading time timeout executed (remaining time case):', {
+          delayUsed: remainingTime,
+          timestamp: new Date().toISOString()
+        });
+        setCurrentRequestId(null)
+        setIsLoading(false)
+        setIsRequestInProgress(false)
+        setRequestStatus(null)
+        abortControllerRef.current = null
+        previousRequestStatusRef.current = null
+        previousIsLoadingRef.current = false
+        previousRequestIdRef.current = null
+        // Clean up refs
+        loadingStartTimeRef.current = null
+        minimumLoadingTimerRef.current = null
+      }, remainingTime);
+    } else {
+      // Minimum time already elapsed, clear immediately
+      console.log('[CHAT] Minimum time already elapsed, clearing immediately:', {
+        elapsedTime,
+        timestamp: new Date().toISOString()
+      });
+      setCurrentRequestId(null)
+      setIsLoading(false)
+      setIsRequestInProgress(false)
+      setRequestStatus(null)
+      abortControllerRef.current = null
+      previousRequestStatusRef.current = null
+      previousIsLoadingRef.current = false
+      previousRequestIdRef.current = null
+      // Clean up refs
+      loadingStartTimeRef.current = null
+      minimumLoadingTimerRef.current = null
+    }
+  };
 
   // Helper function to get status message
   const getStatusMessage = (status: string | null): string => {
@@ -84,31 +185,25 @@ export default function ChatPage() {
     }
   };
 
+  // Create abort controller for new polling session
+  if (!pollingAbortControllerRef.current && currentRequestId) {
+    pollingAbortControllerRef.current = new AbortController();
+  }
+
   // Integrate polling hook
   const { status: polledStatus } = useRequestStatusPolling({
     requestId: currentRequestId,
+    abortSignal: pollingAbortControllerRef.current?.signal,
     onStatusChange: (status, pollingRequestId) => {
       // Debug: Always log status changes to see what's happening
       console.log('[CHAT] Status change received:', {
         currentRequestId,
         pollingRequestId,
         status,
-        requestIdsMatch: currentRequestId === pollingRequestId,
         isLoading,
         isRequestInProgress,
         timestamp: new Date().toISOString()
       });
-      
-      // Only process status changes for the current request
-      if (currentRequestId !== pollingRequestId) {
-        console.log('[CHAT] Ignoring status change from old request:', {
-          currentRequestId,
-          pollingRequestId,
-          status,
-          timestamp: new Date().toISOString()
-        });
-        return; // Ignore status changes from old requests
-      }
 
       console.log('[CHAT] Processing status change:', {
         requestId: currentRequestId,
@@ -125,20 +220,11 @@ export default function ChatPage() {
       setRequestStatus(status)
       if (finalStates.includes(status)) {
         console.log('[CHAT] Request reached final state, clearing UI tracking:', {
-          requestId: currentRequestId,
+          requestId: pollingRequestId,
           finalStatus: status,
           timestamp: new Date().toISOString()
         });
-        // Clear request tracking only for the current request
-        setCurrentRequestId(null)
-        setIsLoading(false)
-        setIsRequestInProgress(false)
-        setRequestStatus(null)
-        abortControllerRef.current = null
-        // Reset refs
-        previousRequestStatusRef.current = null
-        previousIsLoadingRef.current = false
-        previousRequestIdRef.current = null
+        clearUIWithMinimumTime();
       }
     }
   })
@@ -506,9 +592,30 @@ export default function ChatPage() {
     setIsRequestInProgress(true)
     setRequestStatus('pending') // Set initial status
 
+    // Abort any existing polling to ensure only one active request
+    if (pollingAbortControllerRef.current) {
+      pollingAbortControllerRef.current.abort();
+      pollingAbortControllerRef.current = null;
+    }
+
+    // Clear any existing minimum loading timer
+    if (minimumLoadingTimerRef.current) {
+      clearTimeout(minimumLoadingTimerRef.current);
+      minimumLoadingTimerRef.current = null;
+    }
+
     // Generate request ID immediately (like React Native does)
     const requestId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     setCurrentRequestId(requestId)
+
+    // Record loading start time for minimum display time
+    const loadingStartTime = Date.now();
+    loadingStartTimeRef.current = loadingStartTime;
+    console.log('[CHAT] Loading start time recorded:', {
+      requestId,
+      loadingStartTime,
+      timestamp: new Date().toISOString()
+    });
 
     console.log('[CHAT] Starting new request:', {
       requestId,
