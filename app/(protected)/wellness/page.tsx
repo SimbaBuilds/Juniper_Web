@@ -1036,6 +1036,8 @@ function TrendChart({
                     <SelectItem value="7">7 days</SelectItem>
                     <SelectItem value="30">30 days</SelectItem>
                     <SelectItem value="90">90 days</SelectItem>
+                    <SelectItem value="365">1 Year</SelectItem>
+                    <SelectItem value="max">Max</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1365,17 +1367,24 @@ export default function WellnessPage() {
 
     try {
       const supabase = createClient()
-      const daysBack = parseInt(timeRange)
       const today = new Date().toISOString().split('T')[0]
-      const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-      const { data: metricsData, error: metricsError } = await supabase
+      let query = supabase
         .from('health_metrics_daily')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', startDate)
         .lte('date', today)
         .order('date', { ascending: true })
+
+      // Handle different time ranges
+      if (timeRange !== 'max') {
+        const daysBack = parseInt(timeRange)
+        const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        query = query.gte('date', startDate)
+      }
+      // For 'max', we don't add any date filtering to get all data
+
+      const { data: metricsData, error: metricsError } = await query
 
       if (metricsError) {
         console.error('Error fetching health metrics:', metricsError)
@@ -1832,6 +1841,8 @@ export default function WellnessPage() {
                   <SelectItem value="7">7 days</SelectItem>
                   <SelectItem value="30">30 days</SelectItem>
                   <SelectItem value="90">90 days</SelectItem>
+                  <SelectItem value="365">1 Year</SelectItem>
+                  <SelectItem value="max">Max</SelectItem>
                 </SelectContent>
               </Select>
               <MetricsSelector

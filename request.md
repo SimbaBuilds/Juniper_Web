@@ -1,9 +1,17 @@
-OLLING_HOOK] Status changed: {request_id: 'web-1758949840306-zfnrvs5ey', previous_status: null, new_status: 'completed', is_final_state: true, timestamp: '2025-09-27T05:13:22.800Z'}
-page.tsx:104 [CHAT] Request status changed: {requestId: 'web-1758949840306-zfnrvs5ey', previousStatus: null, newStatus: 'completed', timestamp: '2025-09-27T05:13:22.800Z'}
-page.tsx:115 [CHAT] Request reached final state, clearing UI tracking: {requestId: 'web-1758949840306-zfnrvs5ey', finalStatus: 'completed', timestamp: '2025-09-27T05:13:22.800Z'}
-useRequestStatusPolling.ts:108 [POLLING_HOOK] Status changed: {request_id: 'web-1758949667303-ns2oc3ob9', previous_status: null, new_status: 'completed', is_final_state: true, timestamp: '2025-09-27T05:13:24.792Z'}
-page.tsx:104 [CHAT] Request status changed: {requestId: 'web-1758949667303-ns2oc3ob9', previousStatus: null, newStatus: 'completed', timestamp: '2025-09-27T05:13:24.792Z'}
-page.tsx:115 [CHAT] Request reached final state, clearing UI tracking: {requestId: 'web-1758949667303-ns2oc3ob9', finalStatus: 'completed', timestamp: '2025-09-27T05:13:24.792Z'}
-useRequestStatusPolling.ts:108 [POLLING_HOOK] Status changed: {request_id: 'web-1758949897716-rqx028khr', previous_status: null, new_status: 'completed', is_final_state: true, timestamp: '2025-09-27T05:13:25.219Z'}
-page.tsx:104 [CHAT] Request status changed: {requestId: 'web-1758949897716-rqx028khr', previousStatus: null, newStatus: 'completed', timestamp: '2025-09-27T05:13:25.219Z'}
-page.tsx:115 
+  timeRange: 'max',
+  isNormalized: false
+}
+❌ Wellness export error: RangeError: Invalid time value
+    at Date1.toISOString (<anonymous>)
+    at WellnessExportService.addChartSection (app/lib/services/WellnessExportService.ts:445:29)
+    at WellnessExportService.addTrendChartsSection (app/lib/services/WellnessExportService.ts:419:23)
+    at WellnessExportService.generateExport (app/lib/services/WellnessExportService.ts:250:23)
+    at async POST (app/api/wellness/export/route.ts:93:22)
+  443 |     console.log(`📈 Chart section for "${chart.name}":`, {
+  444 |       timeRangeDays: days,
+> 445 |       cutoffDate: cutoffDate.toISOString(),
+      |                             ^
+  446 |       totalHealthData: healthData.length,
+  447 |       filteredDataLength: filteredData.length,
+  448 |       selectedMetrics: chart.selectedMetrics,
+ POST /api/wellness/export 500 in 563ms

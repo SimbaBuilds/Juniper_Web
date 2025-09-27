@@ -1,4 +1,4 @@
-export const FREE_TIER_REQUESTS_LIMIT = 40
+export const FREE_TIER_REQUESTS_LIMIT = 20
 export const FREE_TIER_USAGE_LIMIT = 1.00
 
 export const PRO_TIER_REQUESTS_LIMIT = 500

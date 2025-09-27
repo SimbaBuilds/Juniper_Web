@@ -267,16 +267,24 @@ export class WellnessExportService {
 
     // Determine the maximum time range needed
     const timeRanges = [config.summaryTimeFrame, ...config.trendCharts.map(c => c.timeRange)]
-    const maxDays = Math.max(...timeRanges.map(range => parseInt(range)))
 
-    const startDate = subDays(new Date(), maxDays)
+    // Check if any time range is 'max' - if so, fetch all data
+    const hasMaxRange = timeRanges.includes('max')
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('health_metrics_daily')
       .select('*')
       .eq('user_id', userId)
-      .gte('date', format(startDate, 'yyyy-MM-dd'))
       .order('date', { ascending: true })
+
+    // Only apply date filter if not fetching max data
+    if (!hasMaxRange) {
+      const maxDays = Math.max(...timeRanges.map(range => parseInt(range)))
+      const startDate = subDays(new Date(), maxDays)
+      query = query.gte('date', format(startDate, 'yyyy-MM-dd'))
+    }
+
+    const { data, error } = await query
 
     if (error) {
       throw new Error(`Failed to fetch health data: ${error.message}`)
@@ -312,15 +320,21 @@ export class WellnessExportService {
     selectedMetrics: string[],
     startY: number
   ): number {
-    const days = parseInt(timeFrame)
-    const cutoffDate = subDays(new Date(), days)
-    const filteredData = healthData.filter(metric =>
-      parseISO(metric.date) >= cutoffDate
-    )
+    const isMaxRange = timeFrame === 'max'
+    const days = isMaxRange ? 0 : parseInt(timeFrame)
+
+    const filteredData = isMaxRange
+      ? healthData
+      : healthData.filter(metric => {
+          const cutoffDate = subDays(new Date(), days)
+          return parseISO(metric.date) >= cutoffDate
+        })
+
+    const timeRangeText = isMaxRange ? 'All Time' : `Last ${days} days`
 
     pdf.setFontSize(14)
     pdf.setTextColor(51, 51, 51)
-    pdf.text(`Summary Statistics (Last ${days} days)`, this.PAGE_MARGIN_LEFT, startY)
+    pdf.text(`Summary Statistics (${timeRangeText})`, this.PAGE_MARGIN_LEFT, startY)
 
     let yPosition = startY + 15
 
@@ -426,15 +440,21 @@ export class WellnessExportService {
     startY: number,
     chartImages?: ChartImage[]
   ): number {
-    const days = parseInt(chart.timeRange)
-    const cutoffDate = subDays(new Date(), days)
-    const filteredData = healthData.filter(metric =>
-      parseISO(metric.date) >= cutoffDate
-    )
+    const isMaxRange = chart.timeRange === 'max'
+    const days = isMaxRange ? 0 : parseInt(chart.timeRange)
+
+    const filteredData = isMaxRange
+      ? healthData
+      : healthData.filter(metric => {
+          const cutoffDate = subDays(new Date(), days)
+          return parseISO(metric.date) >= cutoffDate
+        })
+
+    const timeRangeText = isMaxRange ? 'All Time' : `${days} days`
 
     console.log(`📈 Chart section for "${chart.name}":`, {
-      timeRangeDays: days,
-      cutoffDate: cutoffDate.toISOString(),
+      timeRange: chart.timeRange,
+      timeRangeText,
       totalHealthData: healthData.length,
       filteredDataLength: filteredData.length,
       selectedMetrics: chart.selectedMetrics,
@@ -448,7 +468,7 @@ export class WellnessExportService {
 
     pdf.setFontSize(9)
     pdf.setTextColor(102, 102, 102)
-    pdf.text(`Time Range: ${days} days | Normalization: ${chart.isNormalized ? 'On' : 'Off'}`, this.PAGE_MARGIN_LEFT, startY + 7)
+    pdf.text(`Time Range: ${timeRangeText} | Normalization: ${chart.isNormalized ? 'On' : 'Off'}`, this.PAGE_MARGIN_LEFT, startY + 7)
 
     let yPosition = startY + 15
 
