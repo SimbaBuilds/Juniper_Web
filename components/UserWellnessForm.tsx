@@ -5,11 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Save, X, Edit2, ChevronDown, ChevronUp, Heart } from 'lucide-react'
 
 interface UserWellnessData {
   id?: string
   user_id?: string
+  age: string
+  sex: string
   goals: string
   status_progress: string
   fav_activities: string
@@ -26,6 +30,8 @@ export function UserWellnessForm() {
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<UserWellnessData>({
+    age: '',
+    sex: '',
     goals: '',
     status_progress: '',
     fav_activities: '',
@@ -33,6 +39,8 @@ export function UserWellnessForm() {
   })
 
   const [originalData, setOriginalData] = useState<UserWellnessData>({
+    age: '',
+    sex: '',
     goals: '',
     status_progress: '',
     fav_activities: '',
@@ -75,6 +83,23 @@ export function UserWellnessForm() {
       setSaving(true)
       setError(null)
 
+      // Validate age
+      if (!formData.age) {
+        setError('Age is required')
+        return
+      }
+      const ageNum = parseInt(formData.age)
+      if (isNaN(ageNum) || ageNum < 0 || ageNum > 120) {
+        setError('Age must be between 0 and 120')
+        return
+      }
+
+      // Validate sex
+      if (!formData.sex) {
+        setError('Sex is required')
+        return
+      }
+
       // Validate misc_info length
       if (formData.misc_info && formData.misc_info.length > 2000) {
         setError('Miscellaneous info must be less than 2000 characters')
@@ -87,6 +112,8 @@ export function UserWellnessForm() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          age: ageNum,
+          sex: formData.sex,
           goals: formData.goals,
           status_progress: formData.status_progress,
           fav_activities: formData.fav_activities,
@@ -121,7 +148,7 @@ export function UserWellnessForm() {
     setIsEditing(true)
   }
 
-  const hasContent = formData.goals || formData.status_progress || formData.fav_activities || formData.misc_info
+  const hasContent = formData.age || formData.sex || formData.goals || formData.status_progress || formData.fav_activities || formData.misc_info
 
   if (loading) {
     return (
@@ -197,6 +224,66 @@ export function UserWellnessForm() {
           )}
 
           <div className="space-y-4">
+            {/* Age */}
+            <div className="space-y-2">
+              <Label htmlFor="age" className="text-sm font-medium">
+                Age <span className="text-destructive">*</span>
+              </Label>
+              {isEditing ? (
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="Enter your age"
+                  value={formData.age}
+                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                  min="0"
+                  max="120"
+                  disabled={saving}
+                  required
+                />
+              ) : (
+                <div className="p-3 rounded-md border bg-muted/50">
+                  {formData.age ? (
+                    <p className="text-sm">{formData.age}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No age set</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Sex */}
+            <div className="space-y-2">
+              <Label htmlFor="sex" className="text-sm font-medium">
+                Sex <span className="text-destructive">*</span>
+              </Label>
+              {isEditing ? (
+                <Select
+                  value={formData.sex}
+                  onValueChange={(value) => setFormData({ ...formData, sex: value })}
+                  disabled={saving}
+                  required
+                >
+                  <SelectTrigger id="sex">
+                    <SelectValue placeholder="Select sex" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 rounded-md border bg-muted/50">
+                  {formData.sex ? (
+                    <p className="text-sm">{formData.sex}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No sex set</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Goals */}
             <div className="space-y-2">
               <Label htmlFor="goals" className="text-sm font-medium">

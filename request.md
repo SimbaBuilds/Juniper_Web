@@ -1,2 +1,17 @@
-To the public landing page, please add below the Ready to get Started section.  Unlock voice options and Pixel/Apple Watch integrations with our mobile apps!  Apple App Store: https://apps.apple.com/us/app/juniperai/id6749830751
-G Play Store app available via Closed Testing - please contact /support for access
+I've added the below metrics to the health metrics daily.  If the metrics list for the trends chart and summary charts on the wellness screen does not come directly from the database.  Please add these metrics to the shared metrics list in the apprpriate category.
+
+Metrics:
+
+- [x]  triglycerides
+- [x]  triglycerides_to_hdl
+- [x]  hba1c
+- [x]  hscrp
+- [x]  apob
+- [x]  alt
+- [x]  ast
+- [x]  uric_acid
+- [x]  crp
+- [x]  ggt
+- [x]  vitamin_d
+- [x]  hdl
+- [x]  fasting_insulin

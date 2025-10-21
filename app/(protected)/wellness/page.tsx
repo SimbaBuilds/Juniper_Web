@@ -306,6 +306,86 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
     label: 'Menstruation Flow',
     group: 'Women\'s Health',
     color: { light: '#be185d', dark: '#ec4899' }
+  },
+
+  // Lab Results (Blood Work)
+  {
+    key: 'triglycerides',
+    label: 'Triglycerides',
+    group: 'Lab Results',
+    color: { light: '#b91c1c', dark: '#f87171' }
+  },
+  {
+    key: 'triglycerides_to_hdl',
+    label: 'Triglycerides to HDL Ratio',
+    group: 'Lab Results',
+    color: { light: '#dc2626', dark: '#ef4444' }
+  },
+  {
+    key: 'hba1c',
+    label: 'HbA1c',
+    group: 'Lab Results',
+    color: { light: '#ea580c', dark: '#fb923c' }
+  },
+  {
+    key: 'hscrp',
+    label: 'hs-CRP',
+    group: 'Lab Results',
+    color: { light: '#d97706', dark: '#fbbf24' }
+  },
+  {
+    key: 'apob',
+    label: 'ApoB',
+    group: 'Lab Results',
+    color: { light: '#ca8a04', dark: '#facc15' }
+  },
+  {
+    key: 'alt',
+    label: 'ALT',
+    group: 'Lab Results',
+    color: { light: '#65a30d', dark: '#a3e635' }
+  },
+  {
+    key: 'ast',
+    label: 'AST',
+    group: 'Lab Results',
+    color: { light: '#16a34a', dark: '#4ade80' }
+  },
+  {
+    key: 'uric_acid',
+    label: 'Uric Acid',
+    group: 'Lab Results',
+    color: { light: '#0891b2', dark: '#22d3ee' }
+  },
+  {
+    key: 'crp',
+    label: 'CRP',
+    group: 'Lab Results',
+    color: { light: '#0284c7', dark: '#38bdf8' }
+  },
+  {
+    key: 'ggt',
+    label: 'GGT',
+    group: 'Lab Results',
+    color: { light: '#2563eb', dark: '#60a5fa' }
+  },
+  {
+    key: 'vitamin_d',
+    label: 'Vitamin D',
+    group: 'Lab Results',
+    color: { light: '#7c3aed', dark: '#a78bfa' }
+  },
+  {
+    key: 'hdl',
+    label: 'HDL Cholesterol',
+    group: 'Lab Results',
+    color: { light: '#9333ea', dark: '#c084fc' }
+  },
+  {
+    key: 'fasting_insulin',
+    label: 'Fasting Insulin',
+    group: 'Lab Results',
+    color: { light: '#c026d3', dark: '#e879f9' }
   }
 ]
 
@@ -321,6 +401,7 @@ const METRIC_PRESETS = {
   blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],
+  labs: ['triglycerides', 'triglycerides_to_hdl', 'hdl', 'hba1c', 'hscrp', 'apob', 'alt', 'ast', 'ggt', 'uric_acid', 'crp', 'vitamin_d', 'fasting_insulin'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 
@@ -574,6 +655,14 @@ function MetricsSelector({ selectedMetrics, onSelectionChange, isDarkMode, mode,
           className="h-7 px-2 text-xs"
         >
           Nutrition
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyPreset('labs')}
+          className="h-7 px-2 text-xs"
+        >
+          Labs
         </Button>
         <Button
           variant="outline"
@@ -1110,7 +1199,8 @@ function TrendChart({
                         stroke={getMetricColor(metricKey, isDarkMode)}
                         strokeWidth={2}
                         name={metric.label}
-                        connectNulls={false}
+                        connectNulls={true}
+                        dot={false}
                       />
                     )
                   })}
@@ -1590,7 +1680,22 @@ export default function WellnessPage() {
     nutrition_calories: calculateAverage('nutrition_calories'),
 
     // Women's Health
-    menstruation_flow: calculateAverage('menstruation_flow')
+    menstruation_flow: calculateAverage('menstruation_flow'),
+
+    // Lab Results
+    triglycerides: calculateAverage('triglycerides'),
+    triglycerides_to_hdl: calculateAverage('triglycerides_to_hdl'),
+    hba1c: calculateAverage('hba1c'),
+    hscrp: calculateAverage('hscrp'),
+    apob: calculateAverage('apob'),
+    alt: calculateAverage('alt'),
+    ast: calculateAverage('ast'),
+    uric_acid: calculateAverage('uric_acid'),
+    crp: calculateAverage('crp'),
+    ggt: calculateAverage('ggt'),
+    vitamin_d: calculateAverage('vitamin_d'),
+    hdl: calculateAverage('hdl'),
+    fasting_insulin: calculateAverage('fasting_insulin')
   } : null
 
   // Helper function to prepare chart data for a specific data set
@@ -1648,7 +1753,22 @@ export default function WellnessPage() {
       nutrition_calories: (d.nutrition_calories && d.nutrition_calories > 0) ? d.nutrition_calories : null,
 
       // Women's health
-      menstruation_flow: (d.menstruation_flow && d.menstruation_flow > 0) ? d.menstruation_flow : null
+      menstruation_flow: (d.menstruation_flow && d.menstruation_flow > 0) ? d.menstruation_flow : null,
+
+      // Lab results
+      triglycerides: (d.triglycerides && d.triglycerides > 0) ? d.triglycerides : null,
+      triglycerides_to_hdl: (d.triglycerides_to_hdl && d.triglycerides_to_hdl > 0) ? d.triglycerides_to_hdl : null,
+      hba1c: (d.hba1c && d.hba1c > 0) ? d.hba1c : null,
+      hscrp: (d.hscrp && d.hscrp > 0) ? d.hscrp : null,
+      apob: (d.apob && d.apob > 0) ? d.apob : null,
+      alt: (d.alt && d.alt > 0) ? d.alt : null,
+      ast: (d.ast && d.ast > 0) ? d.ast : null,
+      uric_acid: (d.uric_acid && d.uric_acid > 0) ? d.uric_acid : null,
+      crp: (d.crp && d.crp > 0) ? d.crp : null,
+      ggt: (d.ggt && d.ggt > 0) ? d.ggt : null,
+      vitamin_d: (d.vitamin_d && d.vitamin_d > 0) ? d.vitamin_d : null,
+      hdl: (d.hdl && d.hdl > 0) ? d.hdl : null,
+      fasting_insulin: (d.fasting_insulin && d.fasting_insulin > 0) ? d.fasting_insulin : null
     }))
   }
 
@@ -1865,6 +1985,7 @@ export default function WellnessPage() {
               const IconComponent = cardConfig.group === 'Sleep' || cardKey.includes('sleep') ? Moon :
                                    cardConfig.group === 'Activity' || cardKey.includes('steps') || cardKey.includes('calories') || cardKey.includes('exercise') ? Activity :
                                    cardConfig.group === 'Vitals' || cardKey.includes('hr') || cardKey.includes('blood') || cardKey.includes('oxygen') ? Heart :
+                                   cardConfig.group === 'Lab Results' ? Heart :
                                    cardConfig.group === 'Recovery' || cardKey.includes('score') ? TrendingUp : Activity
 
               // Determine unit
@@ -1887,6 +2008,15 @@ export default function WellnessPage() {
                           cardKey === 'time_in_daylight' ? 'hours' :
                           cardKey === 'hydration' ? 'ml' :
                           cardKey === 'menstruation_flow' ? 'level' :
+                          cardKey === 'triglycerides' || cardKey === 'hdl' ? 'mg/dL' :
+                          cardKey === 'triglycerides_to_hdl' ? 'ratio' :
+                          cardKey === 'hba1c' ? '%' :
+                          cardKey === 'hscrp' || cardKey === 'crp' ? 'mg/L' :
+                          cardKey === 'apob' ? 'mg/dL' :
+                          cardKey === 'alt' || cardKey === 'ast' || cardKey === 'ggt' ? 'U/L' :
+                          cardKey === 'uric_acid' ? 'mg/dL' :
+                          cardKey === 'vitamin_d' ? 'ng/mL' :
+                          cardKey === 'fasting_insulin' ? 'μU/mL' :
                           cardKey.includes('score') ? '/100' : ''
 
               // Determine tooltip
@@ -1922,6 +2052,19 @@ export default function WellnessPage() {
                              cardKey === 'hydration' ? 'Average daily water intake.' :
                              cardKey === 'nutrition_calories' ? 'Average calories consumed per day.' :
                              cardKey === 'menstruation_flow' ? 'Menstruation flow intensity level.' :
+                             cardKey === 'triglycerides' ? 'Average triglyceride level - a type of fat in your blood.' :
+                             cardKey === 'triglycerides_to_hdl' ? 'Ratio of triglycerides to HDL cholesterol - important cardiovascular risk marker.' :
+                             cardKey === 'hba1c' ? 'Average blood sugar level over the past 2-3 months.' :
+                             cardKey === 'hscrp' ? 'High-sensitivity C-Reactive Protein - inflammation marker for cardiovascular risk.' :
+                             cardKey === 'apob' ? 'Apolipoprotein B - particle count marker for cardiovascular risk.' :
+                             cardKey === 'alt' ? 'Alanine Aminotransferase - liver enzyme indicating liver health.' :
+                             cardKey === 'ast' ? 'Aspartate Aminotransferase - liver enzyme indicating liver health.' :
+                             cardKey === 'ggt' ? 'Gamma-Glutamyl Transferase - liver enzyme indicating liver and bile duct health.' :
+                             cardKey === 'uric_acid' ? 'Uric acid level - related to gout and kidney function.' :
+                             cardKey === 'crp' ? 'C-Reactive Protein - general inflammation marker.' :
+                             cardKey === 'vitamin_d' ? 'Vitamin D level - important for bone health and immune function.' :
+                             cardKey === 'hdl' ? 'HDL (good) cholesterol - higher levels are generally better.' :
+                             cardKey === 'fasting_insulin' ? 'Fasting insulin level - marker of insulin sensitivity and metabolic health.' :
                              'Health metric average for selected period.'
 
               return (

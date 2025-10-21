@@ -42,7 +42,23 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json()
-    const { goals, status_progress, fav_activities, misc_info } = body
+    const { age, sex, goals, status_progress, fav_activities, misc_info } = body
+
+    // Validate age
+    if (age === undefined || age === null || age === '') {
+      return NextResponse.json({ error: 'age is required' }, { status: 400 })
+    }
+    if (typeof age !== 'number' || age < 0 || age > 120) {
+      return NextResponse.json({ error: 'age must be between 0 and 120' }, { status: 400 })
+    }
+
+    // Validate sex
+    if (!sex) {
+      return NextResponse.json({ error: 'sex is required' }, { status: 400 })
+    }
+    if (!['Male', 'Female', 'Other'].includes(sex)) {
+      return NextResponse.json({ error: 'sex must be Male, Female, or Other' }, { status: 400 })
+    }
 
     // Validate misc_info length
     if (misc_info && misc_info.length > 2000) {
@@ -61,6 +77,8 @@ export async function POST(request: Request) {
       const { data, error } = await supabase
         .from('user_wellness')
         .update({
+          age,
+          sex,
           goals,
           status_progress,
           fav_activities,
@@ -83,6 +101,8 @@ export async function POST(request: Request) {
         .from('user_wellness')
         .insert({
           user_id: user.id,
+          age,
+          sex,
           goals,
           status_progress,
           fav_activities,
