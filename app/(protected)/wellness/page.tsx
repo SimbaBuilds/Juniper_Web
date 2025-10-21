@@ -160,7 +160,7 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
   {
     key: 'blood_glucose',
     label: 'Blood Glucose',
-    group: 'Vitals',
+    group: 'Lab Results',
     color: { light: '#c2410c', dark: '#fb923c' }
   },
   {
@@ -392,16 +392,15 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
 
 // Metric presets for quick selection
 const METRIC_PRESETS = {
-  vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'oxygen_saturation'],
+  vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'blood_pressure_diastolic', 'oxygen_saturation'],
   activity: ['activity_score', 'total_steps', 'calories_burned', 'exercise_minutes', 'active_energy', 'distance'],
   recovery: ['sleep_score', 'readiness_score', 'recovery_score'],
   wellness: ['stress_level', 'resilience_score'],
-  sleep: ['time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
+  sleep: ['sleep_score', 'time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
   body: ['weight', 'body_fat_percentage', 'lean_body_mass', 'basal_metabolic_rate'],
-  blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],
-  labs: ['triglycerides', 'triglycerides_to_hdl', 'hdl', 'hba1c', 'hscrp', 'apob', 'alt', 'ast', 'ggt', 'uric_acid', 'crp', 'vitamin_d', 'fasting_insulin'],
+  labs: ['blood_glucose', 'triglycerides', 'triglycerides_to_hdl', 'hdl', 'hba1c', 'hscrp', 'apob', 'alt', 'ast', 'ggt', 'uric_acid', 'crp', 'vitamin_d', 'fasting_insulin'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 
@@ -631,14 +630,6 @@ function MetricsSelector({ selectedMetrics, onSelectionChange, isDarkMode, mode,
           className="h-7 px-2 text-xs"
         >
           Body
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => applyPreset('blood')}
-          className="h-7 px-2 text-xs"
-        >
-          Blood
         </Button>
         <Button
           variant="outline"
