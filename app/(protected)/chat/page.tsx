@@ -20,7 +20,7 @@ interface Message {
   imageUrl?: string
 }
 
-const AUTO_CLEAR_DELAY = 10 * 60 * 1000 // 10 minutes
+const AUTO_CLEAR_DELAY = 30 * 60 * 1000 // 10 minutes
 const MINIMUM_LOADING_TIME = 2000 // 2 seconds minimum loading display
 
 export default function ChatPage() {
