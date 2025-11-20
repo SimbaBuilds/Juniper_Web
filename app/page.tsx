@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Mic, 
-  Brain, 
+import {
+  Mic,
+  Brain,
   Zap,
   Smartphone,
   Play
@@ -19,6 +19,19 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/utils/supabase/client'
 import { ContactForm } from './components/contact-form'
+import { motion } from 'framer-motion'
+import {
+  fadeInUp,
+  fadeInScale,
+  staggerContainer,
+  staggerContainerSlow,
+  cardHover,
+  heroTitle,
+  heroSubtitle,
+  heroButtons,
+  sectionReveal,
+  playButtonPulse,
+} from './lib/animations'
 
 const publicServicesCount = getPublicServices().length;
 
@@ -29,9 +42,9 @@ const demoVideos = [
     thumbnail: "https://img.youtube.com/vi/FmxwgpCW_7A/maxresdefault.jpg"
   },
   {
-    id: "3n_l7NohHrk",
-    title: "Email Integration Flow",
-    thumbnail: "https://img.youtube.com/vi/3n_l7NohHrk/maxresdefault.jpg"
+    id: "f9xjc4oKap0",
+    title: "Juniper Guides Through Somatic Therapy",
+    thumbnail: "https://img.youtube.com/vi/f9xjc4oKap0/maxresdefault.jpg"
   },
   {
     id: "vfv6uGq42DY",
@@ -127,12 +140,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       {/* Header */}
-      <header className="container mx-auto px-4 py-8">
+      <motion.header
+        className="container mx-auto px-4 py-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <nav className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <motion.div
+            className="flex items-center space-x-2"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
             <Brain className="h-8 w-8" style={{color: 'var(--muted-blue)'}} />
             <Link href="/" className="text-2xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer">Juniper</Link>
-          </div>
+          </motion.div>
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-6">
               <Link href="/blog" className="text-foreground hover:text-primary transition-colors">
@@ -168,80 +190,138 @@ export default function HomePage() {
             <PublicMobileMenu user={user} loading={loading} />
           </div>
         </nav>
-      </header>
+      </motion.header>
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl font-bold text-foreground mb-6">
-          An AI Assistant for 
- 
+          <motion.h2
+            className="text-5xl font-bold text-foreground mb-6"
+            variants={heroTitle}
+            initial="hidden"
+            animate="visible"
+          >
+            An AI Assistant for
             <span style={{color: 'var(--muted-blue)'}}> Wellness and Productivity</span>
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Add intelligence to your interactions with your wearable devices.
-            Connect productivity services like Gmail, Slack, and Notion.
-            Live well.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          </motion.h2>
+          <motion.p
+            className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            variants={heroSubtitle}
+            initial="hidden"
+            animate="visible"
+          >
+            Energetic balance and lifestlye over pills and scalpels. <br />
+            Utilizes your wearable devices and medical data. <br />
+            Connects with productivity services like Gmail, Slack, and Notion.
+          </motion.p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            variants={heroButtons}
+            initial="hidden"
+            animate="visible"
+          >
             {user ? (
               <Link href="/dashboard">
-                <Button size="lg" className="text-lg px-8 py-3">
-                  Go to Dashboard
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="lg" className="text-lg px-8 py-3">
+                    Go to Dashboard
+                  </Button>
+                </motion.div>
               </Link>
             ) : (
               <>
                 <Link href="/signup">
-                  <Button size="lg" className="text-lg px-8 py-3">
-                    Get Started
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                    <Button size="lg" className="text-lg px-8 py-3">
+                      Get Started
+                    </Button>
+                  </motion.div>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                    Sign In
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                    <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                      Sign In
+                    </Button>
+                  </motion.div>
                 </Link>
               </>
             )}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <motion.section
+        className="container mx-auto px-4 py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold text-foreground mb-4">Powerful Features</h3>
-          <p className="text-lg text-muted-foreground">Experience the future of mobile productivity</p>
+          <p className="text-lg text-muted-foreground">Experience the future of AI for Wellness</p>
         </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+        >
           {features.map((feature, index) => (
-            <Card key={index} className="text-center border border-border shadow-lg bg-muted">
-              <CardHeader>
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg text-foreground">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={index}
+              variants={fadeInUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <Card className="text-center border border-border shadow-lg bg-muted h-full">
+                <CardHeader>
+                  <motion.div
+                    className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </motion.div>
+                  <CardTitle className="text-lg text-foreground">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* Demos Section */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30">
+      <motion.section
+        className="container mx-auto px-4 py-16 bg-muted/30"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold text-foreground mb-4">Demos</h3>
           <p className="text-lg text-muted-foreground">See Juniper in action</p>
         </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto"
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+        >
           {demoVideos.map((video) => (
-            <div key={video.id} className="relative group">
+            <motion.div
+              key={video.id}
+              className="relative group"
+              variants={fadeInScale}
+            >
               {playingVideo === video.id ? (
                 <div className="relative overflow-hidden rounded-lg">
                   <iframe
@@ -256,46 +336,70 @@ export default function HomePage() {
                   ></iframe>
                 </div>
               ) : (
-                <div 
+                <motion.div
                   className="relative cursor-pointer overflow-hidden rounded-lg group"
                   onClick={() => setPlayingVideo(video.id)}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <img
                     src={video.thumbnail}
                     alt={video.title}
-                    className="w-full h-64 object-cover rounded-lg transition-transform duration-200 group-hover:scale-105"
+                    className="w-full h-64 object-cover rounded-lg"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors rounded-lg"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white/90 hover:bg-white rounded-full p-4 transition-all duration-200 group-hover:scale-110">
+                    <motion.div
+                      className="bg-white/90 hover:bg-white rounded-full p-4"
+                      whileHover={{ scale: 1.15 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <Play className="w-6 h-6 text-gray-700 ml-1" fill="currentColor" />
-                    </div>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               )}
               <h4 className="text-lg font-semibold text-foreground mt-4 text-center">{video.title}</h4>
-            </div>
+            </motion.div>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* Integrations Section */}
-      <section className="container mx-auto px-4 py-16">
+      <motion.section
+        className="container mx-auto px-4 py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="text-center">
           <h3 className="text-3xl font-bold text-foreground mb-4">Explore Our Integrations</h3>
           <p className="text-lg text-muted-foreground mb-8">
             Connect Juniper with your favorite apps and services
           </p>
           <Link href="/integration-descriptions">
-            <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-              View Integrations
-            </Button>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-block"
+            >
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                View Integrations
+              </Button>
+            </motion.div>
           </Link>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA Section */}
-      <section className="bg-primary text-primary-foreground py-16">
+      <motion.section
+        className="bg-primary text-primary-foreground py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
           <p className="text-xl mb-8 text-primary-foreground/80">
@@ -303,22 +407,40 @@ export default function HomePage() {
           </p>
           {user ? (
             <Link href="/dashboard">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-                Go to Dashboard
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-block"
+              >
+                <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+                  Go to Dashboard
+                </Button>
+              </motion.div>
             </Link>
           ) : (
             <Link href="/signup">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-                Sign Up Now
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-block"
+              >
+                <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+                  Sign Up Now
+                </Button>
+              </motion.div>
             </Link>
           )}
         </div>
-      </section>
+      </motion.section>
 
       {/* Mobile Apps Section */}
-      <section className="container mx-auto px-4 py-16">
+      <motion.section
+        className="container mx-auto px-4 py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="text-center">
           <h3 className="text-3xl font-bold text-foreground mb-4">Unlock Voice Options and Wearable Integrations</h3>
           <p className="text-lg text-muted-foreground mb-8">
@@ -330,31 +452,47 @@ export default function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                <Smartphone className="mr-2 h-5 w-5" />
-                Download on App Store
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                  <Smartphone className="mr-2 h-5 w-5" />
+                  Download on App Store
+                </Button>
+              </motion.div>
             </a>
             <Link href="/support">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                <Smartphone className="mr-2 h-5 w-5" />
-                Google Play (Closed Testing)
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                  <Smartphone className="mr-2 h-5 w-5" />
+                  Google Play (Closed Testing)
+                </Button>
+              </motion.div>
             </Link>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
             Google Play Store app available via Closed Testing - contact support for access
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Business Contact Section */}
-      <section className="py-16">
+      <motion.section
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={sectionReveal}
+      >
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-8">
             <h3 className="text-3xl font-bold mb-4">Want Something Like Juniper for Your Business?</h3>
             <p className="text-lg text-muted-foreground">
-              We can help you build custom AI-powered systems tailored to your specific needs. 
+              We can help you build custom AI-powered systems tailored to your specific needs.
               Get in touch to discuss how we can transform your business with intelligent and reliable systems.
             </p>
           </div>
@@ -362,10 +500,16 @@ export default function HomePage() {
             <ContactForm variant="business" />
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Footer */}
-      <footer className="bg-background border-t border-border py-12">
+      <motion.footer
+        className="bg-background border-t border-border py-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
@@ -407,7 +551,7 @@ export default function HomePage() {
             <p>&copy; 2025 Juniper. All rights reserved.</p>
           </div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   )
 }
