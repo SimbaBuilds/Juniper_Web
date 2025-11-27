@@ -737,24 +737,6 @@ export default function ChatPage() {
 
         const supabase = createClient()
 
-        // Save messages to the existing conversation
-        const messagesToSave = messages.map(msg => ({
-          conversation_id: conversationId,
-          user_id: user.id,
-          role: msg.role,
-          content: msg.content,
-          metadata: {},
-          created_at: new Date(msg.timestamp).toISOString()
-        }))
-
-        const { data: savedMessages, error: msgError } = await supabase.from('messages').insert(messagesToSave)
-        console.log('[CHAT] Messages save result:', {
-          conversation_id: conversationId,
-          saved_count: savedMessages?.length || 0,
-          error: msgError?.message || null,
-          timestamp: new Date().toISOString()
-        });
-
         // Update conversation status to completed
         const { error: convUpdateError } = await supabase
           .from('conversations')
