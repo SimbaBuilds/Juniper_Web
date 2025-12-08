@@ -290,14 +290,24 @@ export function UserWellnessForm() {
                 Goals
               </Label>
               {isEditing ? (
-                <Textarea
-                  id="goals"
-                  placeholder="What are your wellness goals?"
-                  value={formData.goals}
-                  onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
-                  className="min-h-[100px]"
-                  disabled={saving}
-                />
+                <>
+                  <Textarea
+                    id="goals"
+                    placeholder="What are your wellness goals?"
+                    value={formData.goals}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 2000) {
+                        setFormData({ ...formData, goals: e.target.value })
+                      }
+                    }}
+                    className="min-h-[100px]"
+                    disabled={saving}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {formData.goals.length}/2000 characters
+                  </p>
+                </>
               ) : (
                 <div className="min-h-[100px] p-3 rounded-md border bg-muted/50">
                   {formData.goals ? (
@@ -315,14 +325,24 @@ export function UserWellnessForm() {
                 Status & Progress
               </Label>
               {isEditing ? (
-                <Textarea
-                  id="status_progress"
-                  placeholder="How are you progressing towards your goals?"
-                  value={formData.status_progress}
-                  onChange={(e) => setFormData({ ...formData, status_progress: e.target.value })}
-                  className="min-h-[100px]"
-                  disabled={saving}
-                />
+                <>
+                  <Textarea
+                    id="status_progress"
+                    placeholder="How are you progressing towards your goals?"
+                    value={formData.status_progress}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 2000) {
+                        setFormData({ ...formData, status_progress: e.target.value })
+                      }
+                    }}
+                    className="min-h-[100px]"
+                    disabled={saving}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {formData.status_progress.length}/2000 characters
+                  </p>
+                </>
               ) : (
                 <div className="min-h-[100px] p-3 rounded-md border bg-muted/50">
                   {formData.status_progress ? (
@@ -340,14 +360,24 @@ export function UserWellnessForm() {
                 Favorite Activities
               </Label>
               {isEditing ? (
-                <Textarea
-                  id="fav_activities"
-                  placeholder="What activities do you enjoy for wellness?"
-                  value={formData.fav_activities}
-                  onChange={(e) => setFormData({ ...formData, fav_activities: e.target.value })}
-                  className="min-h-[100px]"
-                  disabled={saving}
-                />
+                <>
+                  <Textarea
+                    id="fav_activities"
+                    placeholder="What activities do you enjoy for wellness?"
+                    value={formData.fav_activities}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 2000) {
+                        setFormData({ ...formData, fav_activities: e.target.value })
+                      }
+                    }}
+                    className="min-h-[100px]"
+                    disabled={saving}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {formData.fav_activities.length}/2000 characters
+                  </p>
+                </>
               ) : (
                 <div className="min-h-[100px] p-3 rounded-md border bg-muted/50">
                   {formData.fav_activities ? (
