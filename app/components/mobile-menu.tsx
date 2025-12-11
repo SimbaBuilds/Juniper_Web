@@ -54,16 +54,24 @@ export function MobileMenu({ userEmail }: MobileMenuProps) {
             </Link>
           </SheetClose>
           <SheetClose asChild>
-            <Link 
-              href="/integrations" 
+            <Link
+              href="/integrations"
               className="text-base text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               Integrations
             </Link>
           </SheetClose>
           <SheetClose asChild>
-            <Link 
-              href="/repository" 
+            <Link
+              href="/automations"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              Automations
+            </Link>
+          </SheetClose>
+          <SheetClose asChild>
+            <Link
+              href="/repository"
               className="text-base text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               Repository
