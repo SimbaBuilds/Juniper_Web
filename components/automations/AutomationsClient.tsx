@@ -15,7 +15,8 @@ import {
   XCircle,
   Loader2,
   Settings,
-  History
+  History,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -30,8 +31,25 @@ import {
   DialogFooter,
   DialogDescription
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { createClient } from '@/lib/utils/supabase/client';
 import type { AutomationRecord, AutomationExecutionLog, AutomationAction } from '@/app/lib/automations/types';
 
@@ -58,6 +76,44 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
   const [logsHasMore, setLogsHasMore] = useState<Record<string, boolean>>({});
   const [editingAutomation, setEditingAutomation] = useState<AutomationRecord | null>(null);
   const [editValues, setEditValues] = useState<Record<string, unknown>>({});
+  const [deletingAutomation, setDeletingAutomation] = useState<AutomationRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Filters
+  const [filterService, setFilterService] = useState<string>('all');
+  const [filterTriggerType, setFilterTriggerType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Get unique services from automations
+  const uniqueServices = Array.from(
+    new Set(
+      automations
+        .map(a => a.trigger_config?.service)
+        .filter((s): s is string => !!s)
+    )
+  ).sort();
+
+  // Filter automations
+  const filteredAutomations = automations.filter(automation => {
+    // Filter by service
+    if (filterService !== 'all') {
+      const service = automation.trigger_config?.service;
+      if (service !== filterService) return false;
+    }
+
+    // Filter by trigger type
+    if (filterTriggerType !== 'all') {
+      if (automation.trigger_type !== filterTriggerType) return false;
+    }
+
+    // Filter by status
+    if (filterStatus !== 'all') {
+      if (filterStatus === 'active' && !automation.active) return false;
+      if (filterStatus === 'paused' && automation.active) return false;
+    }
+
+    return true;
+  });
 
   // Fetch automations
   const fetchAutomations = useCallback(async () => {
@@ -360,6 +416,43 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
     }
   };
 
+  // Delete automation
+  const handleDelete = async () => {
+    if (!deletingAutomation) return;
+
+    setIsDeleting(true);
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .schema('automations')
+        .from('automation_records')
+        .delete()
+        .eq('id', deletingAutomation.id);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setAutomations(prev => prev.filter(a => a.id !== deletingAutomation.id));
+
+      // Clean up any cached logs
+      setLogs(prev => {
+        const newLogs = { ...prev };
+        delete newLogs[deletingAutomation.id];
+        return newLogs;
+      });
+
+      toast.success(`Automation "${deletingAutomation.name}" deleted`);
+      setDeletingAutomation(null);
+    } catch (error) {
+      console.error('Error deleting automation:', error);
+      toast.error('Failed to delete automation');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Format relative time
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -506,6 +599,8 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
   const activeAutomations = automations.filter(a => a.active);
   const inactiveAutomations = automations.filter(a => !a.active);
 
+  const hasActiveFilters = filterService !== 'all' || filterTriggerType !== 'all' || filterStatus !== 'all';
+
   return (
     <div className="space-y-8">
       {/* Overview Stats */}
@@ -529,6 +624,82 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="bg-card p-4 rounded-lg border border-border">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="filter-status" className="text-sm text-muted-foreground whitespace-nowrap">Status:</Label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger id="filter-status" className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label htmlFor="filter-trigger" className="text-sm text-muted-foreground whitespace-nowrap">Trigger:</Label>
+            <Select value={filterTriggerType} onValueChange={setFilterTriggerType}>
+              <SelectTrigger id="filter-trigger" className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="webhook">Webhook</SelectItem>
+                <SelectItem value="schedule_recurring">Scheduled</SelectItem>
+                <SelectItem value="schedule_once">One-time</SelectItem>
+                <SelectItem value="manual">Manual</SelectItem>
+                <SelectItem value="polling">Polling</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {uniqueServices.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor="filter-service" className="text-sm text-muted-foreground whitespace-nowrap">Service:</Label>
+              <Select value={filterService} onValueChange={setFilterService}>
+                <SelectTrigger id="filter-service" className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {uniqueServices.map(service => (
+                    <SelectItem key={service} value={service}>
+                      {service}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterStatus('all');
+                setFilterTriggerType('all');
+                setFilterService('all');
+              }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Clear Filters
+            </Button>
+          )}
+
+          {hasActiveFilters && (
+            <span className="text-sm text-muted-foreground ml-auto">
+              Showing {filteredAutomations.length} of {automations.length}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Automations List */}
       <div className="space-y-6">
         <div>
@@ -545,9 +716,28 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
               Ask your assistant to create automations that can respond to triggers like email, calendar events, or schedules.
             </p>
           </div>
+        ) : filteredAutomations.length === 0 ? (
+          <div className="bg-card p-8 rounded-lg border border-border text-center">
+            <h3 className="text-lg font-medium text-foreground mb-2">No matching automations</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your filters to see more automations.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFilterStatus('all');
+                setFilterTriggerType('all');
+                setFilterService('all');
+              }}
+              className="mt-4"
+            >
+              Clear Filters
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
-            {automations.map((automation) => {
+            {filteredAutomations.map((automation) => {
               const triggerConfig = triggerTypeConfig[automation.trigger_type] || triggerTypeConfig.manual;
               const TriggerIcon = triggerConfig.icon;
               const isLoading = loadingStates[automation.id];
@@ -574,22 +764,24 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        {/* Trigger button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleTrigger(automation)}
-                          disabled={isLoading?.trigger}
-                        >
-                          {isLoading?.trigger ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Play className="w-4 h-4 mr-1" />
-                              Run Now
-                            </>
-                          )}
-                        </Button>
+                        {/* Trigger button - only for manual and scheduled automations */}
+                        {['manual', 'schedule_recurring', 'schedule_once'].includes(automation.trigger_type) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTrigger(automation)}
+                            disabled={isLoading?.trigger}
+                          >
+                            {isLoading?.trigger ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-1" />
+                                Run Now
+                              </>
+                            )}
+                          </Button>
+                        )}
 
                         {/* Active toggle */}
                         <div className="flex items-center gap-2">
@@ -673,6 +865,16 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
                       >
                         <Settings className="w-4 h-4 mr-1" />
                         Edit
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletingAutomation(automation)}
+                        className="text-muted-foreground hover:text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>
@@ -768,6 +970,36 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingAutomation} onOpenChange={(open) => !open && setDeletingAutomation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Automation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingAutomation?.name}&quot;? This action cannot be undone.
+              All execution history for this automation will also be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
