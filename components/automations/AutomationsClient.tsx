@@ -755,14 +755,6 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
 
               {/* Editable conditions */}
               {renderEditableConditions(editingAutomation.actions)}
-
-              {/* Raw trigger config display */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Trigger Configuration</Label>
-                <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-32">
-                  {JSON.stringify(editingAutomation.trigger_config, null, 2)}
-                </pre>
-              </div>
             </div>
           )}
 
