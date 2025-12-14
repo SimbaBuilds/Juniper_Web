@@ -425,6 +425,9 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
   };
 
   // Manually trigger automation
+  // Uses the /api/automations/trigger route which handles:
+  // - Polling automations: poll → wait → process events
+  // - Other types: direct execution via script-executor
   const handleTrigger = async (automation: AutomationRecord) => {
     setLoadingStates(prev => ({
       ...prev,
@@ -432,54 +435,34 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
     }));
 
     try {
-      const supabase = createClient();
+      console.log(`Triggering ${automation.trigger_type} automation ${automation.id} (${automation.name})`);
 
-      // Get session for authentication with edge function
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session?.access_token) {
-        throw new Error('Please sign in to trigger automations');
-      }
-
-      // Get Supabase URL from env
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Configuration error');
-      }
-
-      const executorUrl = `${supabaseUrl}/functions/v1/script-executor/manual`;
-
-      const manualTriggerData = {
-        trigger_type: 'manual',
-        triggered_at: new Date().toISOString(),
-        triggered_by: 'web_ui',
-      };
-
-      console.log(`Triggering automation ${automation.id} (${automation.name})`);
-
-      const response = await fetch(executorUrl, {
+      const response = await fetch('/api/automations/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          automation_id: automation.id,
-          trigger_data: manualTriggerData,
-          test_mode: false
+          automation_id: automation.id
         })
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          throw new Error(errorJson.error || errorJson.message || 'Execution failed');
-        } catch {
-          throw new Error(`Execution failed: ${errorText}`);
-        }
+        throw new Error(result.error || 'Execution failed');
       }
 
-      toast.success(`Automation "${automation.name}" triggered successfully`);
+      // Show appropriate success message based on trigger type
+      if (automation.trigger_type === 'polling') {
+        const pollResult = result.poll_result || {};
+        const processResult = result.process_result || {};
+        toast.success(
+          `Polled ${pollResult.items_found || 0} items, processed ${processResult.events_processed || 0} events`
+        );
+      } else {
+        toast.success(`Automation "${automation.name}" triggered successfully`);
+      }
 
       // Refresh logs for this automation
       if (expandedLogs[automation.id]) {
