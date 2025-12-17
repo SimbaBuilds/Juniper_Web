@@ -56,10 +56,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Service configuration error' }, { status: 500 });
       }
 
-      console.log(`Triggering polling automation ${automation_id} (${automation.name})`);
-
       // Step 1: Trigger the poll to fetch new data and create events
       const pollUrl = `${supabaseUrl}/functions/v1/scheduler-runner/polling`;
+      const pollPayload = {
+        // Force-poll this specific automation (ignores next_poll_at)
+        automation_id: automation_id
+      };
+
+      console.log(`Triggering polling automation via scheduler-runner`);
+      console.log(`  Automation ID: ${automation_id}`);
+      console.log(`  Automation Name: ${automation.name}`);
+      console.log(`  Service: ${automation.trigger_config?.service || 'unknown'}`);
+      console.log(`  Poll Payload:`, JSON.stringify(pollPayload, null, 2));
 
       const pollResponse = await fetch(pollUrl, {
         method: 'POST',
@@ -67,10 +75,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceRoleKey}`
         },
-        body: JSON.stringify({
-          // Force-poll this specific automation (ignores next_poll_at)
-          automation_id: automation_id
-        })
+        body: JSON.stringify(pollPayload)
       });
 
       if (!pollResponse.ok) {
@@ -89,10 +94,19 @@ export async function POST(request: NextRequest) {
       console.log(`Poll completed: ${eventsCreated} events created`);
 
       // Step 2: Wait for events to populate in the database
+      console.log(`  Waiting 2s for events to populate...`);
       await sleep(2000);
 
       // Step 3: Process events for this user
       const processUrl = `${supabaseUrl}/functions/v1/event-processor/user`;
+      const processPayload = {
+        user_id: user.id,
+        // Optionally filter by service from trigger_config
+        service_name: automation.trigger_config?.service?.toLowerCase()
+      };
+
+      console.log(`  Processing events via event-processor/user`);
+      console.log(`  Process Payload:`, JSON.stringify(processPayload, null, 2));
 
       const processResponse = await fetch(processUrl, {
         method: 'POST',
@@ -100,11 +114,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceRoleKey}`
         },
-        body: JSON.stringify({
-          user_id: user.id,
-          // Optionally filter by service from trigger_config
-          service_name: automation.trigger_config?.service?.toLowerCase()
-        })
+        body: JSON.stringify(processPayload)
       });
 
       if (!processResponse.ok) {
@@ -154,7 +164,16 @@ export async function POST(request: NextRequest) {
       ...trigger_data
     };
 
-    console.log(`Triggering ${automation.trigger_type} automation ${automation_id} (${automation.name}) via script-executor`);
+    const payload = {
+      automation_id,
+      trigger_data: manualTriggerData,
+      test_mode: false
+    };
+
+    console.log(`Triggering ${automation.trigger_type} automation via script-executor`);
+    console.log(`  Automation ID: ${automation_id}`);
+    console.log(`  Automation Name: ${automation.name}`);
+    console.log(`  Payload:`, JSON.stringify(payload, null, 2));
 
     const response = await fetch(executorUrl, {
       method: 'POST',
@@ -162,11 +181,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
       },
-      body: JSON.stringify({
-        automation_id,
-        trigger_data: manualTriggerData,
-        test_mode: false
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {

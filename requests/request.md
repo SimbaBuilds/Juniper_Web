@@ -1,3 +1,1 @@
-Polling triggering is not working.
-
-Please see below 
+See automation record below
