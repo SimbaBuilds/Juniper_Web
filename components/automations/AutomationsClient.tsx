@@ -250,8 +250,11 @@ function shouldHideParam(key: string, value: unknown): boolean {
   // Hide pure template references like "{{trigger_data.id}}"
   if (typeof value === 'string' && /^\{\{[^}]+\}\}$/.test(value)) return true;
 
-  // Hide complex nested objects (but NOT arrays)
+  // Hide complex nested objects
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) return true;
+
+  // Hide arrays of objects (but keep arrays of primitives like ["sleep_score", "readiness_score"])
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') return true;
 
   return false;
 }
