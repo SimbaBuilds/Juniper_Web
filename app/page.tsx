@@ -210,7 +210,7 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
           >
-            Energetic balance and lifestlye over pills and scalpels. <br />
+            Energetic balance and lifestyle over pills and scalpels. <br />
             Utilizes your wearable devices and medical data. <br />
             Connects with productivity services like Gmail, Slack, and Notion.
           </motion.p>
