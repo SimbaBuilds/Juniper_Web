@@ -10,6 +10,7 @@ import { ChatMessage } from './components/ChatMessage'
 import { ConversationHistory } from './components/ConversationHistory'
 import { ImageUpload } from './components/ImageUpload'
 import { createClient } from '@/lib/utils/supabase/client'
+import { saveChatState, loadChatState, clearChatState } from '@/lib/utils/chatPersistence'
 import { useRequestStatusPolling } from '@/hooks/useRequestStatusPolling'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
@@ -46,6 +47,7 @@ export default function ChatPage() {
   const loadingStartTimeRef = useRef<number | null>(null)
   const minimumLoadingTimerRef = useRef<NodeJS.Timeout | null>(null)
   const pollingAbortControllerRef = useRef<AbortController | null>(null)
+  const hasRestoredStateRef = useRef<boolean>(false)
 
   // Define final states that should stop polling and clear tracking
   const finalStates = ['completed', 'failed', 'cancelled'];
@@ -312,6 +314,119 @@ export default function ChatPage() {
       setHasCheckedForNewUser(true)
     }
   }
+
+  // Function to recover an in-flight request after page navigation
+  const recoverInFlightRequest = async (requestId: string, persistedLoadingStartTime: number | null) => {
+    console.log('[CHAT] Recovering in-flight request:', { requestId })
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('requests')
+        .select('status, assistant_response, user_message')
+        .eq('request_id', requestId)
+        .single()
+
+      if (error || !data) {
+        console.log('[CHAT] Recovery: Request not found, clearing')
+        return
+      }
+
+      if (data.status === 'completed') {
+        // Request finished while away - add response to messages
+        console.log('[CHAT] Recovery: Request completed while away, adding response')
+        if (data.assistant_response) {
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: data.assistant_response,
+            timestamp: Date.now()
+          }
+          setMessages(prev => [...prev, assistantMessage])
+          toast.success('Response received while you were away')
+        }
+        return
+      }
+
+      if (data.status === 'failed') {
+        console.log('[CHAT] Recovery: Request failed while away')
+        toast.error('Your request failed while you were away')
+        return
+      }
+
+      if (data.status === 'cancelled') {
+        console.log('[CHAT] Recovery: Request was cancelled')
+        return
+      }
+
+      // Request still in progress - resume polling
+      console.log('[CHAT] Recovery: Request still in progress, resuming polling')
+      setCurrentRequestId(requestId)
+      setIsLoading(true)
+      setIsRequestInProgress(true)
+      setRequestStatus(data.status)
+
+      // Restore loading start time for minimum display calculation
+      if (persistedLoadingStartTime) {
+        loadingStartTimeRef.current = persistedLoadingStartTime
+      } else {
+        loadingStartTimeRef.current = Date.now()
+      }
+
+      // Create new abort controller for polling
+      pollingAbortControllerRef.current = new AbortController()
+
+    } catch (error) {
+      console.error('[CHAT] Error recovering request:', error)
+    }
+  }
+
+  // Restore chat state from localStorage on mount
+  useEffect(() => {
+    if (hasRestoredStateRef.current) return
+    hasRestoredStateRef.current = true
+
+    const persistedState = loadChatState()
+    if (!persistedState) return
+
+    console.log('[CHAT] Restoring persisted state:', {
+      messageCount: persistedState.messages.length,
+      conversationId: persistedState.conversationId,
+      hasActiveRequest: !!persistedState.currentRequestId
+    })
+
+    // Restore messages and conversation
+    if (persistedState.messages.length > 0) {
+      setMessages(persistedState.messages)
+    }
+    if (persistedState.conversationId) {
+      setConversationId(persistedState.conversationId)
+    }
+
+    // Handle in-flight request recovery
+    if (persistedState.currentRequestId) {
+      recoverInFlightRequest(
+        persistedState.currentRequestId,
+        persistedState.loadingStartTime
+      )
+    }
+  }, [])
+
+  // Persist chat state to localStorage on changes
+  useEffect(() => {
+    // Skip initial render before restoration
+    if (!hasRestoredStateRef.current) return
+
+    const timeoutId = setTimeout(() => {
+      saveChatState({
+        messages,
+        conversationId,
+        currentRequestId,
+        loadingStartTime: loadingStartTimeRef.current
+      })
+    }, 300) // Debounce saves
+
+    return () => clearTimeout(timeoutId)
+  }, [messages, conversationId, currentRequestId])
 
   // Get current user on mount
   useEffect(() => {
@@ -722,6 +837,7 @@ export default function ChatPage() {
       console.log('[CHAT] No messages to save, clearing chat state only');
       setMessages([])
       setConversationId(null)
+      clearChatState() // Clear localStorage
       return;
     }
 
@@ -766,6 +882,7 @@ export default function ChatPage() {
 
     setMessages([])
     setConversationId(null)
+    clearChatState() // Clear localStorage
 
     if (!isAutoRefresh) {
       toast.success('Chat cleared. Your conversation has been saved.')

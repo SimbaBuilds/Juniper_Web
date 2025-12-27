@@ -52,9 +52,9 @@ const demoVideos = [
     thumbnail: "https://img.youtube.com/vi/vfv6uGq42DY/maxresdefault.jpg"
   },
   {
-    id: "quMsf4s5LFQ",
-    title: "Juniper Asked About A Run",
-    thumbnail: "https://img.youtube.com/vi/quMsf4s5LFQ/maxresdefault.jpg"
+    id: "LIJK88nngtk",
+    title: "Juniper Creates Email Monitoring Automation",
+    thumbnail: "https://img.youtube.com/vi/LIJK88nngtk/maxresdefault.jpg"
   },
   {
     id: "gZaz-iuZgcM",
