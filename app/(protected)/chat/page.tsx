@@ -382,28 +382,42 @@ export default function ChatPage() {
 
   // Restore chat state from localStorage on mount
   useEffect(() => {
-    if (hasRestoredStateRef.current) return
+    console.log('[CHAT] Restoration useEffect triggered, hasRestoredState:', hasRestoredStateRef.current)
+
+    if (hasRestoredStateRef.current) {
+      console.log('[CHAT] Already restored, skipping')
+      return
+    }
     hasRestoredStateRef.current = true
+    console.log('[CHAT] First mount, attempting to load persisted state')
 
     const persistedState = loadChatState()
-    if (!persistedState) return
+    if (!persistedState) {
+      console.log('[CHAT] No persisted state to restore')
+      return
+    }
 
     console.log('[CHAT] Restoring persisted state:', {
       messageCount: persistedState.messages.length,
+      messages: persistedState.messages.map(m => ({ role: m.role, contentPreview: m.content.substring(0, 50) })),
       conversationId: persistedState.conversationId,
-      hasActiveRequest: !!persistedState.currentRequestId
+      hasActiveRequest: !!persistedState.currentRequestId,
+      currentRequestId: persistedState.currentRequestId
     })
 
     // Restore messages and conversation
     if (persistedState.messages.length > 0) {
+      console.log('[CHAT] Setting messages from persisted state')
       setMessages(persistedState.messages)
     }
     if (persistedState.conversationId) {
+      console.log('[CHAT] Setting conversationId from persisted state:', persistedState.conversationId)
       setConversationId(persistedState.conversationId)
     }
 
     // Handle in-flight request recovery
     if (persistedState.currentRequestId) {
+      console.log('[CHAT] Found in-flight request, attempting recovery:', persistedState.currentRequestId)
       recoverInFlightRequest(
         persistedState.currentRequestId,
         persistedState.loadingStartTime
@@ -413,10 +427,22 @@ export default function ChatPage() {
 
   // Persist chat state to localStorage on changes
   useEffect(() => {
-    // Skip initial render before restoration
-    if (!hasRestoredStateRef.current) return
+    console.log('[CHAT] Persistence useEffect triggered:', {
+      hasRestoredState: hasRestoredStateRef.current,
+      messageCount: messages.length,
+      conversationId,
+      currentRequestId
+    })
 
+    // Skip initial render before restoration
+    if (!hasRestoredStateRef.current) {
+      console.log('[CHAT] Skipping persistence - not yet restored')
+      return
+    }
+
+    console.log('[CHAT] Scheduling state save (300ms debounce)')
     const timeoutId = setTimeout(() => {
+      console.log('[CHAT] Debounce complete, saving state now')
       saveChatState({
         messages,
         conversationId,
@@ -425,7 +451,10 @@ export default function ChatPage() {
       })
     }, 300) // Debounce saves
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      console.log('[CHAT] Clearing debounce timeout')
+      clearTimeout(timeoutId)
+    }
   }, [messages, conversationId, currentRequestId])
 
   // Get current user on mount
@@ -696,7 +725,11 @@ export default function ChatPage() {
       imageUrl: selectedImageUrl || undefined
     }
 
-    setMessages(prev => [...prev, userMessage])
+    console.log('[CHAT] Adding user message, current count:', messages.length)
+    setMessages(prev => {
+      console.log('[CHAT] setMessages callback - adding user message, prev count:', prev.length)
+      return [...prev, userMessage]
+    })
     setInputValue('')
     setSelectedImageUrl(null) // Clear selected image
 
@@ -777,7 +810,11 @@ export default function ChatPage() {
         timestamp: Date.now()
       }
 
-      setMessages(prev => [...prev, assistantMessage])
+      console.log('[CHAT] Adding assistant message')
+      setMessages(prev => {
+        console.log('[CHAT] setMessages callback - adding assistant message, prev count:', prev.length)
+        return [...prev, assistantMessage]
+      })
 
       // Update response_fetched to true since the assistant message is now displayed
       try {
@@ -837,6 +874,7 @@ export default function ChatPage() {
       console.log('[CHAT] No messages to save, clearing chat state only');
       setMessages([])
       setConversationId(null)
+      console.log('[CHAT] Calling clearChatState (no messages case)')
       clearChatState() // Clear localStorage
       return;
     }
@@ -882,6 +920,7 @@ export default function ChatPage() {
 
     setMessages([])
     setConversationId(null)
+    console.log('[CHAT] Calling clearChatState (main clear case)')
     clearChatState() // Clear localStorage
 
     if (!isAutoRefresh) {
