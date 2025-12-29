@@ -36,10 +36,15 @@ import {
 const publicServicesCount = getPublicServices().length;
 
 const demoVideos = [
+  // {
+  //   id: "FmxwgpCW_7A",
+  //   title: "Oura Stress Zones Research Email",
+  //   thumbnail: "https://img.youtube.com/vi/FmxwgpCW_7A/maxresdefault.jpg"
+  // },
   {
-    id: "FmxwgpCW_7A",
-    title: "Oura Stress Zones Research Email",
-    thumbnail: "https://img.youtube.com/vi/FmxwgpCW_7A/maxresdefault.jpg"
+    id: "tmmqHsehkQI",
+    title: "Juniper Builds Event Driven and Scheduled Jobs from Natural Language",
+    thumbnail: "https://img.youtube.com/vi/tmmqHsehkQI/maxresdefault.jpg"
   },
   {
     id: "f9xjc4oKap0",
@@ -51,11 +56,7 @@ const demoVideos = [
     title: "Oura Integration + Wellness Dashboard",
     thumbnail: "https://img.youtube.com/vi/vfv6uGq42DY/maxresdefault.jpg"
   },
-  {
-    id: "LIJK88nngtk",
-    title: "Juniper Creates Email Monitoring Automation",
-    thumbnail: "https://img.youtube.com/vi/LIJK88nngtk/maxresdefault.jpg"
-  },
+
   {
     id: "gZaz-iuZgcM",
     title: "Juniper Helps with Achilles Tendonitis",
