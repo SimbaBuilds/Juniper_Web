@@ -1380,7 +1380,6 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
         <div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">Your Automations</h2>
           <p className="text-sm text-muted-foreground">
-            View, pause, edit, and manually trigger your automations. Click on an automation to see execution history.
           </p>
         </div>
 

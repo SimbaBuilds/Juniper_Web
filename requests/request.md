@@ -1,1 +1,4 @@
-How could we have chat requests persist when the chat page is clicked off (e.g. to the automations page)?
+Please create plan for adding support for day of week to automation edit functionality.  Time of day and interval UI work great already.  Example JSON:
+
+
+[{"idx":41,"id":"dbb23c1e-9bae-4302-9e0d-d9aa322c82ce","user_id":"56a2c117-6486-4ca5-a57d-6c2e877e7083","name":"Morning Wellness Check-in","description":"Good morning! ☀️\nHow are you feeling today?","trigger_type":"schedule_recurring","trigger_config":"{\"interval\": \"weekly\", \"day_of_week\": \"monday\", \"time_of_day\": \"14:30\"}","script_code":null,"execution_params":"{}","dependencies":[],"active":true,"created_at":"2025-12-15 04:24:14.314544+00","updated_at":"2026-01-02 03:15:15.500039+00","actions":"[{\"id\": \"send_push\", \"tool\": \"push_notifications_send\", \"parameters\": {\"body\": \"How'd you sleep? Open Juniper to log your morning wellness check.\", \"data\": {\"screen\": \"Wellness\"}, \"title\": \"Good Morning!\"}}]","variables":"{}","status":"active","confirmed_at":null,"next_poll_at":null,"last_poll_cursor":null,"polling_interval_minutes":null}]
