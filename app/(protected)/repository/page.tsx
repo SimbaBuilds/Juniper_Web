@@ -267,7 +267,7 @@ export default function RepositoryPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Repository</h1>
           <p className="text-muted-foreground">
-            Your saved memories, samples, references, and notes.
+            Your saved resources for Juniper's use.
           </p>
         </div>
       </div>
