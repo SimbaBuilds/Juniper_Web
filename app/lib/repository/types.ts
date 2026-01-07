@@ -43,5 +43,5 @@ export const PREDEFINED_TAGS = [
 ];
 
 export const MAX_RESOURCE_TAGS = 4;
-export const MAX_CONTENT_LENGTH = 2000;
+export const MAX_CONTENT_LENGTH = 25000;
 export const MAX_INSTRUCTIONS_LENGTH = 200;
