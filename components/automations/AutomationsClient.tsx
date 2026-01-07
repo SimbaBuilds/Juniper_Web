@@ -1626,8 +1626,9 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
                 <Label htmlFor="description">Description</Label>
                 <Input
                   id="description"
-                  defaultValue={editingAutomation.description || ''}
-                  onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
+                  value={editingAutomation.description || ''}
+                  readOnly
+                  className="bg-muted text-muted-foreground cursor-not-allowed"
                 />
               </div>
 
