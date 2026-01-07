@@ -40,7 +40,7 @@ export default function TermsOfUsePage() {
               Please read these terms carefully before using Juniper
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Last updated: January 1, 2025
+              Last updated: January 7, 2025
             </p>
           </div>
 
@@ -150,7 +150,28 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Third-Party Integrations</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Important Health and Wellness Disclaimer</h2>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="text-gray-700 font-semibold mb-2">
+                      JUNIPER IS NOT A SUBSTITUTE FOR PROFESSIONAL MENTAL HEALTH CARE OR MEDICAL TREATMENT.
+                    </p>
+                  </div>
+                  <p className="text-gray-600 mb-4">
+                    By using Juniper, you acknowledge and agree that:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-600 mb-6 space-y-1">
+                    <li><strong>Not a Therapist:</strong> Juniper is an AI assistant and is not a licensed therapist, counselor, psychologist, psychiatrist, or mental health professional. Juniper cannot and does not provide therapy, counseling, or mental health treatment.</li>
+                    <li><strong>Not Medical Advice:</strong> Juniper is not a medical practitioner and does not provide medical diagnoses, treatment recommendations, or healthcare advice. Nothing provided by Juniper should be construed as medical advice.</li>
+                    <li><strong>Seek Professional Help:</strong> If you are experiencing mental health issues, emotional distress, or medical concerns, you should seek help from qualified licensed professionals. If you are in crisis or experiencing thoughts of self-harm, please contact emergency services or a crisis helpline immediately.</li>
+                    <li><strong>No Liability for User Actions:</strong> HightowerAI and its affiliates, officers, directors, employees, and agents are not liable for any harm, injury, damages, or losses resulting from actions taken by users based on Juniper&apos;s responses or suggestions. You assume full responsibility for any decisions or actions you take based on your interactions with Juniper.</li>
+                    <li><strong>Use at Your Own Discretion:</strong> Any reliance you place on information or suggestions provided by Juniper is at your own discretion.</li>
+                  </ul>
+                </section>
+
+                <Separator className="my-8" />
+
+                <section className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Third-Party Integrations</h2>
                   <p className="text-gray-600 mb-4">
                     Juniper integrates with various third-party services. You acknowledge that:
                   </p>
@@ -169,7 +190,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">6. User Conduct and Prohibited Uses</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">7. User Conduct and Prohibited Uses</h2>
                   <p className="text-gray-600 mb-4">You agree not to use the Service to:</p>
                   <ul className="list-disc pl-6 text-gray-600 mb-6 space-y-1">
                     <li>Violate any applicable laws, regulations, or third-party rights</li>
@@ -186,7 +207,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Intellectual Property Rights</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Intellectual Property Rights</h2>
                   <p className="text-gray-600 mb-4">
                     The Service and its original content, features, and functionality are and will remain the exclusive property of Juniper and its licensors. The Service is protected by copyright, trademark, and other laws.
                   </p>
@@ -198,7 +219,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Privacy and Data Protection</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Privacy and Data Protection</h2>
                   <p className="text-gray-600 mb-4">
                     Your privacy is important to us. Please review our <Link href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link>, which also governs your use of the Service, to understand our practices.
                   </p>
@@ -210,7 +231,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Service Availability and Modifications</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Service Availability and Modifications</h2>
                   <p className="text-gray-600 mb-4">
                     We strive to provide reliable service, but cannot guarantee:
                   </p>
@@ -228,7 +249,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Disclaimers and Limitations of Liability</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Disclaimers and Limitations of Liability</h2>
                   <p className="text-gray-600 mb-4">
                     THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND. TO THE FULLEST EXTENT PERMITTED BY LAW, Juniper DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED.
                   </p>
@@ -240,7 +261,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Termination</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Termination</h2>
                   <p className="text-gray-600 mb-4">
                     You may terminate your account at any time by contacting us or using account deletion features in the application.
                   </p>
@@ -255,7 +276,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Governing Law and Dispute Resolution</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Governing Law and Dispute Resolution</h2>
                   <p className="text-gray-600 mb-4">
                     These Terms shall be governed by and construed in accordance with the laws of the jurisdiction where Juniper is headquartered, without regard to conflict of law principles.
                   </p>
@@ -267,7 +288,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Changes to Terms</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">14. Changes to Terms</h2>
                   <p className="text-gray-600 mb-4">
                     We reserve the right to update these Terms at any time. We will notify you of any material changes by posting the new Terms on this page and updating the &quot;Last updated&quot; date.
                   </p>
@@ -279,7 +300,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">14. Severability</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">15. Severability</h2>
                   <p className="text-gray-600 mb-4">
                     If any provision of these Terms is held to be unenforceable or invalid, such provision will be changed and interpreted to accomplish the objectives of such provision to the greatest extent possible under applicable law.
                   </p>
@@ -288,7 +309,7 @@ export default function TermsOfUsePage() {
                 <Separator className="my-8" />
 
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">15. Contact Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">16. Contact Information</h2>
                   <p className="text-gray-600 mb-4">
                     If you have any questions about these Terms of Use, please contact us:
                   </p>
