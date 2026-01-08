@@ -1380,7 +1380,7 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
         <div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">Your Automations</h2>
           <p className="text-sm text-muted-foreground">
-          Pause, resume, edit, or manually trigger automations.  You can also <a href="/chat" className="underline"><u>ask Juniper</u></a> to edit automations for you.
+          Pause, resume, edit, or manually trigger automations.  You can also <a href="/chat" className="underline"><u>ask Juniper</u></a> to edit or create automations for you.  
           </p>
         </div>
 
