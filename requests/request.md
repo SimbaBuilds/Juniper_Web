@@ -1,1 +1,1 @@
-Please add automations screen to mobile hamburger menu in web app
+Please make Oura and Fitbit mobile app only like Apple Health and Google Health Connect. protected/integrations)

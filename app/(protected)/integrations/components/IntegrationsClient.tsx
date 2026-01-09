@@ -579,8 +579,8 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       );
     }
 
-    // Special handling for Apple Health, Google Health Connect, and MyChart - mobile app only
-    if (['Apple Health', 'Google Health Connect', 'MyChart'].includes(service.service_name)) {
+    // Special handling for mobile app only integrations
+    if (['Apple Health', 'Google Health Connect', 'MyChart', 'Oura', 'Fitbit'].includes(service.service_name)) {
       return (
         <Button
           variant="outline"
@@ -782,8 +782,8 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                   {/* Action Button */}
                   {!(service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected) && (
                     <div className="mt-4">
-                      {/* Special handling for Apple Health, Google Health Connect, and MyChart */}
-                      {['Apple Health', 'Google Health Connect', 'MyChart'].includes(service.service_name) ? (
+                      {/* Special handling for mobile app only integrations */}
+                      {['Apple Health', 'Google Health Connect', 'MyChart', 'Oura', 'Fitbit'].includes(service.service_name) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-blue-600">
                             <Smartphone className="w-3 h-3" />
