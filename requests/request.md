@@ -1,1 +1,1 @@
-In the automations screen, I think the description box will confuse users - they will manually edit a value in teh description and think it affects the actual automation.  Please make the description immutable.  Please give me your simple plan first.
+Please add automations screen to mobile hamburger menu in web app
