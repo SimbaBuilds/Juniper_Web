@@ -11,6 +11,112 @@ export interface CompletionResult {
   error?: string;
 }
 
+/**
+ * Fire-and-forget version of integration completion.
+ * Creates request record and sends to backend without awaiting response.
+ * The result will be delivered via push notification.
+ */
+export async function sendCompletionMessageAsync(
+  serviceName: string,
+  userId: string,
+  supabase: any
+): Promise<{ success: boolean; request_id?: string; error?: string }> {
+  try {
+    console.log(`[Async] Initiating fire-and-forget completion for ${serviceName}`);
+
+    // Get session for backend authentication
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.access_token) {
+      console.error('[Async] No valid session for completion message authentication');
+      return { success: false, error: 'No valid session token' };
+    }
+
+    // Get user profile for settings
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('general_instructions, base_language_model, timezone')
+      .eq('id', userId)
+      .single();
+
+    // Generate request ID for tracking
+    const requestId = `integration-completion-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const message = `Let's complete the integration for ${serviceName}`;
+
+    // Create request record in database
+    try {
+      await serverRequestService.createRequest(userId, {
+        request_id: requestId,
+        request_type: 'integration_completion',
+        status: 'pending',
+        metadata: {
+          message: message,
+          integration_in_progress: true,
+          service_name: serviceName,
+          timestamp: Date.now(),
+          async_completion: true
+        }
+      });
+    } catch (requestError) {
+      console.error('[Async] Failed to create completion request record:', requestError);
+      return { success: false, error: 'Failed to create request record' };
+    }
+
+    // Prepare request for Python backend
+    const chatRequest = {
+      message: message,
+      timestamp: Date.now(),
+      history: [],
+      preferences: {
+        general_instructions: profile?.general_instructions || '',
+        base_language_model: profile?.base_language_model || 'gpt-4',
+        timezone: profile?.timezone || 'UTC'
+      },
+      request_id: requestId,
+      integration_in_progress: true,
+      service_name: serviceName
+    };
+
+    const formData = new FormData();
+    formData.append('json_data', JSON.stringify(chatRequest));
+
+    // Fire-and-forget: send request without awaiting response
+    fetch(`${PYTHON_BACKEND_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: formData,
+    }).then(async (response) => {
+      if (!response.ok) {
+        console.error('[Async] Backend request failed:', response.status);
+        await serverRequestService.updateRequestStatus(requestId, 'failed', {
+          error: `Backend error: ${response.status}`,
+          error_timestamp: Date.now()
+        });
+      }
+      // Success case: backend will update status and send push notification
+      console.log(`[Async] Completion request sent successfully for ${serviceName}`);
+    }).catch(async (error) => {
+      console.error('[Async] Backend request error:', error);
+      await serverRequestService.updateRequestStatus(requestId, 'failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        error_timestamp: Date.now()
+      });
+    });
+
+    console.log(`[Async] Fire-and-forget request initiated for ${serviceName}, request_id: ${requestId}`);
+    return { success: true, request_id: requestId };
+
+  } catch (error) {
+    console.error('[Async] Integration completion setup error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 export async function sendCompletionMessageDirect(
   serviceName: string, 
   userId: string, 

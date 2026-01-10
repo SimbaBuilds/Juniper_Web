@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAppServerClient } from '@/lib/utils/supabase/server';
 import { IntegrationService } from '@/app/lib/integrations/IntegrationService';
+import { sendCompletionMessageAsync } from '@/app/lib/integrations/completion-logic';
 
 export async function GET(
   request: NextRequest,
@@ -86,12 +87,16 @@ export async function GET(
       integrationsUrl.searchParams.set('reconnected', service);
       return NextResponse.redirect(integrationsUrl);
     } else {
-      console.log(`New connection flow detected for ${service}, redirecting to chat for completion`);
-      // Redirect to chat page with integration completion metadata for new connections
-      const chatUrl = new URL('/chat', request.url);
-      chatUrl.searchParams.set('integration_completed', service);
-      chatUrl.searchParams.set('service_name', service);
-      return NextResponse.redirect(chatUrl);
+      console.log(`New connection flow detected for ${service}, sending async completion request`);
+      // Fire-and-forget: send completion request without blocking
+      sendCompletionMessageAsync(service, user.id, supabase).catch(err => {
+        console.error('Async completion request failed:', err);
+      });
+
+      // Redirect back to integrations page
+      const integrationsUrl = new URL('/integrations', request.url);
+      integrationsUrl.searchParams.set('connected', service);
+      return NextResponse.redirect(integrationsUrl);
     }
 
   } catch (error) {

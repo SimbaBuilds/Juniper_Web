@@ -1,1 +1,1 @@
-Please make Oura and Fitbit mobile app only like Apple Health and Google Health Connect. protected/integrations)
+Currently, on integration completion, There is an integration completion flow that auto navigate users to the home screen and send a chat request to the backend. I want to make this asynchronous and non-blocking so that the same request is sent to the back end point but this app does not enter a request State the result will be sent in a push notification and this app does not need to track this request after it is sent. Please create a plan.
