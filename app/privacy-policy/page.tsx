@@ -163,6 +163,7 @@ export default function PrivacyPolicyPage() {
                     <li><strong>AI Models:</strong> We use various language models to generate responses and perform tasks</li>
                     <li><strong>Medical Record Processing:</strong> Medical record information is securely passed to LLM (Large Language Model) providers for processing and analysis. This data is stored temporarily for security and logging purposes, but is not stored long-term and is never used to train or improve AI models</li>
                     <li><strong>No Unauthorized Training:</strong> We will not use your data to train or improve Juniper's AI models unless you explicitly authorize us to do so</li>
+                    <li><strong>Zero Data Retention with LLM Provider:</strong> HightowerAI has a zero data retention agreement with our main LLM provider, Anthropic — neither your data nor your chats with Juniper are ever stored on their servers</li>
                   </ul>
                 </section>
 

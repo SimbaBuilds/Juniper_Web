@@ -144,6 +144,7 @@ export default function TermsOfUsePage() {
                     <li><strong>No Medical/Legal Advice:</strong> Juniper does not provide medical, legal, financial, or professional advice</li>
                     <li><strong>Content Monitoring:</strong> We may monitor conversations for safety, security, and service improvement purposes</li>
                     <li><strong>No Unauthorized Training:</strong> We will not use your data to train or improve Juniper's AI models unless you explicitly authorize us to do so</li>
+                    <li><strong>Zero Data Retention with LLM Provider:</strong> HightowerAI has a zero data retention agreement with our main LLM provider, Anthropic — neither your data nor your chats with Juniper are ever stored on their servers</li>
                   </ul>
                 </section>
 

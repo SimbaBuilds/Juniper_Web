@@ -62,11 +62,21 @@ export async function sendCompletionMessageAsync(
       return { success: false, error: 'Failed to create request record' };
     }
 
-    // Prepare request for Python backend
+    // Create user message for history (matching chat page format)
+    const timestamp = Date.now();
+    const userMessage = {
+      role: 'user',
+      content: message,
+      timestamp: timestamp,
+      type: 'text',
+      image_url: null
+    };
+
+    // Prepare request for Python backend (matching /api/chat format)
     const chatRequest = {
       message: message,
-      timestamp: Date.now(),
-      history: [],
+      timestamp: timestamp,
+      history: [userMessage],
       preferences: {
         general_instructions: profile?.general_instructions || '',
         base_language_model: profile?.base_language_model || 'gpt-4',
@@ -179,11 +189,21 @@ export async function sendCompletionMessageDirect(
       console.error('Failed to update completion request status to processing:', updateError);
     }
 
+    // Create user message for history (matching chat page format)
+    const timestamp = Date.now();
+    const userMessage = {
+      role: 'user',
+      content: message,
+      timestamp: timestamp,
+      type: 'text',
+      image_url: null
+    };
+
     // Prepare request for Python backend (matching backend ChatRequest model)
     const chatRequest = {
       message: message,
-      timestamp: Date.now(),
-      history: [], // No history for completion messages
+      timestamp: timestamp,
+      history: [userMessage],
       preferences: {
         general_instructions: profile?.general_instructions || '',
         base_language_model: profile?.base_language_model || 'gpt-4',
