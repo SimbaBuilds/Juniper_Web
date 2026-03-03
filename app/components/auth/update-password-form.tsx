@@ -39,8 +39,9 @@ export function UpdatePasswordForm() {
       return
     }
 
-    // Redirect to login page after successful password update
-    router.push('/login?message=Password updated successfully')
+    // Redirect to dashboard after successful password update
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (

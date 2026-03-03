@@ -60,7 +60,7 @@ function LoginFormContent() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div>
       <form onSubmit={handleEmailLogin} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
