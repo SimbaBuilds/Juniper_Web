@@ -53,7 +53,7 @@ export function ResetPasswordForm() {
 
     setMessage('Check your email for the verification code!')
     setStep('verify')
-    setResendCooldown(60)
+    setResendCooldown(10)
     setLoading(false)
   }
 
@@ -88,7 +88,7 @@ export function ResetPasswordForm() {
   const handleResendCode = async () => {
     setError(null)
     setMessage(null)
-    setResendCooldown(60)
+    setResendCooldown(10)
 
     const { error } = await supabase.auth.signInWithOtp({
       email,

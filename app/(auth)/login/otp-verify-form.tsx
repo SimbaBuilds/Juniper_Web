@@ -56,7 +56,7 @@ export function OtpVerifyForm({ email, onBack }: OtpVerifyFormProps) {
 
   const handleResendCode = async () => {
     setError(null)
-    setResendCooldown(60)
+    setResendCooldown(10)
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
