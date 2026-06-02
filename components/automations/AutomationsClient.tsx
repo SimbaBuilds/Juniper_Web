@@ -724,6 +724,14 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
         }
       }
 
+      // Mirror nested polling interval to the top-level scheduler column.
+      // The scheduler (polling-manager) reads automation_records.polling_interval_minutes,
+      // not trigger_config.polling_interval_minutes — without this, UI edits never reach it.
+      const editedTriggerConfig = editValues.trigger_config as Record<string, unknown> | undefined;
+      if (editedTriggerConfig && typeof editedTriggerConfig.polling_interval_minutes === 'number') {
+        updatePayload.polling_interval_minutes = editedTriggerConfig.polling_interval_minutes;
+      }
+
       const { data: updated, error } = await supabase
         .schema('automations')
         .from('automation_records')
