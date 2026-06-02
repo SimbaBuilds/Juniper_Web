@@ -211,7 +211,8 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       // Get system integrations from user profile
       let systemIntegrations: Record<string, boolean> = {
         perplexity: true,
-        xai_live_search: true
+        xai_live_search: true,
+        claude_code: true
       };
       
       if (systemIntegrationsResponse.ok) {
@@ -244,9 +245,10 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
           // Map service names to integration keys
           const serviceKeyMap: Record<string, string> = {
             'Perplexity': 'perplexity',
-            'XAI Live Search': 'xai_live_search'
+            'XAI Live Search': 'xai_live_search',
+            'Claude Code': 'claude_code'
           };
-          
+
           const integrationKey = serviceKeyMap[service.service_name];
           if (!integrationKey) {
             console.warn(`No integration key mapped for system service: ${service.service_name}`);
@@ -522,9 +524,10 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       // Map specific system services to their integration keys (matching React Native pattern)
       const serviceKeyMap: Record<string, string> = {
         'Perplexity': 'perplexity',
-        'XAI Live Search': 'xai_live_search'
+        'XAI Live Search': 'xai_live_search',
+        'Claude Code': 'claude_code'
       };
-      
+
       const integrationKey = serviceKeyMap[service.service_name];
       if (!integrationKey) {
         toast.error(`No integration key mapped for system service: ${service.service_name}`);

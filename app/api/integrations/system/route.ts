@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
     const currentIntegrations = profile?.enabled_system_integrations || {
       perplexity: true,
       textbelt: true,
-      xai_live_search: true
+      xai_live_search: true,
+      claude_code: true
     };
 
     // Update the specific integration
@@ -145,7 +146,8 @@ export async function GET(request: NextRequest) {
     const systemIntegrations = profile?.enabled_system_integrations || {
       perplexity: true,
       textbelt: true,
-      xai_live_search: true
+      xai_live_search: true,
+      claude_code: true
     };
 
     return NextResponse.json({

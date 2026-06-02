@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Calendar, Mail, MessageSquare, CheckSquare, Video, Search, Cloud, FileText, Grid, Heart, Activity, Link2, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, Mail, MessageSquare, CheckSquare, Video, Search, Cloud, FileText, Grid, Heart, Activity, Link2, Loader2, Terminal } from 'lucide-react';
 import type { ServiceCategory } from './types';
 import { Button } from '@/components/ui/button';
 
@@ -80,7 +80,7 @@ export default function IntegrationDescriptions() {
     }
     
     // Research
-    if (['perplexity', 'xai live search'].includes(name)) {
+    if (['perplexity', 'xai live search', 'claude code'].includes(name)) {
       return 'Research';
     }
     
@@ -116,6 +116,7 @@ export default function IntegrationDescriptions() {
     if (['notion', 'todoist', 'any.do'].includes(name)) return <CheckSquare className="w-6 h-6" />;
     if (name === 'google meet') return <Video className="w-6 h-6" />;
     if (['perplexity', 'xai live search'].includes(name)) return <Search className="w-6 h-6" />;
+    if (name === 'claude code') return <Terminal className="w-6 h-6" />;
     if (name === 'dropbox') return <Cloud className="w-6 h-6" />;
     if (['google docs', 'microsoft word online'].includes(name)) return <FileText className="w-6 h-6" />;
     if (['google sheets', 'microsoft excel online'].includes(name)) return <Grid className="w-6 h-6" />;
