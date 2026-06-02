@@ -25,7 +25,7 @@ export interface TriggerConfig {
   interval?: string;
   time_of_day?: string;
   run_at?: string;
-  poll_interval?: string;
+  polling_interval_minutes?: number;
   filters?: Record<string, unknown>;
 }
 

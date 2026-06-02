@@ -851,8 +851,13 @@ export function AutomationsClient({ userId }: AutomationsClientProps) {
           return `Scheduled for ${date.toLocaleString()} ${tzAbbr}`;
         }
         return 'One-time';
-      case 'polling':
-        return `${config.service || 'Unknown'} - every ${config.poll_interval || '5min'}`;
+      case 'polling': {
+        const mins = config.polling_interval_minutes;
+        const label = typeof mins === 'number'
+          ? (mins >= 60 && mins % 60 === 0 ? `${mins / 60}h` : `${mins}min`)
+          : '?';
+        return `${config.service || 'Unknown'} - every ${label}`;
+      }
       case 'manual':
         return 'Triggered manually';
       default:
