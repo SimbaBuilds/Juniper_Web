@@ -34,7 +34,7 @@ export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full flex-col bg-card border-r border-border">
+    <div className="flex h-full w-full flex-col bg-card border-r border-border">
       <div className="px-6 py-5 border-b border-border">
         <Link
           href="/"
@@ -69,15 +69,17 @@ export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="border-t border-border px-4 py-3 space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="border-t border-border px-4 pt-3 pb-6 space-y-3">
+        <div className="flex items-center justify-between gap-2">
           <span
-            className="text-xs text-muted-foreground truncate"
+            className="text-xs text-muted-foreground truncate min-w-0 flex-1"
             title={userEmail}
           >
             {userEmail}
           </span>
-          <ThemeToggle />
+          <div className="flex-shrink-0">
+            <ThemeToggle />
+          </div>
         </div>
         <form action="/api/auth/signout" method="POST">
           <button
