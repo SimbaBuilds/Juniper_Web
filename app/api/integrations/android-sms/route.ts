@@ -90,3 +90,53 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * Android SMS disconnect proxy.
+ *
+ * Disconnect through the FastAPI backend so the server can delete the inbound
+ * webhook registered on the gateway (it holds the username/password + base_url)
+ * and remove the webhook config + integration record. Forwards to:
+ *   POST {PYTHON_BACKEND_URL}/api/integrations/android-sms/disconnect
+ */
+export async function DELETE() {
+  try {
+    const supabase = await createSupabaseAppServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.access_token) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const backendResponse = await fetch(`${PYTHON_BACKEND_URL}/api/integrations/android-sms/disconnect`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    const data = await backendResponse.json().catch(() => null);
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: data?.detail || data?.message || data?.error || 'Failed to disconnect Android SMS',
+        },
+        { status: backendResponse.status }
+      );
+    }
+
+    return NextResponse.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Android SMS disconnect error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

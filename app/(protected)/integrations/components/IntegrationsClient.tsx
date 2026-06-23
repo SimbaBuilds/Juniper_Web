@@ -653,23 +653,36 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
     setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
 
     try {
-      const response = await fetch('/api/integrations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'disconnect',
-          integrationId: service.integration_id
-        }),
-      });
+      // Quo + Android SMS MUST disconnect through the FastAPI backend (proxied
+      // via dedicated routes) so the server can delete the inbound webhook
+      // registered on the provider; the generic disconnect only removes the
+      // local integration record and would orphan the remote webhook.
+      const dedicatedDisconnectRoute =
+        service.service_name === 'Quo'
+          ? '/api/integrations/quo'
+          : service.service_name === 'Android SMS'
+            ? '/api/integrations/android-sms'
+            : null;
+
+      const response = dedicatedDisconnectRoute
+        ? await fetch(dedicatedDisconnectRoute, { method: 'DELETE' })
+        : await fetch('/api/integrations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'disconnect',
+              integrationId: service.integration_id
+            }),
+          });
 
       if (!response.ok) {
         throw new Error('Failed to disconnect integration');
       }
 
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error('Disconnection failed');
       }

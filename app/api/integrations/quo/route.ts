@@ -82,3 +82,53 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * Quo disconnect proxy.
+ *
+ * Quo MUST be disconnected through the FastAPI backend so the server can delete
+ * the inbound webhook registered on the user's Quo account (it holds the API
+ * key) and remove the webhook config + integration record. Forwards to:
+ *   POST {PYTHON_BACKEND_URL}/api/integrations/quo/disconnect
+ */
+export async function DELETE() {
+  try {
+    const supabase = await createSupabaseAppServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.access_token) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const backendResponse = await fetch(`${PYTHON_BACKEND_URL}/api/integrations/quo/disconnect`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    const data = await backendResponse.json().catch(() => null);
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: data?.detail || data?.message || data?.error || 'Failed to disconnect Quo',
+        },
+        { status: backendResponse.status }
+      );
+    }
+
+    return NextResponse.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Quo disconnect error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
