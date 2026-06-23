@@ -74,7 +74,7 @@ function getServiceCategory(serviceName: string): string {
   }
   
   // Communications
-  if (['slack', 'microsoft teams', 'twilio', 'textbelt'].includes(name)) {
+  if (['slack', 'microsoft teams', 'twilio', 'textbelt', 'quo', 'android sms'].includes(name)) {
     return 'Communications';
   }
   
@@ -185,6 +185,23 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [showTextbeltForm, setShowTextbeltForm] = useState(false);
   const [textbeltPhoneNumber, setTextbeltPhoneNumber] = useState('');
+  const [showQuoForm, setShowQuoForm] = useState(false);
+  const [quoApiKey, setQuoApiKey] = useState('');
+  const [quoFromNumber, setQuoFromNumber] = useState('');
+  const [quoConnectState, setQuoConnectState] = useState<{
+    inbound_state: 'active' | 'pending';
+    inbound_error?: string;
+    message: string;
+  } | null>(null);
+  const [showAndroidSmsForm, setShowAndroidSmsForm] = useState(false);
+  const [androidSmsUsername, setAndroidSmsUsername] = useState('');
+  const [androidSmsPassword, setAndroidSmsPassword] = useState('');
+  const [androidSmsBaseUrl, setAndroidSmsBaseUrl] = useState('');
+  const [androidSmsConnectState, setAndroidSmsConnectState] = useState<{
+    inbound_state: 'active' | 'pending';
+    inbound_error?: string;
+    message: string;
+  } | null>(null);
   const integrationService = new IntegrationService();
 
   // Load services and user integrations (following React Native pattern)
@@ -352,6 +369,18 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       return;
     }
 
+    // Special handling for Quo - show credential form instead of OAuth
+    if (service.service_name === 'Quo') {
+      setShowQuoForm(true);
+      return;
+    }
+
+    // Special handling for Android SMS - show credential form instead of OAuth
+    if (service.service_name === 'Android SMS') {
+      setShowAndroidSmsForm(true);
+      return;
+    }
+
     setLoadingStates(prev => ({ ...prev, [service.service_name]: true }));
 
     try {
@@ -429,6 +458,149 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       toast.error(error instanceof Error ? error.message : 'Failed to setup Textbelt');
     } finally {
       setLoadingStates(prev => ({ ...prev, 'Textbelt': false }));
+    }
+  };
+
+  const handleQuoSubmit = async () => {
+    if (!quoApiKey.trim()) {
+      toast.error('Please enter your Quo API key');
+      return;
+    }
+
+    setLoadingStates(prev => ({ ...prev, 'Quo': true }));
+    setQuoConnectState(null);
+
+    try {
+      console.log('Submitting Quo credentials...');
+
+      // Quo connect MUST go through the FastAPI backend (proxied via this
+      // Next.js route) so the server can register the inbound webhook with Quo
+      // and store the returned signing key. The proxy attaches the user's
+      // Supabase session JWT as a Bearer token.
+      const response = await fetch('/api/integrations/quo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          api_key: quoApiKey.trim(),
+          from_number: quoFromNumber.trim() || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to connect Quo');
+      }
+
+      // Reload services so the connection status reflects the backend state.
+      await loadServicesWithStatus();
+
+      const inboundState: 'active' | 'pending' = result.inbound_state === 'active' ? 'active' : 'pending';
+
+      if (inboundState === 'active') {
+        // Fully connected: outbound + inbound both active.
+        setShowQuoForm(false);
+        setQuoApiKey('');
+        setQuoFromNumber('');
+        setQuoConnectState(null);
+        toast.success('Quo connected successfully! You can now send and receive texts.');
+      } else {
+        // Connect-anyway / retry-later: outbound is active but inbound (receiving
+        // texts) is still pending until 10DLC registration completes and the
+        // webhook registers. Show the EXACT backend state to the user.
+        setQuoApiKey('');
+        setQuoFromNumber('');
+        setQuoConnectState({
+          inbound_state: 'pending',
+          inbound_error: result.inbound_error,
+          message:
+            result.message ||
+            'Quo is connected for sending texts. Receiving texts is still pending until you finish 10DLC registration in Quo and the webhook registers. Juniper will keep retrying automatically.',
+        });
+        toast.warning('Quo connected for sending. Receiving texts is still pending.');
+      }
+    } catch (error) {
+      console.error('Quo setup failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to setup Quo');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, 'Quo': false }));
+    }
+  };
+
+  const handleAndroidSmsSubmit = async () => {
+    if (!androidSmsUsername.trim()) {
+      toast.error('Please enter your SMS Gateway username');
+      return;
+    }
+    if (!androidSmsPassword.trim()) {
+      toast.error('Please enter your SMS Gateway password');
+      return;
+    }
+
+    setLoadingStates(prev => ({ ...prev, 'Android SMS': true }));
+    setAndroidSmsConnectState(null);
+
+    try {
+      console.log('Submitting Android SMS credentials...');
+
+      // Android SMS connect MUST go through the FastAPI backend (proxied via
+      // this Next.js route) so the server can validate the gateway credentials
+      // and register the inbound webhook. The proxy attaches the user's
+      // Supabase session JWT as a Bearer token.
+      const response = await fetch('/api/integrations/android-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: androidSmsUsername.trim(),
+          password: androidSmsPassword.trim(),
+          base_url: androidSmsBaseUrl.trim() || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to connect Android SMS');
+      }
+
+      // Reload services so the connection status reflects the backend state.
+      await loadServicesWithStatus();
+
+      const inboundState: 'active' | 'pending' = result.inbound_state === 'active' ? 'active' : 'pending';
+
+      if (inboundState === 'active') {
+        // Fully connected: outbound + inbound both active.
+        setShowAndroidSmsForm(false);
+        setAndroidSmsUsername('');
+        setAndroidSmsPassword('');
+        setAndroidSmsBaseUrl('');
+        setAndroidSmsConnectState(null);
+        toast.success('Android SMS connected successfully! You can now send and receive texts.');
+      } else {
+        // Connect-anyway / retry-later: outbound is active but inbound (receiving
+        // texts) is still pending until the gateway webhook registers. Show the
+        // EXACT backend state to the user.
+        setAndroidSmsUsername('');
+        setAndroidSmsPassword('');
+        setAndroidSmsBaseUrl('');
+        setAndroidSmsConnectState({
+          inbound_state: 'pending',
+          inbound_error: result.inbound_error,
+          message:
+            result.message ||
+            'Android SMS is connected for sending texts. Receiving texts is still pending until the SMS Gateway webhook registers. Juniper will keep retrying automatically.',
+        });
+        toast.warning('Android SMS connected for sending. Receiving texts is still pending.');
+      }
+    } catch (error) {
+      console.error('Android SMS setup failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to setup Android SMS');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, 'Android SMS': false }));
     }
   };
 
@@ -782,8 +954,265 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                     </div>
                   )}
 
+                  {/* Quo Credential Form */}
+                  {service.service_name === 'Quo' && showQuoForm && !service.isConnected && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Smartphone className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">Quo SMS Setup</h4>
+                      </div>
+                      <div className="text-sm text-blue-700 mb-4">
+                        <p className="mb-2">Connect your Quo (formerly OpenPhone) number so Juniper can send and receive texts for you. Here's how:</p>
+                        <ol className="list-decimal pl-5 space-y-1">
+                          <li>
+                            Create a Quo account and get a phone number at{' '}
+                            <a
+                              href="https://quo.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium underline hover:text-blue-900"
+                            >
+                              quo.com
+                            </a>
+                            .
+                          </li>
+                          <li>In Quo, register your number for business texting (this takes a couple of minutes to submit, then a few hours to get approved).</li>
+                          <li>In Quo, go to Settings → API, create an API key, and copy it.</li>
+                          <li>Paste the API key below.</li>
+                        </ol>
+                        <p className="mt-2">
+                          Your API key lets Juniper send and read texts on your Quo number. Keep it private and don't share it. You can delete the key anytime in Quo's settings to disconnect.
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="quo-api-key" className="text-sm font-medium text-blue-900">
+                            API Key
+                          </Label>
+                          <Input
+                            id="quo-api-key"
+                            type="password"
+                            placeholder="Your Quo API key"
+                            value={quoApiKey}
+                            onChange={(e) => setQuoApiKey(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Quo']}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="quo-from-number" className="text-sm font-medium text-blue-900">
+                            Default from number / phone number ID (optional)
+                          </Label>
+                          <Input
+                            id="quo-from-number"
+                            type="text"
+                            placeholder="+15551234567 or phone number ID"
+                            value={quoFromNumber}
+                            onChange={(e) => setQuoFromNumber(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Quo']}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowQuoForm(false);
+                              setQuoApiKey('');
+                              setQuoFromNumber('');
+                            }}
+                            disabled={loadingStates['Quo']}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleQuoSubmit}
+                            disabled={loadingStates['Quo'] || !quoApiKey.trim()}
+                            className="flex-1"
+                          >
+                            {loadingStates['Quo'] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Connecting...
+                              </>
+                            ) : (
+                              'Connect'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quo inbound-pending state (outbound active, receiving texts pending) */}
+                  {service.service_name === 'Quo' && quoConnectState?.inbound_state === 'pending' && (
+                    <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <h4 className="font-medium text-yellow-900">Sending active, receiving pending</h4>
+                      </div>
+                      <p className="text-sm text-yellow-800">{quoConnectState.message}</p>
+                      {quoConnectState.inbound_error && (
+                        <p className="text-xs text-yellow-700 mt-2">
+                          Details: {quoConnectState.inbound_error}
+                        </p>
+                      )}
+                      <p className="text-xs text-yellow-700 mt-2">
+                        Juniper will automatically retry registering the inbound webhook once your
+                        10DLC registration is complete in Quo. No further action is needed here.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setQuoConnectState(null)}
+                        className="mt-3"
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Android SMS Credential Form */}
+                  {service.service_name === 'Android SMS' && showAndroidSmsForm && !service.isConnected && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Smartphone className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">Android SMS Setup</h4>
+                      </div>
+                      <div className="text-sm text-blue-700 mb-4">
+                        <p className="mb-2">Use your own Android phone to send and receive texts with Juniper. Here's how:</p>
+                        <ol className="list-decimal pl-5 space-y-1">
+                          <li>
+                            Install the free SMS Gateway app from{' '}
+                            <a
+                              href="https://sms-gate.app"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium underline hover:text-blue-900"
+                            >
+                              sms-gate.app
+                            </a>{' '}
+                            on your Android phone.
+                          </li>
+                          <li>In the app, turn on "Cloud Server" mode.</li>
+                          <li>The app shows a username and password — copy them.</li>
+                          <li>Paste the username and password below.</li>
+                        </ol>
+                        <p className="mt-2">
+                          These let Juniper send texts through your own phone, using your normal phone number and carrier plan. Keep your username and password private; you can change them in the app anytime.
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="android-sms-username" className="text-sm font-medium text-blue-900">
+                            Username
+                          </Label>
+                          <Input
+                            id="android-sms-username"
+                            type="text"
+                            placeholder="Your SMS Gateway username"
+                            value={androidSmsUsername}
+                            onChange={(e) => setAndroidSmsUsername(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Android SMS']}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="android-sms-password" className="text-sm font-medium text-blue-900">
+                            Password
+                          </Label>
+                          <Input
+                            id="android-sms-password"
+                            type="password"
+                            placeholder="Your SMS Gateway password"
+                            value={androidSmsPassword}
+                            onChange={(e) => setAndroidSmsPassword(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Android SMS']}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="android-sms-base-url" className="text-sm font-medium text-blue-900">
+                            Server URL (leave blank for cloud)
+                          </Label>
+                          <Input
+                            id="android-sms-base-url"
+                            type="text"
+                            placeholder="https://your-gateway-host:8080"
+                            value={androidSmsBaseUrl}
+                            onChange={(e) => setAndroidSmsBaseUrl(e.target.value)}
+                            className="mt-1"
+                            disabled={loadingStates['Android SMS']}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowAndroidSmsForm(false);
+                              setAndroidSmsUsername('');
+                              setAndroidSmsPassword('');
+                              setAndroidSmsBaseUrl('');
+                            }}
+                            disabled={loadingStates['Android SMS']}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleAndroidSmsSubmit}
+                            disabled={loadingStates['Android SMS'] || !androidSmsUsername.trim() || !androidSmsPassword.trim()}
+                            className="flex-1"
+                          >
+                            {loadingStates['Android SMS'] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Connecting...
+                              </>
+                            ) : (
+                              'Connect'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Android SMS inbound-pending state (outbound active, receiving texts pending) */}
+                  {service.service_name === 'Android SMS' && androidSmsConnectState?.inbound_state === 'pending' && (
+                    <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <h4 className="font-medium text-yellow-900">Sending active, receiving pending</h4>
+                      </div>
+                      <p className="text-sm text-yellow-800">{androidSmsConnectState.message}</p>
+                      {androidSmsConnectState.inbound_error && (
+                        <p className="text-xs text-yellow-700 mt-2">
+                          Details: {androidSmsConnectState.inbound_error}
+                        </p>
+                      )}
+                      <p className="text-xs text-yellow-700 mt-2">
+                        Juniper will automatically retry registering the inbound webhook with your SMS
+                        Gateway. No further action is needed here.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAndroidSmsConnectState(null)}
+                        className="mt-3"
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Action Button */}
-                  {!(service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected) && (
+                  {!(service.service_name === 'Textbelt' && showTextbeltForm && !service.isConnected) &&
+                   !(service.service_name === 'Quo' && showQuoForm && !service.isConnected) &&
+                   !(service.service_name === 'Android SMS' && showAndroidSmsForm && !service.isConnected) && (
                     <div className="mt-4">
                       {/* Special handling for mobile app only integrations */}
                       {['Apple Health', 'Google Health Connect', 'MyChart', 'Oura', 'Fitbit'].includes(service.service_name) ? (
