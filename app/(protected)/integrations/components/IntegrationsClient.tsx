@@ -989,7 +989,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                             </a>
                             .
                           </li>
-                          <li>In Quo, register your number for business texting (this takes a couple of minutes to submit, then a few hours to get approved).</li>
+                          <li>In Quo, register your number for business texting (this takes a couple of minutes to submit, then a few hours to get approved). This is only needed if you want Juniper to send outbound texts.</li>
                           <li>In Quo, go to Settings → API, create an API key, and copy it.</li>
                           <li>Paste the API key below.</li>
                         </ol>
