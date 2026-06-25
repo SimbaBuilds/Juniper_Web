@@ -467,6 +467,11 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
       return;
     }
 
+    if (!quoFromNumber.trim()) {
+      toast.error('Please enter your default from number / phone number ID');
+      return;
+    }
+
     setLoadingStates(prev => ({ ...prev, 'Quo': true }));
     setQuoConnectState(null);
 
@@ -484,7 +489,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
         },
         body: JSON.stringify({
           api_key: quoApiKey.trim(),
-          from_number: quoFromNumber.trim() || undefined,
+          from_number: quoFromNumber.trim(),
         }),
       });
 
@@ -1014,7 +1019,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                         </div>
                         <div>
                           <Label htmlFor="quo-from-number" className="text-sm font-medium text-blue-900">
-                            Default from number / phone number ID (optional)
+                            Default from number / phone number ID
                           </Label>
                           <Input
                             id="quo-from-number"
@@ -1042,7 +1047,7 @@ export function IntegrationsClient({ userId }: IntegrationsClientProps) {
                           </Button>
                           <Button
                             onClick={handleQuoSubmit}
-                            disabled={loadingStates['Quo'] || !quoApiKey.trim()}
+                            disabled={loadingStates['Quo'] || !quoApiKey.trim() || !quoFromNumber.trim()}
                             className="flex-1"
                           >
                             {loadingStates['Quo'] ? (
