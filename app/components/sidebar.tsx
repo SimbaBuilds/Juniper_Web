@@ -11,6 +11,7 @@ import {
   HeartPulse,
   FolderClosed,
   UserCircle,
+  ShieldCheck,
 } from 'lucide-react'
 import { ThemeToggle } from '@/app/components/theme-toggle'
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/wellness', label: 'Wellness', icon: HeartPulse },
   { href: '/repository', label: 'Repository', icon: FolderClosed },
+  { href: '/settings/confirmations', label: 'Confirmations', icon: ShieldCheck },
   { href: '/account', label: 'Account', icon: UserCircle },
 ] as const
 
