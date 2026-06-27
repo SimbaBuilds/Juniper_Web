@@ -9,6 +9,12 @@ export default async function DashboardPage() {
     fetchExecutionLogs(user.id, 5)
   ])
 
+  // Server component renders in the server's timezone (UTC); format execution
+  // log timestamps in the user's saved timezone instead.
+  const userTimezone = userProfile?.timezone || 'UTC'
+  const formatLogTime = (utcDatetime: string) =>
+    new Date(utcDatetime).toLocaleString('en-US', { timeZone: userTimezone })
+
   return (
     <div className="space-y-8">
       <div>
@@ -143,7 +149,7 @@ export default async function DashboardPage() {
                     {log.trigger_type}
                   </span>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {new Date(log.started_at).toLocaleString()}
+                    {formatLogTime(log.started_at)}
                   </div>
                 </div>
               </div>
